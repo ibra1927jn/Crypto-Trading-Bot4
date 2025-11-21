@@ -1,0 +1,31 @@
+# Trading and Exchange Connection
+ccxt==4.2.25
+
+# Data Analysis and Technical Indicators
+pandas==2.2.0
+numpy==1.26.3
+pandas-ta==0.3.14b
+
+# Machine Learning Frameworks (Preparado para GPU RTX 5080)
+torch==2.2.0
+torchvision==0.17.0
+torchaudio==2.2.0
+tensorflow==2.15.0
+
+# Asynchronous Programming
+asyncio==3.4.3
+aiohttp==3.9.3
+
+# Configuration and Environment
+python-dotenv==1.0.1
+
+# Logging and Monitoring
+colorlog==6.8.2
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2024.1
+
+# Testing
+pytest==8.0.0
+pytest-asyncio==0.23.5
