@@ -27,10 +27,14 @@ from typing import Optional
 import colorlog
 import logging
 
+# ⚠️ IMPORTANTE: Cargar variables de entorno ANTES de importar módulos propios
+from dotenv import load_dotenv
+load_dotenv()  # Cargar .env PRIMERO
+
 # Añadir src al path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-# Importar módulos del bot
+# Importar módulos del bot (DESPUÉS de cargar .env)
 from config import Config
 from modules.data_manager import DataManager
 from modules.indicators import TechnicalIndicators
