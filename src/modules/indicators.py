@@ -25,58 +25,41 @@ class TechnicalIndicators:
             logger.error(f"❌ Error calculando indicadores: {e}")
         return df
 
-    # --- SEÑAL MACD (Ya la tenías) ---
     def get_macd_signal(self, df):
         if df is None or df.empty: return 'NEUTRAL', 0.0
         try:
             macd_col = [c for c in df.columns if c.startswith('MACD_')][0]
             signal_col = [c for c in df.columns if c.startswith('MACDs_')][0]
-            curr_macd = df[macd_col].iloc[-1]
-            curr_signal = df[signal_col].iloc[-1]
-            prev_macd = df[macd_col].iloc[-2]
-            prev_signal = df[signal_col].iloc[-2]
+            curr_macd, curr_sig = df[macd_col].iloc[-1], df[signal_col].iloc[-1]
+            prev_macd, prev_sig = df[macd_col].iloc[-2], df[signal_col].iloc[-2]
 
-            if prev_macd < prev_signal and curr_macd > curr_signal: return 'BUY', 0.8
-            elif prev_macd > prev_signal and curr_macd < curr_signal: return 'SELL', 0.8
+            if prev_macd < prev_sig and curr_macd > curr_sig: return 'BUY', 0.8
+            elif prev_macd > prev_sig and curr_macd < curr_sig: return 'SELL', 0.8
             return 'NEUTRAL', 0.0
         except: return 'NEUTRAL', 0.0
 
-    # --- SEÑAL BOLLINGER (LA QUE FALTABA) ---
     def get_bollinger_signal(self, df):
-        """Estrategia de ruptura de bandas"""
         if df is None or df.empty: return 'NEUTRAL', 0.0
         try:
             latest = df.iloc[-1]
             close = latest['close']
+            bbl = [c for c in df.columns if c.startswith('BBL')]
+            bbu = [c for c in df.columns if c.startswith('BBU')]
             
-            # Buscar columnas BBL (Lower) y BBU (Upper)
-            bbl_cols = [c for c in df.columns if c.startswith('BBL')]
-            bbu_cols = [c for c in df.columns if c.startswith('BBU')]
-            
-            # Si el precio rompe abajo -> Rebote (COMPRA)
-            if bbl_cols and close < latest[bbl_cols[0]]:
-                return 'BUY', 0.9
-            
-            # Si el precio rompe arriba -> Retroceso (VENTA)
-            if bbu_cols and close > latest[bbu_cols[0]]:
-                return 'SELL', 0.9
-                
+            if bbl and close < latest[bbl[0]]: return 'BUY', 0.9
+            if bbu and close > latest[bbu[0]]: return 'SELL', 0.9
             return 'NEUTRAL', 0.0
-        except Exception as e:
-            logger.error(f"Error Bollinger: {e}")
-            return 'NEUTRAL', 0.0
+        except: return 'NEUTRAL', 0.0
 
-    # --- SEÑAL COMBINADA ---
     def get_combined_signal(self, df):
         if df is None or df.empty: return 'NEUTRAL', 0.0
         try:
             signals = []
-            # RSI
             rsi = df['rsi'].iloc[-1]
+            # Lógica Real (No trucada)
             if rsi < 30: signals.append('BUY')
             elif rsi > 70: signals.append('SELL')
             
-            # Bollinger (Reutilizamos lógica)
             bol_sig, _ = self.get_bollinger_signal(df)
             if bol_sig != 'NEUTRAL': signals.append(bol_sig)
 

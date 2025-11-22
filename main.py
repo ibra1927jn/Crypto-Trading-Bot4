@@ -1,40 +1,36 @@
 #!/usr/bin/env python3
 """
-🤖 CRYPTO TRADING BOT - TESTNET FINAL (FULL URL PATCH)
+🤖 CRYPTO TRADING BOT - RADAR EDITION (MULTI-PAIR)
 """
 import os
 import sys
 from dotenv import load_dotenv
 
-# ======================================================
-# 1. SISTEMA DE ARRANQUE Y CARGA DE LLAVES
-# ======================================================
+# 1. Carga de Configuración
 print("\n" + "="*50)
-print("🔧 SISTEMA DE ARRANQUE (MODO DEMO)")
+print("📡 INICIANDO RADAR DE MERCADO")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ENV_PATH = os.path.join(BASE_DIR, '.env')
 load_dotenv(dotenv_path=ENV_PATH, override=True)
 
+# Leer lista de monedas
+symbols_env = os.getenv('TRADING_SYMBOLS', 'BTC/USDT')
+# Limpiamos espacios por si acaso
+SYMBOLS = [s.strip() for s in symbols_env.split(',')]
+print(f"📋 Objetivos: {SYMBOLS}")
+
 API_KEY = os.getenv('BINANCE_API_KEY')
 SECRET_KEY = os.getenv('BINANCE_SECRET_KEY')
 
-if API_KEY and SECRET_KEY:
-    # Mostramos los primeros caracteres para que verifiques
-    if API_KEY.startswith("DCZ"):
-         print(f"✅ Llaves de TESTNET detectadas: {API_KEY[:5]}...")
-    else:
-         print(f"⚠️ CUIDADO: La llave {API_KEY[:5]}... no parece de Testnet (debería empezar por DCZ).")
-else:
-    print("❌ ERROR: Faltan las llaves en el archivo .env")
+if not API_KEY:
+    print("❌ ERROR: Faltan las claves en .env")
     sys.exit(1)
 print("="*50 + "\n")
-# ======================================================
 
 import asyncio
 import logging
 import colorlog
 from datetime import datetime
-import pandas as pd
 import ccxt.async_support as ccxt
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -44,6 +40,7 @@ from modules.indicators import TechnicalIndicators
 from modules.ai_predictor import AI_Predictor
 from strategies.strategy import HybridStrategy
 
+# Configurar Logger
 def setup_logging():
     formatter = colorlog.ColoredFormatter(
         "%(log_color)s%(asctime)s %(levelname)s: %(message)s",
@@ -59,29 +56,24 @@ def setup_logging():
 
 logger = setup_logging()
 
-class CryptoTradingBot:
+class CryptoRadar:
     def __init__(self):
         self.exchange = None
         self.running = False
-        self.symbol = "BTC/USDT"
-        self.timeframe = "1m"
+        self.managers = {} # Aquí guardamos un gestor para cada moneda
+        self.timeframe = os.getenv('TIMEFRAME', '1m')
 
     async def initialize(self):
-        logger.info("🚀 INICIANDO BOT...")
-
+        logger.info("🚀 CARGANDO SISTEMAS...")
         try:
-            # Configuración ESPECÍFICA para Binance Futures Testnet
             self.exchange = ccxt.binance({
                 'apiKey': API_KEY,
                 'secret': SECRET_KEY,
                 'enableRateLimit': True,
-                'options': {
-                    'defaultType': 'future', 
-                }
+                'options': {'defaultType': 'future'}
             })
-
-            # --- PARCHE COMPLETO DE URLS (SOLUCIÓN AL ERROR dapi/sapi) ---
-            # Definimos TODAS las rutas posibles para que CCXT no falle
+            
+            # Parche URLs Testnet
             testnet_url = 'https://testnet.binancefuture.com'
             self.exchange.urls['api'] = {
                 'fapiPublic': f'{testnet_url}/fapi/v1',
@@ -89,84 +81,89 @@ class CryptoTradingBot:
                 'public': f'{testnet_url}/fapi/v1',
                 'private': f'{testnet_url}/fapi/v1',
                 'sapi': f'{testnet_url}/sapi/v1',
-                # ESTAS SON LAS QUE FALTABAN Y DABAN ERROR:
                 'dapiPublic': f'{testnet_url}/dapi/v1',
                 'dapiPrivate': f'{testnet_url}/dapi/v1',
                 'eapiPublic': f'{testnet_url}/eapi/v1',
                 'eapiPrivate': f'{testnet_url}/eapi/v1',
             }
-            # ------------------------------------------------------
 
-            logger.info("🔄 Conectando a Binance Futures Testnet...")
             await self.exchange.load_markets()
-            logger.info("✅ ¡CONEXIÓN EXITOSA!")
+            logger.info("✅ CONEXIÓN MULTI-PAR LISTA")
             
         except Exception as e:
-            logger.error(f"❌ Error de conexión: {e}")
+            logger.error(f"❌ Error conexión: {e}")
             return False
 
-        # Inicializar módulos
-        self.data_manager = DataManager(self.exchange, self.symbol, self.timeframe)
+        # Inicializar componentes compartidos
         self.indicators = TechnicalIndicators({})
         self.ai_predictor = AI_Predictor({})
-        self.strategy = HybridStrategy(self.data_manager, self.indicators, self.ai_predictor, {})
-
-        await self._check_balance()
+        
+        # Inicializar UN GESTOR POR MONEDA
+        logger.info(f"📦 Desplegando {len(SYMBOLS)} sondas...")
+        for sym in SYMBOLS:
+            self.managers[sym] = DataManager(self.exchange, sym, self.timeframe)
+            
+        # Estrategia base (la iremos reutilizando)
+        self.strategy = HybridStrategy(None, self.indicators, self.ai_predictor, {})
+        
         return True
-
-    async def _check_balance(self):
-        try:
-            balance = await self.exchange.fetch_balance()
-            # En testnet el saldo suele estar directamente en el diccionario 'free' o 'total'
-            usdt = balance.get('USDT', {}).get('free', 0)
-            # Si falla, probamos la estructura estándar
-            if usdt == 0:
-                usdt = balance.get('total', {}).get('USDT', 0)
-                
-            logger.info(f"💰 SALDO FICTICIO: ${usdt:.2f} USDT")
-        except Exception as e:
-            logger.warning(f"⚠️ No se pudo leer el saldo (Error menor): {e}")
 
     async def run(self):
         self.running = True
-        logger.info("🟢 BOT OPERATIVO. Escaneando mercado...")
+        logger.info("🟢 RADAR GIRANDO... (Ctrl+C para parar)")
+        
         while self.running:
             try:
-                await self._cycle()
-                logger.info("⏳ Esperando 60 segundos...")
+                await self._scan_round()
+                logger.info("⏳ Enfriando radar (60s)...")
                 await asyncio.sleep(60)
             except Exception as e:
-                logger.error(f"Error: {e}")
+                logger.error(f"Error ciclo: {e}")
                 await asyncio.sleep(5)
 
-    async def _cycle(self):
-        logger.info(f"\n📊 --- {datetime.now().strftime('%H:%M:%S')} ---")
+    async def _scan_round(self):
+        logger.info(f"\n📡 --- ESCANEO {datetime.now().strftime('%H:%M:%S')} ---")
         
-        await self.data_manager.update_data()
-        df = self.data_manager.get_latest_data()
-        
-        if df is None or len(df) < 20:
-            logger.warning("⏳ Recopilando velas...")
-            return
+        for symbol in SYMBOLS:
+            try:
+                manager = self.managers[symbol]
+                # 1. Actualizar datos
+                await manager.update_data()
+                df = manager.get_latest_data()
+                
+                if df is None or len(df) < 20:
+                    continue
 
-        df = self.indicators.calculate_all(df)
-        price = df['close'].iloc[-1]
-        logger.info(f"💹 {self.symbol}: ${price:.2f}")
+                # 2. Calcular
+                df = self.indicators.calculate_all(df)
+                price = df['close'].iloc[-1]
+                
+                # 3. Analizar con Estrategia
+                self.strategy.data_manager = manager # Cambiamos el foco de la estrategia
+                signal, conf, _ = self.strategy.get_signal(df)
+                
+                # 4. Visualización
+                icon = "⚪"
+                if signal.value == "BUY": icon = "🟢"
+                if signal.value == "SELL": icon = "🔴"
+                
+                print(f"{icon} {symbol:<10} ${price:<10.2f} | Señal: {signal.value} ({conf:.0%})")
+                
+                # Si hay señal fuerte, aquí meteríamos la orden
+                if signal.value != "NEUTRAL":
+                    logger.info(f"🚨 ¡ALERTA EN {symbol}! Oportunidad detectada.")
 
-        signal, conf, _ = self.strategy.get_signal(df)
-        if signal.value != "NEUTRAL":
-            logger.info(f"🚨 SEÑAL: {signal.value} (Confianza: {conf:.0%})")
-        else:
-            logger.info("💤 Mercado tranquilo")
+            except Exception as e:
+                logger.error(f"Error en {symbol}: {e}")
 
 async def main():
-    bot = CryptoTradingBot()
-    if await bot.initialize():
+    radar = CryptoRadar()
+    if await radar.initialize():
         try:
-            await bot.run()
+            await radar.run()
         except KeyboardInterrupt:
-            logger.info("\n👋 Apagando...")
-            if bot.exchange: await bot.exchange.close()
+            logger.info("\n🛑 Apagando radar...")
+            if radar.exchange: await radar.exchange.close()
 
 if __name__ == "__main__":
     asyncio.run(main())
