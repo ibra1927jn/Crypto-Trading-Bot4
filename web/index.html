@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CT4 — Centro de Mando</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0e17; --surface: #111827; --surface2: #1a2332;
+            --border: #1e3a52; --text: #e2e8f0; --dim: #6b7280;
+            --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+            --blue: #3b82f6; --cyan: #06b6d4; --purple: #8b5cf6;
+        }
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; padding: 12px;
+        }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 16px; margin-bottom: 12px;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            border: 1px solid var(--border); border-radius: 8px;
+        }
+        .header h1 { font-size: 15px; font-weight: 700; }
+        .header h1 span { color: var(--cyan); }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            display: inline-block; margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+        .status-dot.live { background: var(--green); box-shadow: 0 0 8px var(--green); }
+        .status-dot.off { background: var(--red); animation: none; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .grid-full { grid-column: 1 / -1; }
+        .grid-2 { grid-column: span 2; }
+
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px; overflow: hidden;
+        }
+        .card-title {
+            font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+            color: var(--dim); margin-bottom: 8px; font-weight: 500;
+        }
+        .big-number { font-size: 28px; font-weight: 700; line-height: 1; }
+        .small-label { font-size: 10px; color: var(--dim); margin-top: 2px; }
+
+        .metric {
+            display: flex; justify-content: space-between;
+            padding: 4px 0; border-bottom: 1px solid #ffffff08;
+            font-size: 12px;
+        }
+        .metric:last-child { border: none; }
+        .metric .label { color: var(--dim); }
+        .metric .value { font-weight: 500; }
+
+        .law {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 10px; margin-bottom: 4px;
+            border-radius: 6px; font-size: 12px;
+            transition: all 0.3s;
+        }
+        .law.active { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .law.inactive { background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15); }
+        .law-icon { font-size: 14px; }
+        .law-name { font-weight: 500; flex: 1; }
+        .law-detail { color: var(--dim); font-size: 10px; }
+
+        .history-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 0; border-bottom: 1px solid #ffffff06; font-size: 11px;
+        }
+        .pnl-pos { color: var(--green); } .pnl-neg { color: var(--red); }
+
+        .equity-bar {
+            height: 4px; background: var(--surface2); border-radius: 2px;
+            margin-top: 6px; overflow: hidden;
+        }
+        .equity-fill {
+            height: 100%; border-radius: 2px;
+            transition: width 0.5s ease, background 0.5s ease;
+        }
+
+        .tag {
+            display: inline-block; font-size: 9px; padding: 2px 6px;
+            border-radius: 4px; font-weight: 600; letter-spacing: 0.5px;
+        }
+        .tag-buy { background: rgba(16, 185, 129, 0.2); color: var(--green); }
+        .tag-sell { background: rgba(239, 68, 68, 0.2); color: var(--red); }
+        .tag-hold { background: rgba(107, 114, 128, 0.2); color: var(--dim); }
+
+        .conn-badge {
+            font-size: 10px; padding: 3px 8px; border-radius: 12px;
+            font-weight: 500;
+        }
+        .conn-badge.on { background: rgba(16, 185, 129, 0.15); color: var(--green); }
+        .conn-badge.off { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .grid-2 { grid-column: span 1; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎯 <span>CT4</span> — Centro de Mando</h1>
+        <div>
+            <span class="status-dot off" id="statusDot"></span>
+            <span class="conn-badge off" id="connBadge">OFFLINE</span>
+        </div>
+    </div>
+
+    <div class="grid">
+        <!-- PRECIO -->
+        <div class="card">
+            <div class="card-title">Precio BTC/USDT</div>
+            <div class="big-number" id="price">--</div>
+            <div class="small-label">Binance Testnet</div>
+        </div>
+
+        <!-- EQUITY -->
+        <div class="card">
+            <div class="card-title">Equity Total</div>
+            <div class="big-number" id="equity" style="color: var(--green);">--</div>
+            <div class="equity-bar"><div class="equity-fill" id="equityBar" style="width: 100%; background: var(--green);"></div></div>
+            <div class="small-label" id="equityDetail">USDT + BTC×Precio</div>
+        </div>
+
+        <!-- DRAWDOWN -->
+        <div class="card">
+            <div class="card-title">Drawdown Diario</div>
+            <div class="big-number" id="drawdown" style="color: var(--green);">0.0%</div>
+            <div class="small-label">Máx permitido: 5%</div>
+        </div>
+
+        <!-- LAS 4 LEYES -->
+        <div class="card grid-2">
+            <div class="card-title">⚡ Las 4 Leyes del Francotirador</div>
+            <div id="lawsContainer">
+                <div class="law inactive"><span class="law-icon">🌊</span><span class="law-name">La Marea</span><span class="law-detail">Cargando...</span></div>
+                <div class="law inactive"><span class="law-icon">💪</span><span class="law-name">La Fuerza</span><span class="law-detail">Cargando...</span></div>
+                <div class="law inactive"><span class="law-icon">🐋</span><span class="law-name">Las Ballenas</span><span class="law-detail">Cargando...</span></div>
+                <div class="law inactive"><span class="law-icon">🔫</span><span class="law-name">El Gatillo</span><span class="law-detail">Cargando...</span></div>
+            </div>
+        </div>
+
+        <!-- INDICADORES -->
+        <div class="card">
+            <div class="card-title">📊 Indicadores</div>
+            <div class="metric"><span class="label">EMA 200</span><span class="value" id="ema200">--</span></div>
+            <div class="metric"><span class="label">EMA 9</span><span class="value" id="ema9">--</span></div>
+            <div class="metric"><span class="label">EMA 21</span><span class="value" id="ema21">--</span></div>
+            <div class="metric"><span class="label">ADX</span><span class="value" id="adx">--</span></div>
+            <div class="metric"><span class="label">ATR</span><span class="value" id="atr">--</span></div>
+            <div class="metric"><span class="label">Volumen</span><span class="value" id="volume">--</span></div>
+        </div>
+
+        <!-- MOTOR STATUS -->
+        <div class="card">
+            <div class="card-title">🤖 Estado del Motor</div>
+            <div class="metric"><span class="label">Evaluaciones</span><span class="value" id="evals">0</span></div>
+            <div class="metric"><span class="label">Señales</span><span class="value" id="signals">0</span></div>
+            <div class="metric"><span class="label">Errores API</span><span class="value" id="errors">0</span></div>
+            <div class="metric"><span class="label">Kill Switch</span><span class="value" id="killSwitch" style="color: var(--green);">OFF</span></div>
+            <div class="metric"><span class="label">Velas</span><span class="value" id="candles">--</span></div>
+            <div class="metric"><span class="label">WebSocket</span><span class="value" id="wsStatus">--</span></div>
+        </div>
+
+        <!-- POSICIONES ACTIVAS -->
+        <div class="card">
+            <div class="card-title">📂 Posiciones Activas</div>
+            <div id="positionsContainer"><div style="font-size: 11px; color: var(--dim);">Sin posiciones</div></div>
+        </div>
+
+        <!-- HISTORIAL -->
+        <div class="card grid-2">
+            <div class="card-title">📜 Historial de Trades</div>
+            <div id="historyContainer"><div style="font-size: 11px; color: var(--dim);">Sin historial</div></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/status';
+
+        function fmt(n, d=2) { return n ? Number(n).toFixed(d) : '--'; }
+        function fmtK(n) { return n > 1000 ? (n/1000).toFixed(1) + 'K' : fmt(n, 0); }
+
+        const icons = ['🌊', '💪', '🐋', '🔫'];
+
+        async function poll() {
+            try {
+                const r = await fetch(API_URL);
+                if (!r.ok) throw new Error('Offline');
+                const d = await r.json();
+                if (d.error) throw new Error(d.error);
+
+                // Connection
+                document.getElementById('statusDot').className = 'status-dot live';
+                document.getElementById('connBadge').className = 'conn-badge on';
+                document.getElementById('connBadge').textContent = 'LIVE';
+
+                // Market
+                const m = d.market;
+                document.getElementById('price').textContent = '$' + fmt(m.price);
+                document.getElementById('ema200').textContent = '$' + fmt(m.ema_200);
+                document.getElementById('ema9').textContent = '$' + fmt(m.ema_9);
+                document.getElementById('ema21').textContent = '$' + fmt(m.ema_21);
+                document.getElementById('adx').textContent = fmt(m.adx, 1);
+                document.getElementById('atr').textContent = '$' + fmt(m.atr);
+                document.getElementById('volume').textContent = fmtK(m.volume);
+                document.getElementById('candles').textContent = m.candles_count || '--';
+                document.getElementById('wsStatus').textContent = m.ws_connected ? '✅ LIVE' : '❌ DOWN';
+                document.getElementById('wsStatus').style.color = m.ws_connected ? 'var(--green)' : 'var(--red)';
+
+                // Risk
+                const risk = d.risk;
+                document.getElementById('equity').textContent = '$' + fmt(risk.current_equity);
+                document.getElementById('equityDetail').textContent =
+                    `$${fmt(risk.usdt_free)} USDT + ${fmt(risk.btc_total, 6)} BTC ($${fmt(risk.btc_value_usdt)})`;
+
+                const dd = (risk.drawdown_pct * 100);
+                document.getElementById('drawdown').textContent = dd.toFixed(1) + '%';
+                document.getElementById('drawdown').style.color = dd > 3 ? 'var(--red)' : dd > 1 ? 'var(--amber)' : 'var(--green)';
+
+                const eqPct = Math.max(0, Math.min(100, ((risk.current_equity / risk.starting_balance) * 100)));
+                document.getElementById('equityBar').style.width = eqPct + '%';
+                document.getElementById('equityBar').style.background = dd > 3 ? 'var(--red)' : dd > 1 ? 'var(--amber)' : 'var(--green)';
+
+                // Kill switch
+                const ks = document.getElementById('killSwitch');
+                ks.textContent = risk.kill_switch ? '🚨 ON' : 'OFF';
+                ks.style.color = risk.kill_switch ? 'var(--red)' : 'var(--green)';
+
+                // Alpha
+                document.getElementById('evals').textContent = d.alpha.evaluations;
+                document.getElementById('signals').textContent = d.alpha.signals_emitted;
+                document.getElementById('errors').textContent = d.execution.consecutive_errors;
+
+                // Laws
+                const laws = d.laws;
+                if (laws.ready) {
+                    const container = document.getElementById('lawsContainer');
+                    container.innerHTML = laws.laws.map((l, i) =>
+                        `<div class="law ${l.active ? 'active' : 'inactive'}">
+                            <span class="law-icon">${icons[i]}</span>
+                            <span class="law-name">${l.name}</span>
+                            <span class="law-detail">${l.detail}</span>
+                            <span>${l.active ? '✅' : '❌'}</span>
+                        </div>`
+                    ).join('');
+                }
+
+                // Positions
+                const posC = document.getElementById('positionsContainer');
+                if (d.positions.length > 0) {
+                    posC.innerHTML = d.positions.map(p =>
+                        `<div class="history-row">
+                            <span class="tag tag-buy">${p.side}</span>
+                            <span>${fmt(p.amount, 5)} ${p.symbol}</span>
+                            <span>@ $${fmt(p.entry_price)}</span>
+                        </div>`
+                    ).join('');
+                } else {
+                    posC.innerHTML = '<div style="font-size: 11px; color: var(--dim);">🔍 Francotirador en espera...</div>';
+                }
+
+                // History
+                const hC = document.getElementById('historyContainer');
+                if (d.history && d.history.length > 0) {
+                    hC.innerHTML = d.history.map(h => {
+                        const pnl = h.pnl || 0;
+                        const cls = pnl >= 0 ? 'pnl-pos' : 'pnl-neg';
+                        return `<div class="history-row">
+                            <span class="tag ${h.side === 'BUY' ? 'tag-buy' : 'tag-sell'}">${h.side}</span>
+                            <span>${fmt(h.amount, 5)} ${h.symbol}</span>
+                            <span>@ $${fmt(h.entry_price)}</span>
+                            <span class="${cls}">${pnl >= 0 ? '+' : ''}$${fmt(pnl)}</span>
+                            <span class="tag" style="background: rgba(107,114,128,0.2); color: var(--dim);">${h.status}</span>
+                        </div>`;
+                    }).join('');
+                }
+
+            } catch (e) {
+                document.getElementById('statusDot').className = 'status-dot off';
+                document.getElementById('connBadge').className = 'conn-badge off';
+                document.getElementById('connBadge').textContent = 'OFFLINE';
+            }
+        }
+
+        // Poll every 2 seconds
+        setInterval(poll, 2000);
+        poll();
+    </script>
+</body>
+</html>
