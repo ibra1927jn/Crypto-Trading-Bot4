@@ -20,7 +20,7 @@ import websockets
 
 from config.settings import (
     SYMBOL, TIMEFRAME, WARMUP_CANDLES, BINANCE_WS_BASE,
-    ATR_PERIOD, ADX_PERIOD
+    ATR_PERIOD, ADX_PERIOD, BB_PERIOD, BB_STD
 )
 from utils.logger import setup_logger
 
@@ -209,6 +209,17 @@ class DataEngine:
             if ema200 is not None:
                 df['EMA_200'] = ema200
 
+            # 1.5. EMAs adicionales (v2: para AllIn RSI + MomBurst)
+            ema5 = ta.ema(df['close'], length=5)
+            ema13 = ta.ema(df['close'], length=13)
+            ema50 = ta.ema(df['close'], length=50)
+            if ema5 is not None:
+                df['EMA_5'] = ema5
+            if ema13 is not None:
+                df['EMA_13'] = ema13
+            if ema50 is not None:
+                df['EMA_50'] = ema50
+
             # 2. Gatillos de Momentum (Crossover EMA 9/21)
             ema9 = ta.ema(df['close'], length=9)
             ema21 = ta.ema(df['close'], length=21)
@@ -235,6 +246,22 @@ class DataEngine:
 
             # 5. Volumen Institucional (SMA 20 periodos)
             df['VOL_SMA_20'] = df['volume'].rolling(window=20).mean()
+
+            # 6. Bollinger Bands (Estrategia Bollinger Bounce)
+            bbands = ta.bbands(df['close'], length=BB_PERIOD, std=BB_STD)
+            if bbands is not None:
+                # Find columns dynamically (pandas_ta naming varies by version)
+                bb_cols = bbands.columns.tolist()
+                bbl = [c for c in bb_cols if c.startswith('BBL_')]
+                bbm = [c for c in bb_cols if c.startswith('BBM_')]
+                bbu = [c for c in bb_cols if c.startswith('BBU_')]
+                if bbl and bbm and bbu:
+                    df['BB_LO'] = bbands[bbl[0]]
+                    df['BB_MID'] = bbands[bbm[0]]
+                    df['BB_HI'] = bbands[bbu[0]]
+                    # BB_PCT: 0.0 = banda inferior, 1.0 = banda superior
+                    bb_range = df['BB_HI'] - df['BB_LO']
+                    df['BB_PCT'] = (df['close'] - df['BB_LO']) / bb_range.replace(0, 1e-10)
 
         except Exception as e:
             logger.error(f"Error calculando indicadores vectorizados: {e}")
@@ -269,6 +296,7 @@ class DataEngine:
             'atr': self._safe(last, 'ATRr_14'),
             'volume': self._safe(last, 'volume'),
             'vol_sma': self._safe(last, 'VOL_SMA_20'),
+            'bb_pct': self._safe(last, 'BB_PCT'),
             'ws_connected': self.ws_connected,
             'candles_count': len(self.candles),
         }

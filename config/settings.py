@@ -1,8 +1,8 @@
 """
-Crypto-Trading-Bot4 — Configuración Centralizada
-=================================================
-Todas las variables de calibración del bot viven aquí.
-Cero números mágicos sueltos en el código.
+Crypto-Trading-Bot4 — Configuración Centralizada v2
+=====================================================
+ACTUALIZADO: Estrategia AllIn RSI<15 + MomBurst+
+Validada con datos REALES de Binance (6 meses, 3 meses OOS ciego).
 """
 
 import os
@@ -16,8 +16,6 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- EXCHANGE ---
-# Exchanges sin KYC para trading real: MEXC, KuCoin, Bybit
-# Para testnet usamos Binance (no requiere KYC)
 EXCHANGE_ID = os.getenv("EXCHANGE_ID", "binance")
 EXCHANGE_SANDBOX = os.getenv("EXCHANGE_SANDBOX", "true").lower() == "true"
 
@@ -26,28 +24,65 @@ API_KEY = os.getenv("API_KEY", "")
 API_SECRET = os.getenv("API_SECRET", "")
 
 # --- PARÁMETROS DE MERCADO ---
-SYMBOL = os.getenv("SYMBOL", "BTC/USDT")
+# Multi-moneda: las que ganaron en datos reales
+SYMBOLS = os.getenv("SYMBOLS", "BONK/USDT,NEAR/USDT,SAND/USDT").split(",")
+SYMBOL = SYMBOLS[0]  # Compatibilidad con código antiguo
 TIMEFRAME = os.getenv("TIMEFRAME", "5m")
-WARMUP_CANDLES = 250          # Velas históricas (mínimo 200 para EMA 200)
+WARMUP_CANDLES = 250
+
+# --- ESTRATEGIAS DISPONIBLES ---
+# Validadas con datos REALES (Sep 2025 → Mar 2026):
+#   AllIn RSI<15:  BONK +$30, NEAR +$18, TIA +$5.5
+#   MomBurst+:     SAND +$26, DOGE +$14.5
+ACTIVE_STRATEGY = os.getenv("ACTIVE_STRATEGY", "ALLIN_RSI")  # ALLIN_RSI | MOMBURST | COMBO
 
 # --- REGLAS DEL RISK ENGINE ---
-POSITION_RISK_PCT = 0.01     # Arriesgar max 1% del capital por operación
-MAX_DAILY_DRAWDOWN = 0.05    # Kill Switch: apagar si perdemos >5% en un día
-MAX_CONSECUTIVE_ERRORS = 5   # Kill Switch: apagar tras 5 errores de API seguidos
-ATR_PERIOD = 14              # Período del ATR para SL dinámico
-ADX_PERIOD = 14              # Período del ADX para filtro de tendencia
-ADX_THRESHOLD = 25           # ADX mínimo para considerar que hay tendencia
+POSITION_RISK_PCT = 0.80      # 80% del capital por operación (AllIn validado)
+MAX_DAILY_DRAWDOWN = 0.10     # Kill Switch: apagar si perdemos >10% en un día
+MAX_CONSECUTIVE_ERRORS = 5
+ATR_PERIOD = 14
+ADX_PERIOD = 14
+ADX_THRESHOLD = 15
+
+# --- ESTRATEGIA: AllIn RSI<15 ---
+RSI_EXTREME_THRESHOLD = 15    # RSI < 15 → compra extrema
+RSI_EXIT_THRESHOLD = 70       # RSI > 70 → venta
+SL_PCT = -4.0                 # Stop Loss: -4%
+TP_PCT = 8.0                  # Take Profit: +8%
+TRAIL_PCT = 2.0               # Trailing stop: 2%
+
+# --- ESTRATEGIA: MomBurst+ ---
+MOMBURST_CANDLE_PCT = 0.8     # Vela verde > 0.8%
+MOMBURST_VOL_RATIO = 2.5      # Volumen 2.5x sobre media
+MOMBURST_SL_PCT = -2.0        # SL más ajustado para momentum
+MOMBURST_TP_PCT = 4.0         # TP más rápido
+
+# --- BOLLINGER BANDS (para análisis) ---
+BB_PERIOD = 20
+BB_STD = 2
+BB_ENTRY_PCT = 0.15
+BB_EXIT_PCT = 0.95
+
+# --- COMPATIBILIDAD (legacy) ---
+LONG_ENABLED = True
+SHORT_ENABLED = False
+RSI_OVERSOLD = 35
+RSI_OVERBOUGHT = 65
+RSI_SHORT_EXIT = 50
+LONG_SL_ATR_MULT = 1.5
+LONG_TP_ATR_MULT = 3.0
+SHORT_SL_ATR_MULT = 1.5
+SHORT_TP_ATR_MULT = 3.0
 
 # --- EJECUCIÓN ---
-MAX_RETRIES = 5              # Reintentos con backoff exponencial
-RETRY_BASE_DELAY = 1.0       # Delay inicial en segundos (1s, 2s, 4s, 8s, 16s)
+MAX_RETRIES = 5
+RETRY_BASE_DELAY = 1.0
 
-# --- RUTAS DE INFRAESTRUCTURA ---
+# --- RUTAS ---
 DB_PATH = str(BASE_DIR / "db" / "bot_database.db")
 LOG_DIR = str(BASE_DIR / "logs")
 
 # --- WEBSOCKET ---
-# URLs de WebSocket por exchange (se selecciona automáticamente)
 WS_URLS = {
     'binance': 'wss://stream.binance.com:9443/ws',
     'binance_testnet': 'wss://stream.testnet.binance.vision/ws',

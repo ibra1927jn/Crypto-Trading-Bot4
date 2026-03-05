@@ -9,7 +9,7 @@ Coordina los 4 motores + Dashboard web:
 import asyncio
 import sys
 import uvicorn
-from db.database import init_db, get_open_positions
+from db.database import init_db, get_open_positions, close_position
 from engines.execution_engine import ExecutionEngine
 from engines.data_engine import DataEngine
 from engines.risk_engine import RiskEngine
@@ -79,8 +79,7 @@ class TradingBot:
 
     async def _on_new_candle(self):
         """
-        Ciclo completo ejecutado cuando se cierra una vela:
-        Data → Alpha (4 leyes) → Risk (ATR sizing) → Execution (OCO)
+        V2: Data → Trailing → Alpha (Momentum) → Risk → Execution
         """
         if not self.running:
             return
@@ -108,12 +107,23 @@ class TradingBot:
                 f"ATR: {market.get('atr', 0):.2f}"
             )
 
-            # 2. ALPHA: Evaluar las 4 leyes
+            # 1.5 TRAILING STOP — Rate-limit safe
             open_positions = await get_open_positions(SYMBOL)
-            has_position = len(open_positions) > 0
+            buy_positions = [p for p in open_positions if p.get('side') == 'BUY']
+            
+            for pos in buy_positions:
+                await self._update_trailing_stop(pos, market)
+
+            # 2. ALPHA: Evaluar señales
+            has_position = len(buy_positions) > 0
             signal = self.alpha_engine.get_signal(df, has_position)
 
             if signal == 'HOLD':
+                return
+
+            # ISS-06: Max 1 posición abierta por símbolo
+            if signal == 'BUY' and has_position:
+                logger.debug("🚫 BUY bloqueado: ya hay posición abierta")
                 return
 
             # 3. RISK: Validar señal + calcular sizing
@@ -150,17 +160,41 @@ class TradingBot:
                         f"TP=${validation['tp_price']:.2f}"
                     )
 
-            elif signal == 'SELL' and has_position:
-                pos = open_positions[0]
-                result = await self.execution_engine.execute_market_order(
-                    side='SELL',
-                    amount=pos['amount'],
-                )
-                if result:
+            elif signal == 'SELL' and has_position and len(buy_positions) > 0:
+                pos = buy_positions[0]
+                # BUG-01 FIX: Cancelar SL/TP existentes antes de vender
+                if pos.get('sl_order_id'):
+                    try:
+                        await self.execution_engine._retry(
+                            self.execution_engine.exchange.cancel_order,
+                            pos['sl_order_id'], SYMBOL)
+                        logger.info(f"🗑️ SL cancelado: {pos['sl_order_id']}")
+                    except Exception:
+                        pass  # Puede que ya se ejecutó
+                if pos.get('tp_order_id'):
+                    try:
+                        await self.execution_engine._retry(
+                            self.execution_engine.exchange.cancel_order,
+                            pos['tp_order_id'], SYMBOL)
+                        logger.info(f"🗑️ TP cancelado: {pos['tp_order_id']}")
+                    except Exception:
+                        pass
+                # Vender directamente sin guardar nueva posición
+                try:
+                    amount = float(self.execution_engine.exchange.amount_to_precision(
+                        SYMBOL, pos['amount']))
+                    order = await self.execution_engine._retry(
+                        self.execution_engine.exchange.create_order,
+                        SYMBOL, 'market', 'sell', amount)
+                    sell_price = order.get('average') or order.get('price', 0)
+                    pnl = (sell_price - pos['entry_price']) * pos['amount']
+                    await close_position(pos['id'], pnl)
                     logger.info(
                         f"🔴 VENTA ejecutada: {pos['amount']} {SYMBOL} "
-                        f"@ ${result['entry_price']:.2f}"
+                        f"@ ${sell_price:.2f} | PnL: ${pnl:.2f}"
                     )
+                except Exception as e:
+                    logger.error(f"❌ Error ejecutando SELL: {e}")
 
             # Actualizar balance en Risk Engine
             new_balance = await self.execution_engine.get_balance()
@@ -168,6 +202,82 @@ class TradingBot:
 
         except Exception as e:
             logger.error(f"❌ Error en ciclo de trading: {e}", exc_info=True)
+    async def _update_trailing_stop(self, pos: dict, market: dict):
+        """
+        Trailing Stop — Rate-limit safe.
+        
+        Rules:
+          1. Only activates when price is ≥0.5% above entry
+          2. New SL = price - 1.0×ATR
+          3. Only updates exchange if new SL is ≥0.2% higher than current SL
+          4. Maximum 1 update per candle (runs once per 5min)
+        """
+        entry = pos.get('entry_price', 0)
+        current_sl = pos.get('sl_price', 0)
+        sl_order_id = pos.get('sl_order_id')
+        price = market.get('price', 0)
+        atr = market.get('atr', 0)
+        
+        if not entry or not price or not atr or not sl_order_id:
+            return  # No data or no SL order to trail
+        
+        # Only trail if price is ≥0.5% above entry
+        gain_pct = (price - entry) / entry * 100
+        if gain_pct < 0.5:
+            return
+        
+        # Calculate new SL: price - 1.0×ATR (tight trailing)
+        new_sl = price - 1.0 * atr
+        
+        # Never move SL below current SL (only up)
+        if new_sl <= current_sl:
+            return
+        
+        # Only update if new SL is ≥0.2% higher than current (rate-limit protection)
+        sl_improvement = (new_sl - current_sl) / current_sl * 100
+        if sl_improvement < 0.2:
+            return
+        
+        # ── EXECUTE: Cancel old SL → Place new SL ──
+        try:
+            new_sl = float(self.execution_engine.exchange.price_to_precision(
+                SYMBOL, new_sl
+            ))
+            
+            # Cancel old SL
+            await self.execution_engine._retry(
+                self.execution_engine.exchange.cancel_order,
+                sl_order_id, SYMBOL
+            )
+            
+            # Place new SL (BUG-02 FIX: stop_loss_limit for Spot)
+            new_sl_order = await self.execution_engine._retry(
+                self.execution_engine.exchange.create_order,
+                SYMBOL, 'stop_loss_limit', 'sell', pos['amount'],
+                new_sl, {'stopPrice': new_sl}
+            )
+            new_sl_id = new_sl_order['id']
+            
+            # Update SQLite
+            from db.database import get_connection
+            db = await get_connection()
+            try:
+                await db.execute(
+                    "UPDATE positions SET sl_price = ?, sl_order_id = ? WHERE id = ?",
+                    (new_sl, new_sl_id, pos['id'])
+                )
+                await db.commit()
+            finally:
+                await db.close()
+            
+            logger.info(
+                f"📈 TRAILING SL #{pos['id']}: ${current_sl:.2f} → ${new_sl:.2f} "
+                f"(+{sl_improvement:.1f}%) | Precio: ${price:.2f} | "
+                f"Ganancia: +{gain_pct:.1f}%"
+            )
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error actualizando trailing SL: {e}")
 
     async def run(self):
         """Loop principal: bot + dashboard en el mismo event loop."""

@@ -75,47 +75,54 @@ class RiskEngine:
                                     current_price: float,
                                     current_atr: float) -> dict:
         """
-        Calcula el Sizing y los Hard SL/TP basado en el ATR.
+        Calcula el Sizing y los Hard SL/TP.
         
-        SL: 1.5x ATR de distancia (oxígeno contra caza de stops)
-        TP: 3.0x ATR de distancia (R:R asimétrico 1:2)
-        Size: Capital at Risk / SL Distance (pérdida exacta del % configurado)
+        v2: Porcentaje del capital (AllIn validated con datos REALES)
+        SL/TP basados en porcentaje configurado en settings.
         
         Returns:
             dict con 'amount', 'sl_price', 'tp_price' o None si datos inválidos
         """
-        if not current_atr or pd.isna(current_atr) or current_atr <= 0:
-            logger.warning("⚠️ ATR inválido — no se puede calcular sizing")
-            return None
+        from config.settings import SL_PCT, TP_PCT, TRAIL_PCT, ACTIVE_STRATEGY
+        from config.settings import MOMBURST_SL_PCT, MOMBURST_TP_PCT
 
-        if balance < 10 or current_price <= 0:
+        if balance < 5 or current_price <= 0:
             logger.warning(f"⚠️ Balance ({balance}) o precio ({current_price}) insuficiente")
             return None
 
-        # 1. Distancias basadas en volatilidad real (ATR)
-        sl_distance = current_atr * 1.5  # 1.5 ATRs de oxígeno
-        tp_distance = current_atr * 3.0  # R:R asimétrico 1:2
+        # 1. SL/TP basados en porcentaje (del lab real)
+        if ACTIVE_STRATEGY == 'MOMBURST':
+            sl_pct = abs(MOMBURST_SL_PCT) / 100  # 2%
+            tp_pct = abs(MOMBURST_TP_PCT) / 100  # 4%
+        else:
+            sl_pct = abs(SL_PCT) / 100  # 4%
+            tp_pct = abs(TP_PCT) / 100  # 8%
 
-        sl_price = current_price - sl_distance
-        tp_price = current_price + tp_distance
+        sl_price = current_price * (1 - sl_pct)
+        tp_price = current_price * (1 + tp_pct)
 
-        # 2. Position Sizing exacto (Kelly fraccional / Risk Parity)
-        # Dinero a perder = Balance * Riesgo% (Ej: 1% de $10,000 = $100)
-        capital_at_risk = balance * self.position_risk_pct
+        # 2. Position Sizing: % del balance (validado con datos reales)
+        # POSITION_RISK_PCT = 0.80 → 80% del capital en cada trade
+        capital_to_use = balance * self.position_risk_pct
 
-        # Tamaño = Dinero a arriesgar / Distancia del SL
-        # Si el SL salta, perdemos EXACTAMENTE el % configurado
-        amount = capital_at_risk / sl_distance
+        # Tamaño de la posición en unidades de la moneda
+        amount = capital_to_use / current_price
 
-        # 3. Límite de seguridad: nunca comprar más de lo que tenemos
-        max_possible = balance / current_price
-        final_amount = min(amount, max_possible * 0.95)  # 5% libre para fees
+        # 3. Límites de seguridad
+        max_possible = (balance * 0.95) / current_price  # Max 95%
+        final_amount = min(amount, max_possible)
+
+        # Min notional check (Binance min ~$5 para altcoins)
+        notional = final_amount * current_price
+        if notional < 5:
+            logger.warning(f"⚠️ Posición demasiado pequeña: ${notional:.2f} < $5 mínimo")
+            return None
 
         logger.info(
-            f"📐 Trade Parameters: Size={final_amount:.6f} | "
-            f"SL=${sl_price:.2f} (-{sl_distance:.2f}) | "
-            f"TP=${tp_price:.2f} (+{tp_distance:.2f}) | "
-            f"Riesgo=${capital_at_risk:.2f} ({self.position_risk_pct:.1%})"
+            f"📐 Trade v2: Size={final_amount:.2f} | "
+            f"SL=${sl_price:.6f} (-{sl_pct:.1%}) | "
+            f"TP=${tp_price:.6f} (+{tp_pct:.1%}) | "
+            f"Capital=${capital_to_use:.2f} ({self.position_risk_pct:.0%} de ${balance:.2f})"
         )
 
         return {
