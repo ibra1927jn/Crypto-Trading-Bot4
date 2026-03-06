@@ -15,7 +15,7 @@ from engines.data_engine import DataEngine
 from engines.risk_engine import RiskEngine
 from engines.alpha_engine import AlphaEngine
 from api.server import app as web_app, set_bot_reference
-from config.settings import SYMBOL, EXCHANGE_ID, EXCHANGE_SANDBOX
+from config.settings import SYMBOL, EXCHANGE_ID, EXCHANGE_SANDBOX, ACTIVE_STRATEGY, TRAIL_PCT
 from utils.logger import setup_logger
 
 logger = setup_logger("MAIN")
@@ -39,7 +39,7 @@ class TradingBot:
         logger.info("🚀 CRYPTO-TRADING-BOT4 — Iniciando...")
         logger.info(f"   Exchange: {EXCHANGE_ID} | Sandbox: {EXCHANGE_SANDBOX}")
         logger.info(f"   Símbolo: {SYMBOL}")
-        logger.info(f"   Estrategia: Trend-Momentum Híbrido (EMA200+ADX+Vol+Cross)")
+        logger.info(f"   Estrategia: {ACTIVE_STRATEGY}")
         logger.info(f"   Dashboard: http://localhost:{DASHBOARD_PORT}")
         logger.info("=" * 60)
 
@@ -101,10 +101,10 @@ class TradingBot:
             df = self.data_engine.get_dataframe()
 
             logger.info(
-                f"📈 Precio: ${market['price']:.2f} | "
-                f"EMA200: {market.get('ema_200', 0):.2f} | "
+                f"📈 Precio: ${market['price']:.6f} | "
+                f"RSI: {market.get('rsi', 0):.1f} | "
                 f"ADX: {market.get('adx', 0):.1f} | "
-                f"ATR: {market.get('atr', 0):.2f}"
+                f"ATR: {market.get('atr', 0):.6f}"
             )
 
             # 1.5 TRAILING STOP — Rate-limit safe
@@ -155,9 +155,9 @@ class TradingBot:
                 if result:
                     logger.info(
                         f"🟢 COMPRA ejecutada: {result['amount']} {SYMBOL} "
-                        f"@ ${result['entry_price']:.2f} | "
-                        f"SL=${validation['sl_price']:.2f} | "
-                        f"TP=${validation['tp_price']:.2f}"
+                        f"@ ${result['entry_price']:.6f} | "
+                        f"SL=${validation['sl_price']:.6f} | "
+                        f"TP=${validation['tp_price']:.6f}"
                     )
 
             elif signal == 'SELL' and has_position and len(buy_positions) > 0:
@@ -223,11 +223,12 @@ class TradingBot:
         
         # Only trail if price is ≥0.5% above entry
         gain_pct = (price - entry) / entry * 100
-        if gain_pct < 0.5:
+        if gain_pct < TRAIL_PCT:
             return
         
-        # Calculate new SL: price - 1.0×ATR (tight trailing)
-        new_sl = price - 1.0 * atr
+        # FIX H2: Trailing basado en porcentaje, no ATR
+        trail_distance = price * (TRAIL_PCT / 100)
+        new_sl = price - trail_distance
         
         # Never move SL below current SL (only up)
         if new_sl <= current_sl:

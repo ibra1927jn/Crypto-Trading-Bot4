@@ -1,15 +1,11 @@
 """
-Crypto-Trading-Bot4 — Risk Engine (El Escudo Dinámico)
-======================================================
+Crypto-Trading-Bot4 — Risk Engine v2 (El Escudo)
+=================================================
 Protege el capital con:
-  - Position Sizing milimétrico basado en ATR
-  - Hard SL/TP dinámicos: 1.5x ATR (SL) / 3x ATR (TP) → R:R 1:2
+  - Position Sizing porcentual (80% validado con datos REALES)
+  - SL/TP basados en porcentaje (-4% / +8%)
   - Kill Switch global (drawdown diario + errores consecutivos)
-  - Filtro ADX pre-validación
-
-El SL estático de porcentaje ha muerto.
-Usamos la volatilidad real (ATR) para poner el SL
-donde el "ruido del mercado" no nos alcance.
+  - Reset automático del kill switch al nuevo día
 """
 
 import pandas as pd
@@ -49,8 +45,8 @@ class RiskEngine:
     async def initialize(self, balance: float, exchange=None):
         """Inicializa con el balance actual y carga PnL diario."""
         self._exchange = exchange
-        today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-        daily = await get_daily_pnl(today)
+        self._current_day = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        daily = await get_daily_pnl(self._current_day)
 
         if daily:
             self.starting_balance = daily['starting_balance']
@@ -62,7 +58,7 @@ class RiskEngine:
         else:
             self.starting_balance = balance
             self.current_balance = balance
-            await upsert_daily_pnl(today, balance, balance)
+            await upsert_daily_pnl(self._current_day, balance, balance)
             logger.info(f"📊 Nuevo día de trading. Balance inicial: ${balance:.2f}")
 
         await self._check_drawdown()
@@ -204,17 +200,34 @@ class RiskEngine:
     async def _check_drawdown(self):
         """
         Kill switch por drawdown diario.
-        CORREGIDO: Usa Total Equity (USDT + BTC*precio) en vez de solo USDT.
-        Comprar BTC no es perder dinero — es cambiar de moneda.
+        Se resetea automáticamente al empezar un nuevo día.
+        Usa Total Equity (USDT + cripto*precio) en vez de solo USDT.
         """
         if self.starting_balance <= 0:
+            return
+
+        # FIX H1: Resetear kill switch al nuevo día
+        today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        if hasattr(self, '_current_day') and today != self._current_day:
+            if self.kill_switch_active:
+                logger.info(
+                    f"🔄 Nuevo día ({today}): Reseteando Kill Switch. "
+                    f"Ayer: {self._current_day}"
+                )
+            self.kill_switch_active = False
+            self.kill_reason = ""
+            self._current_day = today
+            # Nuevo día = nuevo starting balance
+            total_equity = await self._calculate_total_equity()
+            self.starting_balance = total_equity
+            await upsert_daily_pnl(today, total_equity, total_equity)
+            logger.info(f"📊 Nuevo día. Balance inicial: ${total_equity:.2f}")
             return
 
         # Calcular equity total incluyendo posiciones en cripto
         total_equity = await self._calculate_total_equity()
         drawdown = (self.starting_balance - total_equity) / self.starting_balance
 
-        today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
         await upsert_daily_pnl(today, self.starting_balance, total_equity)
 
         if drawdown >= MAX_DAILY_DRAWDOWN:

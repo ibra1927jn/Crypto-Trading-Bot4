@@ -589,11 +589,13 @@ class ExecutionEngine:
     async def get_balance(self) -> dict:
         """Obtiene el balance actual del exchange."""
         balance = await self._retry(self.exchange.fetch_balance)
+        base = SYMBOL.split('/')[0]  # FIX M2: Dinámico en vez de hardcoded BTC
         return {
             'USDT_free': balance.get('USDT', {}).get('free', 0),
             'USDT_total': balance.get('USDT', {}).get('total', 0),
-            'BTC_free': balance.get('BTC', {}).get('free', 0),
-            'BTC_total': balance.get('BTC', {}).get('total', 0),
+            'base_free': balance.get(base, {}).get('free', 0),
+            'base_total': balance.get(base, {}).get('total', 0),
+            'base_symbol': base,
         }
 
     async def get_ticker(self) -> dict:
