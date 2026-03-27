@@ -1,0 +1,20 @@
+﻿
+==========================================================================================
+­ƒÅƒ´©Å  BOT ARENA ÔÇö Laboratorio Ciego de Mejoras
+==========================================================================================
+   Monedas:  8
+   Per├¡odo:  30 d├¡as (1h)
+   Capital:  $30.00
+   Bots:     8 variantes
+==========================================================================================
+
+­ƒôÑ Descargando datos hist├│ricos...
+   ÔØî DOGE/USDT: binance GET https://api.binance.com/api/v3/exchangeInfo
+   ÔØî XRP/USDT: binance GET https://api.binance.com/api/v3/exchangeInfo
+   ÔØî FLOW/USDT: binance GET https://api.binance.com/api/v3/exchangeInfo
+   ÔØî GALA/USDT: binance GET https://api.binance.com/api/v3/exchangeInfo
+   ÔØî CHZ/USDT: binance GET https://api.binance.com/api/v3/exchangeInfo
+   ÔØî FLOKI/USDT: binance GET https://api.binance.com/api/v3/exchangeInfo
+   ÔØî PEPE/USDT: binance GET https://api.binance.com/api/v3/exchangeInfo
+   ÔØî BONK/USDT: binance GET https://api.binance.com/api/v3/exchangeInfo
+ÔØî Datos insuficientes

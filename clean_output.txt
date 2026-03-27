@@ -1,0 +1,75 @@
+============================================================
+1. ALL PYTHON PROCESSES
+============================================================
+root         947  0.0  0.2 109656 10240 ?        Ssl  Mar01   0:00 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+root      569479  0.3  6.0 399148 235176 ?       Sl   Mar14  72:20 /opt/ct4/venv/bin/python -u grid_bot.py
+root      596948  0.0  0.7 194612 27988 ?        Ssl  Mar16   2:45 /opt/ct4/venv/bin/python scripts/telegram_monitor.py
+root      738633  0.5  2.7 369372 106916 ?       Ssl  Mar23  34:24 python ./changedetection.py -d /datastore
+1000      738775  0.1  0.8  49904 32796 ?        Sl   Mar23   8:26 python3 ./server.py
+1000      739778  0.0  2.8 334332 109760 ?       Ss   Mar23   0:08 python3 manage.py document_consumer
+root     1294818  0.0  0.0   7340  1156 ?        S    Mar24   0:00 bash -c cd /opt/ct4 && NOHUP=1 nohup venv/bin/python -u api_dashboard.py </dev/null >> logs/api_dashboard.log 2>&1 &
+root     1294819  0.0  0.4  31004 18560 ?        S    Mar24   1:07 venv/bin/python -u api_dashboard.py
+root     2457266  0.0  0.4 103984 16640 ?        Ss   Mar26   0:25 /usr/bin/python3 -m http.server 9988
+root     2693761  0.0  0.0   7340  1284 ?        S    Mar26   0:00 bash -c cd /opt/ct4 && NOHUP=1 nohup venv/bin/python -u monitor_server.py </dev/null >> logs/monitor.log 2>&1 &
+root     2693762  3.4 10.5 924876 414152 ?       Rl   Mar26  40:54 venv/bin/python -u monitor_server.py
+root     2693765  0.0  0.0   7340  1284 ?        S    Mar26   0:00 bash -c cd /opt/ct4 && nohup venv/bin/python -u v15_scalper.py </dev/null >> logs/v15_scalper.log 2>&1 &
+root     2693766  0.2  7.0 675528 277184 ?       Sl   Mar26   2:40 venv/bin/python -u v15_scalper.py
+
+============================================================
+2. PORTS IN USE
+============================================================
+LISTEN 0      5            0.0.0.0:8082      0.0.0.0:*    users:(("python",pid=1294819,fd=3))                                                     
+LISTEN 0      2048         0.0.0.0:8081      0.0.0.0:*    users:(("python",pid=569479,fd=9))                                                      
+LISTEN 0      2048         0.0.0.0:8080      0.0.0.0:*    users:(("python",pid=2693762,fd=15))
+
+============================================================
+3. V14 STATE
+============================================================
+  Balance: $562.50
+  Positions: 2
+  Trades: 0
+  Kill Switch: False
+    ADA/USDT: SHORT @ 0.2605
+    SUI/USDT: SHORT @ 0.9403
+
+============================================================
+4. V15 STATE
+============================================================
+  Balance: $1002.70
+  Positions: 0
+  Trades: 336
+
+============================================================
+5. API DASHBOARD LOG (last 10 lines)
+============================================================
+File "/usr/lib/python3.12/http/server.py", line 436, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.12/http/server.py", line 404, in handle_one_request
+    self.raw_requestline = self.rfile.readline(65537)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 707, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+
+============================================================
+6. V14 LOG (last 5 lines)
+============================================================
+11:37:22 [V12] KILL SWITCH ACTIVE: Kill switch active (waiting for new day)
+11:38:22 [V12] --- Scan #3017 ---
+11:38:22 [V12] KILL SWITCH ACTIVE: Kill switch active (waiting for new day)
+11:39:22 [V12] --- Scan #3018 ---
+11:39:22 [V12] KILL SWITCH ACTIVE: Kill switch active (waiting for new day)
+
+============================================================
+7. V15 LOG (last 5 lines)
+============================================================
+Traceback (most recent call last):
+  File "c:\Users\ibrab\Desktop\Crypto-Trading-Bot4\check_all.py", line 61, in <module>
+    print(o.read().decode().strip())
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ibrab\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f4b0' in position 15: character maps to <undefined>

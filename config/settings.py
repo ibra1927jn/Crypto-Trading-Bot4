@@ -1,8 +1,8 @@
 """
-Crypto-Trading-Bot4 — Configuración Centralizada v2
-=====================================================
-ACTUALIZADO: Estrategia AllIn RSI<15 + MomBurst+
-Validada con datos REALES de Binance (6 meses, 3 meses OOS ciego).
+Crypto-Trading-Bot4 — Configuración Centralizada v3 (Sniper Rotativo)
+======================================================================
+Vigila 5 monedas, pone TODO en la mejor señal, cierra, rota.
+Estrategia RSI7<25 validada en lab con datos reales.
 """
 
 import os
@@ -23,9 +23,9 @@ EXCHANGE_SANDBOX = os.getenv("EXCHANGE_SANDBOX", "true").lower() == "true"
 API_KEY = os.getenv("API_KEY", "")
 API_SECRET = os.getenv("API_SECRET", "")
 
-# --- PARÁMETROS DE MERCADO ---
-# Multi-moneda: las que ganaron en datos reales
-SYMBOLS = os.getenv("SYMBOLS", "BONK/USDT,NEAR/USDT,SAND/USDT").split(",")
+# --- PARÁMETROS DE MERCADO (Sniper Rotativo) ---
+# 5 monedas validadas en lab agresivo + francotirador
+SYMBOLS = os.getenv("SYMBOLS", "XRP/USDT,DOGE/USDT,AVAX/USDT,SHIB/USDT,SOL/USDT").split(",")
 SYMBOL = SYMBOLS[0]  # Compatibilidad con código antiguo
 TIMEFRAME = os.getenv("TIMEFRAME", "5m")
 WARMUP_CANDLES = 250
@@ -37,18 +37,18 @@ WARMUP_CANDLES = 250
 ACTIVE_STRATEGY = os.getenv("ACTIVE_STRATEGY", "ALLIN_RSI")  # ALLIN_RSI | MOMBURST | COMBO
 
 # --- REGLAS DEL RISK ENGINE ---
-POSITION_RISK_PCT = 0.80      # 80% del capital por operación (AllIn validado)
+POSITION_RISK_PCT = 0.90      # 90% all-in en la mejor señal (Sniper Rotativo)
 MAX_DAILY_DRAWDOWN = 0.10     # Kill Switch: apagar si perdemos >10% en un día
 MAX_CONSECUTIVE_ERRORS = 5
 ATR_PERIOD = 14
 ADX_PERIOD = 14
 ADX_THRESHOLD = 15
 
-# --- ESTRATEGIA: AllIn RSI<15 ---
-RSI_EXTREME_THRESHOLD = 15    # RSI < 15 → compra extrema
+# --- ESTRATEGIA: RSI7<25→30 Sniper (Optimizada) ---
+RSI_EXTREME_THRESHOLD = 30    # RSI7 < 30 → compra (sweep óptimo: 13 trades, 62% WR)
 RSI_EXIT_THRESHOLD = 70       # RSI > 70 → venta
-SL_PCT = -4.0                 # Stop Loss: -4%
-TP_PCT = 8.0                  # Take Profit: +8%
+SL_PCT = -3.0                 # Stop Loss: -3% (R:R 1:1.67)
+TP_PCT = 5.0                  # Take Profit: +5%
 TRAIL_PCT = 2.0               # Trailing stop: 2%
 
 # --- ESTRATEGIA: MomBurst+ ---

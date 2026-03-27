@@ -1,30 +1,14 @@
 """
-Crypto-Trading-Bot4 — Alpha Engine v2 (Lab-Validated, Real Data)
-================================================================
-Estrategias validadas con datos REALES de Binance (Sep 2025 → Mar 2026):
-
-ESTRATEGIA 1: AllIn RSI<15 (la ganadora #1)
-  - Compra cuando RSI < 15 y empieza a rebotar
-  - Resultado REAL: BONK +$30, NEAR +$18 en 3 meses de bear market
-  - WR 67%, DD 6.3%
-
-ESTRATEGIA 2: MomBurst+ (la ganadora #2)
-  - Compra explosiones de momentum (vela verde >0.8% + volumen 2.5x)
-  - Resultado REAL: SAND +$26, DOGE +$14.5 en 3 meses de bear market
-  - WR 48%, DD 10.6%
-
-ESTRATEGIA 3: Combo Killer (la más consistente)
-  - BB bajo + volumen alto + RSI rebotando + vela verde
-  - Positiva en APT +$8.6, FIL +$10.5
-  - WR 65%, DD 4.3%
+Crypto-Trading-Bot4 — Alpha Engine v3 (Sniper Rotativo)
+=======================================================
+Evalúa TODAS las monedas y devuelve la MEJOR señal.
+Score basado en RSI7, volumen, MACD, y posición en Bollinger.
 """
 
 import pandas as pd
 from config.settings import (
-    ACTIVE_STRATEGY, RSI_EXTREME_THRESHOLD, RSI_EXIT_THRESHOLD,
-    SL_PCT, TP_PCT, TRAIL_PCT,
-    MOMBURST_CANDLE_PCT, MOMBURST_VOL_RATIO,
-    ADX_THRESHOLD, BB_ENTRY_PCT, BB_EXIT_PCT
+    RSI_EXTREME_THRESHOLD, RSI_EXIT_THRESHOLD,
+    ACTIVE_STRATEGY
 )
 from utils.logger import setup_logger
 
@@ -33,259 +17,219 @@ logger = setup_logger("ALPHA")
 
 class AlphaEngine:
     """
-    Motor de señales v2: Estrategias validadas con datos REALES.
-    
-    Modos:
-      - ALLIN_RSI:  Compra en RSI extremo (< 15) → La más rentable
-      - MOMBURST:   Compra explosiones de momentum → La más rápida
-      - COMBO:      BB bajo + volumen + RSI → La más consistente
+    Sniper Rotativo: evalúa N monedas y devuelve la mejor oportunidad.
     """
 
     def __init__(self):
-        self.evaluations = 0
-        self.signals_emitted = 0
-        self.strategy = ACTIVE_STRATEGY
-        logger.info(f"🎯 Alpha Engine v2 inicializado | Estrategia: {self.strategy}")
+        logger.info(
+            f"🎯 Sniper Rotativo inicializado | "
+            f"RSI7 < {RSI_EXTREME_THRESHOLD} | EXIT RSI > {RSI_EXIT_THRESHOLD}"
+        )
 
-    def get_signal(self, df: pd.DataFrame, has_open_position: bool, position_side: str = 'LONG') -> str:
-        """
-        Evalúa el mercado y emite señal.
-        REGLA ANTI-REPAINTING: Solo evaluamos velas CERRADAS.
-        """
-        if df is None or len(df) < 250:
-            return 'HOLD'
-
-        closed = df.iloc[-2]  # Última vela CERRADA
-        prev = df.iloc[-3]    # Penúltima vela cerrada
-        prev2 = df.iloc[-4] if len(df) > 3 else prev
-
-        self.evaluations += 1
-
-        # Si tenemos posición abierta → buscar EXIT
-        if has_open_position and position_side == 'LONG':
-            return self._check_exit(closed, prev)
-
-        # Sin posición → buscar ENTRY
-        if not has_open_position:
-            if self.strategy == 'ALLIN_RSI':
-                return self._check_allin_rsi(closed, prev, prev2)
-            elif self.strategy == 'MOMBURST':
-                return self._check_momburst(closed, prev, prev2)
-            elif self.strategy == 'COMBO':
-                return self._check_combo(closed, prev, prev2)
-            else:
-                logger.warning(f"⚠️ Estrategia desconocida: {self.strategy}")
-                return 'HOLD'
-
-        return 'HOLD'
-
-    # ──────────────────────────────────────────────
-    # STRATEGY 1: AllIn RSI<15
-    # ──────────────────────────────────────────────
-    def _check_allin_rsi(self, closed, prev, prev2) -> str:
-        """
-        AllIn RSI<15 — La estrategia #1 en datos reales.
-        
-        Compra cuando:
-          1. RSI anterior < 15 (caída extrema)
-          2. RSI actual > RSI anterior (REBOTE confirmado)
-          3. Precio > EMA50 × 0.95 (no está en caída libre total)
-        
-        Lab REAL: BONK +$29.9 (+30%), NEAR +$17.8 (+18%) en 3 meses
-        """
-        rsi_now = self._safe(closed, 'RSI_14')
-        rsi_prev = self._safe(prev, 'RSI_14')
-        ema50 = self._safe(closed, 'EMA_50')
-        price = closed['close']
-
-        # NaN safety
-        if rsi_now == 0 or rsi_prev == 0 or ema50 == 0:
-            return 'HOLD'
-
-        # Condiciones
-        rsi_extreme = rsi_prev < RSI_EXTREME_THRESHOLD
-        rsi_bouncing = rsi_now > rsi_prev
-        not_freefall = price > ema50 * 0.95
-
-        # Log cada 10 evaluaciones
-        if self.evaluations % 10 == 0:
-            logger.info(
-                f"📊 Eval #{self.evaluations} [AllIn RSI] | "
-                f"RSI={rsi_now:.0f}(prev:{rsi_prev:.0f}) "
-                f"{'✅' if rsi_extreme else '❌'}(<{RSI_EXTREME_THRESHOLD}) | "
-                f"Rebote={'✅' if rsi_bouncing else '❌'} | "
-                f"EMA50={'✅' if not_freefall else '❌'}"
-            )
-
-        if rsi_extreme and rsi_bouncing and not_freefall:
-            self.signals_emitted += 1
-            logger.info(
-                f"🎯 ALLIN RSI #{self.signals_emitted}: BUY | "
-                f"RSI: {rsi_prev:.0f} → {rsi_now:.0f} (rebote desde <{RSI_EXTREME_THRESHOLD}) | "
-                f"Precio: ${price:.6f}"
-            )
-            return 'BUY'
-
-        return 'HOLD'
-
-    # ──────────────────────────────────────────────
-    # STRATEGY 2: MomBurst+
-    # ──────────────────────────────────────────────
-    def _check_momburst(self, closed, prev, prev2) -> str:
-        """
-        MomBurst+ — Explosiones de momentum.
-        
-        Compra cuando:
-          1. Vela verde grande (> 0.8% de subida)
-          2. Volumen 2.5x superior a la media de 20 velas
-          3. Precio > EMA9 (momentum alcista)
-        
-        Lab REAL: SAND +$25.6 (+26%), DOGE +$14.5 (+14.5%) en 3 meses
-        """
-        price = closed['close']
-        open_p = closed['open']
-        volume = closed['volume']
-        vol_sma = self._safe(closed, 'VOL_SMA_20')
-        ema9 = self._safe(closed, 'EMA_9')
-
-        if vol_sma == 0 or ema9 == 0:
-            return 'HOLD'
-
-        # Condiciones
-        candle_pct = (price - open_p) / open_p * 100
-        big_green = candle_pct > MOMBURST_CANDLE_PCT
-        high_volume = volume > vol_sma * MOMBURST_VOL_RATIO
-        above_ema9 = price > ema9
-
-        if self.evaluations % 10 == 0:
-            logger.info(
-                f"📊 Eval #{self.evaluations} [MomBurst] | "
-                f"Vela={candle_pct:.2f}%{'✅' if big_green else '❌'} | "
-                f"Vol={volume/vol_sma:.1f}x{'✅' if high_volume else '❌'} | "
-                f"EMA9={'✅' if above_ema9 else '❌'}"
-            )
-
-        if big_green and high_volume and above_ema9:
-            self.signals_emitted += 1
-            logger.info(
-                f"🚀 MOMBURST #{self.signals_emitted}: BUY | "
-                f"Vela: +{candle_pct:.2f}% | "
-                f"Vol: {volume/vol_sma:.1f}x | "
-                f"Precio: ${price:.6f}"
-            )
-            return 'BUY'
-
-        return 'HOLD'
-
-    # ──────────────────────────────────────────────
-    # STRATEGY 3: Combo Killer
-    # ──────────────────────────────────────────────
-    def _check_combo(self, closed, prev, prev2) -> str:
-        """
-        Combo Killer — La más consistente.
-        
-        Compra cuando TODAS las condiciones se cumplen:
-          1. BB% < 0.20 (precio en zona baja de Bollinger)
-          2. Volumen > 1.5x media (interés del mercado)
-          3. RSI rebotando (momentum cambiando)
-          4. Vela verde (confirmación de compra)
-          5. Precio > EMA50 × 0.98 (no en tendencia bajista fuerte)
-        
-        Lab REAL: APT +$8.6, FIL +$10.5, WR 65%, DD 4.3%
-        """
-        bb_pct = self._safe(closed, 'BB_PCT')
-        rsi_now = self._safe(closed, 'RSI_14')
-        rsi_prev = self._safe(prev, 'RSI_14')
-        vol_sma = self._safe(closed, 'VOL_SMA_20')
-        ema50 = self._safe(closed, 'EMA_50')
-        price = closed['close']
-        volume = closed['volume']
-
-        if vol_sma == 0 or ema50 == 0 or bb_pct == 0:
-            return 'HOLD'
-
-        # Condiciones
-        bb_low = bb_pct < 0.20
-        vol_high = volume > vol_sma * 1.5
-        rsi_bounce = rsi_now > rsi_prev
-        green_candle = price > closed['open']
-        not_crash = price > ema50 * 0.98
-
-        if self.evaluations % 10 == 0:
-            logger.info(
-                f"📊 Eval #{self.evaluations} [Combo] | "
-                f"BB%={bb_pct:.2f}{'✅' if bb_low else '❌'} | "
-                f"Vol={volume/vol_sma:.1f}x{'✅' if vol_high else '❌'} | "
-                f"RSI↑={'✅' if rsi_bounce else '❌'} | "
-                f"Green={'✅' if green_candle else '❌'}"
-            )
-
-        if bb_low and vol_high and rsi_bounce and green_candle and not_crash:
-            self.signals_emitted += 1
-            logger.info(
-                f"⚡ COMBO #{self.signals_emitted}: BUY | "
-                f"BB%: {bb_pct:.3f} | RSI: {rsi_now:.0f} | "
-                f"Vol: {volume/vol_sma:.1f}x | "
-                f"Precio: ${price:.6f}"
-            )
-            return 'BUY'
-
-        return 'HOLD'
-
-    # ──────────────────────────────────────────────
-    # EXIT — Universal para todas las estrategias
-    # ──────────────────────────────────────────────
-    def _check_exit(self, closed, prev) -> str:
-        """
-        Señal de salida LONG.
-        
-        Vende cuando:
-          1. RSI > 70 (sobrecompra → hora de vender)
-          2. Cruce bajista EMA5 < EMA13 (momentum perdido)
-          3. BB% > 0.95 (precio en banda superior)
-        """
-        # SALIDA 1: RSI alta (sobrecompra)
-        rsi_now = self._safe(closed, 'RSI_14')
-        if rsi_now > RSI_EXIT_THRESHOLD:
-            self.signals_emitted += 1
-            logger.info(
-                f"🔴 EXIT #{self.signals_emitted}: RSI Overbought | "
-                f"RSI: {rsi_now:.0f} > {RSI_EXIT_THRESHOLD} | "
-                f"Precio: ${closed['close']:.6f}"
-            )
-            return 'SELL'
-
-        # SALIDA 2: Cruce bajista EMA5/13
-        ema5_now = self._safe(closed, 'EMA_5')
-        ema13_now = self._safe(closed, 'EMA_13')
-        ema5_prev = self._safe(prev, 'EMA_5')
-        ema13_prev = self._safe(prev, 'EMA_13')
-        
-        if ema5_prev > 0 and ema13_prev > 0:
-            if ema5_prev >= ema13_prev and ema5_now < ema13_now:
-                self.signals_emitted += 1
-                logger.info(
-                    f"🔴 EXIT #{self.signals_emitted}: Cruce bajista EMA5 < EMA13 | "
-                    f"Precio: ${closed['close']:.6f}"
-                )
-                return 'SELL'
-
-        # SALIDA 3: BB% alta (banda superior)
-        bb_pct = self._safe(closed, 'BB_PCT')
-        if bb_pct > BB_EXIT_PCT:
-            self.signals_emitted += 1
-            logger.info(
-                f"🔴 EXIT #{self.signals_emitted}: BB Upper Band | "
-                f"BB%: {bb_pct:.3f} > {BB_EXIT_PCT} | "
-                f"Precio: ${closed['close']:.6f}"
-            )
-            return 'SELL'
-
-        return 'HOLD'
-
-    def _safe(self, row, col, default=0):
-        """Extrae valor numérico seguro de una fila."""
-        val = row.get(col, default)
-        if pd.isna(val):
+    def _safe(self, row, col, default=0.0) -> float:
+        if row is None:
             return default
-        return float(val)
+        val = row.get(col) if isinstance(row, dict) else (
+            row[col] if col in row.index else None
+        )
+        return float(val) if val is not None and not pd.isna(val) else default
+
+    # ==========================================================
+    # SCORING: Evalúa una señal de compra (0-100)
+    # ==========================================================
+
+    def _score_buy_signal(self, snapshot: dict, df: pd.DataFrame) -> float:
+        """
+        Calcula un score de 0-100 para una señal de compra.
+        Más alto = mejor oportunidad. 0 = no comprar.
+        """
+        if df is None or len(df) < 60:
+            return 0.0
+
+        last = df.iloc[-2]   # Última vela CERRADA
+        prev = df.iloc[-3]   # Anterior
+
+        rsi7 = self._safe(last, 'RSI_7', 50)
+        rsi7_prev = self._safe(prev, 'RSI_7', 50)
+        rsi14 = self._safe(last, 'RSI_14', 50)
+        vol_ratio = self._safe(last, 'VOL_RATIO', 1.0)
+        macd = self._safe(last, 'MACD', 0)
+        macd_s = self._safe(last, 'MACD_S', 0)
+        stoch_k = self._safe(last, 'STOCH_K', 50)
+        bb_lo = self._safe(last, 'BB_LO', 0)
+        bb_mid = self._safe(last, 'BB_MID', 0)
+        price = snapshot.get('price', 0)
+
+        score = 0.0
+
+        # ── CONDICIÓN BASE: RSI7 debe estar bajo y SUBIENDO ──
+        if rsi7 >= RSI_EXTREME_THRESHOLD or rsi7 <= rsi7_prev:
+            return 0.0  # No hay señal
+
+        # ── PUNTOS POR RSI7 (más bajo = mejor) ──
+        # RSI7 = 5 → 40 pts, RSI7 = 15 → 20 pts, RSI7 = 24 → 2 pts
+        rsi_score = max(0, (RSI_EXTREME_THRESHOLD - rsi7) * 2)
+        score += min(rsi_score, 40)
+
+        # ── PUNTOS POR VOLUMEN (confirmación) ──
+        if vol_ratio > 2.0:
+            score += 20  # Volumen 2x = confirmación fuerte
+        elif vol_ratio > 1.5:
+            score += 15
+        elif vol_ratio > 1.2:
+            score += 10
+        elif vol_ratio > 1.0:
+            score += 5
+
+        # ── PUNTOS POR MACD (momentum) ──
+        if macd > macd_s:
+            score += 10  # MACD cruzando al alza
+        elif macd > macd_s * 0.95:
+            score += 5   # Cerca de cruzar
+
+        # ── PUNTOS POR POSICIÓN EN BOLLINGER ──
+        if bb_lo > 0 and price > 0:
+            if price <= bb_lo * 1.01:
+                score += 15  # En banda inferior = sobreventa extrema
+            elif price < bb_mid:
+                score += 5   # Bajo la media
+
+        # ── PUNTOS POR STOCHASTIC ──
+        if stoch_k < 20:
+            score += 10  # Stochastic también sobrevendido
+        elif stoch_k < 30:
+            score += 5
+
+        # ── PUNTOS POR RSI14 BAJO (confirmación adicional) ──
+        if rsi14 < 30:
+            score += 5
+        elif rsi14 < 40:
+            score += 2
+
+        return score
+
+    # ==========================================================
+    # SEÑAL DE SALIDA
+    # ==========================================================
+
+    def should_exit(self, df: pd.DataFrame) -> bool:
+        """¿Debería cerrar la posición actual?"""
+        if df is None or len(df) < 3:
+            return False
+
+        last = df.iloc[-2]
+        rsi7 = self._safe(last, 'RSI_7', 50)
+
+        # Salir si RSI7 > umbral de salida
+        if rsi7 > RSI_EXIT_THRESHOLD:
+            return True
+
+        # Salir si MACD cruza a la baja (momentum se acaba)
+        macd = self._safe(last, 'MACD', 0)
+        macd_s = self._safe(last, 'MACD_S', 0)
+        prev = df.iloc[-3]
+        macd_prev = self._safe(prev, 'MACD', 0)
+        macd_s_prev = self._safe(prev, 'MACD_S', 0)
+
+        if macd_prev > macd_s_prev and macd < macd_s:
+            return True  # MACD death cross
+
+        return False
+
+    # ==========================================================
+    # SNIPER ROTATIVO: Buscar la MEJOR señal entre N monedas
+    # ==========================================================
+
+    def get_best_signal(
+        self,
+        snapshots: dict,
+        dataframes: dict,
+        has_position: bool,
+        external_scores: dict = None,
+    ) -> dict:
+        """
+        Evalúa todas las monedas y devuelve la mejor señal.
+        
+        Score total = Técnico (0-100) + Externo (-20 to +20)
+
+        Args:
+            external_scores: {symbol: {'total_boost': 10, ...}} from NewsEngine
+
+        Returns:
+            {
+                'signal': 'BUY' | 'HOLD',
+                'symbol': 'XRP/USDT',
+                'score': 72.5,
+                'all_scores': {'XRP/USDT': 72.5, 'DOGE/USDT': 45, ...}
+            }
+        """
+        # Si ya tenemos posición, no buscar nuevas señales
+        if has_position:
+            return {'signal': 'HOLD', 'symbol': None, 'score': 0, 'all_scores': {}}
+
+        scores = {}
+        for symbol in snapshots:
+            snap = snapshots[symbol]
+            df = dataframes.get(symbol)
+            
+            # Score técnico (0-100)
+            technical = self._score_buy_signal(snap, df)
+            
+            # Score externo (-20 to +20)
+            ext_boost = 0
+            if external_scores and symbol in external_scores:
+                ext_boost = external_scores[symbol].get('total_boost', 0)
+            
+            # Score total
+            total = max(0, technical + ext_boost)
+            scores[symbol] = total
+            
+            if technical > 0:
+                logger.debug(
+                    f"  {symbol}: Tech={technical:.0f} + Ext={ext_boost:+d} = {total:.0f}"
+                )
+
+        # Encontrar la mejor
+        best_symbol = max(scores, key=scores.get) if scores else None
+        best_score = scores.get(best_symbol, 0) if best_symbol else 0
+
+        # Umbral mínimo: score > 20 para comprar
+        MIN_SCORE = 20
+        if best_score >= MIN_SCORE:
+            logger.info(
+                f"🎯 Señal encontrada: {best_symbol} (score: {best_score:.0f}) | "
+                f"Scores: {', '.join(f'{s}={sc:.0f}' for s, sc in sorted(scores.items(), key=lambda x: -x[1]))}"
+            )
+            return {
+                'signal': 'BUY',
+                'symbol': best_symbol,
+                'score': best_score,
+                'all_scores': scores,
+            }
+
+        return {'signal': 'HOLD', 'symbol': None, 'score': 0, 'all_scores': scores}
+
+    # ==========================================================
+    # COMPATIBILIDAD (para código legacy)
+    # ==========================================================
+
+    def get_signal(self, df: pd.DataFrame, has_position: bool = False) -> str:
+        """Compatibilidad con código antiguo (single-coin)."""
+        if df is None or len(df) < 60:
+            return 'HOLD'
+
+        last = df.iloc[-2]
+        prev = df.iloc[-3]
+
+        rsi7 = self._safe(last, 'RSI_7', 50)
+        rsi7_prev = self._safe(prev, 'RSI_7', 50)
+
+        if has_position:
+            if rsi7 > RSI_EXIT_THRESHOLD:
+                return 'SELL'
+            return 'HOLD'
+
+        if rsi7 < RSI_EXTREME_THRESHOLD and rsi7 > rsi7_prev:
+            return 'BUY'
+
+        return 'HOLD'

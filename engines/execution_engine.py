@@ -14,7 +14,7 @@ import asyncio
 import ccxt.async_support as ccxt
 from typing import Optional
 from config.settings import (
-    API_KEY, API_SECRET, SYMBOL, MAX_RETRIES, RETRY_BASE_DELAY,
+    API_KEY, API_SECRET, SYMBOL, SYMBOLS, MAX_RETRIES, RETRY_BASE_DELAY,
     EXCHANGE_ID, EXCHANGE_SANDBOX
 )
 from db.database import (
@@ -83,18 +83,17 @@ class ExecutionEngine:
         """
         Secuencia de despertar: reconcilia el estado real del exchange
         con la base de datos local (SQLite).
-        
-        Detecta y resuelve:
+
+        Itera todos los SYMBOLS (multi-coin) para detectar:
           - Posiciones que el exchange cerró mientras el bot estaba offline
-            (SQLite dice OPEN pero exchange dice que no existe → CLOSED)
           - Posiciones huérfanas en el exchange que SQLite no conoce
-            (Exchange tiene posición pero SQLite está vacío → ORPHANED alert)
-        
+
         Returns:
             dict con balance, posiciones reales y resultado de reconciliación
         """
         logger.info("=" * 50)
         logger.info("🔄 SECUENCIA DE DESPERTAR — Iniciando...")
+        logger.info(f"   Vigilando {len(SYMBOLS)} monedas: {', '.join(SYMBOLS)}")
         logger.info("=" * 50)
 
         # 1. Leer BALANCE real del exchange
@@ -103,18 +102,23 @@ class ExecutionEngine:
         usdt_total = balance.get('USDT', {}).get('total', 0)
         logger.info(f"💰 Balance USDT — Libre: {usdt_free:.2f} | Total: {usdt_total:.2f}")
 
-        # 2. Leer ÓRDENES ABIERTAS reales del exchange
-        open_orders = await self._retry(
-            self.exchange.fetch_open_orders, SYMBOL
-        )
-        logger.info(f"📋 Órdenes abiertas en exchange: {len(open_orders)}")
+        # 2. Leer ÓRDENES ABIERTAS para TODOS los símbolos
+        all_open_orders = []
+        all_local_positions = []
+        for sym in SYMBOLS:
+            try:
+                orders = await self._retry(self.exchange.fetch_open_orders, sym)
+                all_open_orders.extend(orders)
+                positions = await get_open_positions(sym)
+                all_local_positions.extend(positions)
+            except Exception as e:
+                logger.warning(f"⚠️ Error leyendo {sym} en wake-up: {e}")
 
-        # 3. Leer POSICIONES ABIERTAS en SQLite
-        local_positions = await get_open_positions(SYMBOL)
-        logger.info(f"📂 Posiciones OPEN en SQLite: {len(local_positions)}")
+        logger.info(f"📋 Órdenes abiertas (todos los pares): {len(all_open_orders)}")
+        logger.info(f"📂 Posiciones OPEN en SQLite: {len(all_local_positions)}")
 
-        # 4. RECONCILIACIÓN BIDIRECCIONAL
-        await self._reconcile(local_positions, open_orders, balance)
+        # 3. RECONCILIACIÓN BIDIRECCIONAL (usando primer símbolo como referencia)
+        await self._reconcile(all_local_positions, all_open_orders, balance)
 
         logger.info("=" * 50)
         logger.info("✅ SECUENCIA DE DESPERTAR — Completada")
@@ -123,8 +127,8 @@ class ExecutionEngine:
         return {
             'usdt_free': usdt_free,
             'usdt_total': usdt_total,
-            'open_orders': len(open_orders),
-            'local_positions': len(local_positions),
+            'open_orders': len(all_open_orders),
+            'local_positions': len(all_local_positions),
         }
 
     async def _reconcile(self, local_positions: list, 
@@ -225,7 +229,7 @@ class ExecutionEngine:
     # RECONCILIACIÓN EN VIVO (cada vela)
     # ==========================================================
 
-    async def check_open_positions(self) -> dict:
+    async def check_open_positions(self, symbol: str = None) -> dict:
         """
         Loop de reconciliación OCO que corre cada vela.
         
@@ -246,7 +250,8 @@ class ExecutionEngine:
         }
         
         try:
-            positions = await get_open_positions(SYMBOL)
+            sym = symbol or SYMBOL
+            positions = await get_open_positions(sym)
             if not positions:
                 return result
 
@@ -254,7 +259,7 @@ class ExecutionEngine:
             
             # Obtener órdenes abiertas en el exchange
             open_orders = await self._retry(
-                self.exchange.fetch_open_orders, SYMBOL
+                self.exchange.fetch_open_orders, sym
             )
             exchange_order_ids = {o['id'] for o in open_orders}
 
@@ -288,7 +293,7 @@ class ExecutionEngine:
                     try:
                         await self._retry(
                             self.exchange.cancel_order,
-                            which_cancel, SYMBOL
+                            which_cancel, sym
                         )
                         logger.info(
                             f"✅ Orden {'SL' if sl_alive else 'TP'} cancelada: {which_cancel}"
@@ -348,7 +353,8 @@ class ExecutionEngine:
 
     async def execute_market_order(self, side: str, amount: float,
                                    sl_price: float = None,
-                                   tp_price: float = None) -> Optional[dict]:
+                                   tp_price: float = None,
+                                   symbol: str = None) -> Optional[dict]:
         """
         Ejecuta orden de mercado + Hard SL/TP en el exchange.
         
@@ -372,14 +378,15 @@ class ExecutionEngine:
             return None
 
         # 1. TRUNCAR PRECISIÓN (evitar HTTP 400 de Binance)
-        amount = float(self.exchange.amount_to_precision(SYMBOL, amount))
+        sym = symbol or SYMBOL
+        amount = float(self.exchange.amount_to_precision(sym, amount))
         if sl_price:
-            sl_price = float(self.exchange.price_to_precision(SYMBOL, sl_price))
+            sl_price = float(self.exchange.price_to_precision(sym, sl_price))
         if tp_price:
-            tp_price = float(self.exchange.price_to_precision(SYMBOL, tp_price))
+            tp_price = float(self.exchange.price_to_precision(sym, tp_price))
 
         logger.info(
-            f"📤 Enviando orden: {side} {amount} {SYMBOL} | "
+            f"📤 Enviando orden: {side} {amount} {sym} | "
             f"SL: {sl_price} | TP: {tp_price}"
         )
 
@@ -387,7 +394,7 @@ class ExecutionEngine:
             # 2. ORDEN DE MERCADO PRINCIPAL
             order = await self._retry(
                 self.exchange.create_order,
-                SYMBOL, 'market', side.lower(), amount
+                sym, 'market', side.lower(), amount
             )
             entry_price = order.get('average') or order.get('price', 0)
             logger.info(
@@ -414,17 +421,16 @@ class ExecutionEngine:
 
             if sl_price:
                 sl_order_id = await self._place_stop_loss(
-                    close_side, amount, sl_price
+                    close_side, amount, sl_price, sym
                 )
 
             if tp_price:
                 tp_order_id = await self._place_take_profit(
-                    close_side, amount, tp_price
+                    close_side, amount, tp_price, sym
                 )
 
-            # 4. GUARDAR EN SQLITE
             position_id = await save_position(
-                symbol=SYMBOL,
+                symbol=sym,
                 side=side.upper(),
                 amount=amount,
                 entry_price=entry_price,
@@ -438,7 +444,7 @@ class ExecutionEngine:
             await save_order(
                 position_id=position_id,
                 exchange_order_id=order['id'],
-                symbol=SYMBOL,
+                symbol=sym,
                 side=side.upper(),
                 order_type='MARKET',
                 amount=amount,
@@ -463,12 +469,13 @@ class ExecutionEngine:
             return None
 
     async def _place_stop_loss(self, side: str, amount: float, 
-                                price: float) -> Optional[str]:
+                                price: float, symbol: str = None) -> Optional[str]:
         """Coloca Hard Stop Loss en el servidor del exchange."""
+        sym = symbol or SYMBOL
         try:
             sl_order = await self._retry(
                 self.exchange.create_order,
-                SYMBOL, 'stop_loss_limit', side, amount,
+                sym, 'stop_loss_limit', side, amount,
                 price,  # limit price
                 {'stopPrice': price}
             )
@@ -479,12 +486,13 @@ class ExecutionEngine:
             return None
 
     async def _place_take_profit(self, side: str, amount: float, 
-                                  price: float) -> Optional[str]:
+                                  price: float, symbol: str = None) -> Optional[str]:
         """Coloca Take Profit en el servidor del exchange."""
+        sym = symbol or SYMBOL
         try:
             tp_order = await self._retry(
                 self.exchange.create_order,
-                SYMBOL, 'take_profit_limit', side, amount,
+                sym, 'take_profit_limit', side, amount,
                 price,  # limit price
                 {'stopPrice': price}
             )
@@ -516,7 +524,7 @@ class ExecutionEngine:
         for i in range(max_checks):
             await asyncio.sleep(0.3 * (1.5 ** i))  # 0.3s, 0.45s, 0.67s...
             order = await self._retry(
-                self.exchange.fetch_order, order_id, SYMBOL
+                self.exchange.fetch_order, order_id, symbol  # FIX: usar símbolo pasado como parámetro
             )
             status = order.get('status')
             logger.debug(f"⏳ Esperando fill... intento {i+1}/{max_checks} | status={status}")
@@ -537,47 +545,53 @@ class ExecutionEngine:
     async def emergency_shutdown(self):
         """
         BOTÓN NUCLEAR: Cancela todas las órdenes abiertas y cierra
-        cualquier posición a mercado. Se invoca cuando el Kill Switch 
-        del Risk Engine se activa.
+        cualquier posición a mercado para TODOS los símbolos monitoreados.
+        Se invoca cuando el Kill Switch del Risk Engine se activa.
         """
         logger.critical("🚨🚨🚨 EMERGENCY SHUTDOWN ACTIVADO 🚨🚨🚨")
 
         try:
-            # 1. Cancelar TODAS las órdenes abiertas
-            open_orders = await self._retry(
-                self.exchange.fetch_open_orders, SYMBOL
-            )
-            for order in open_orders:
-                try:
-                    await self.exchange.cancel_order(order['id'], SYMBOL)
-                    logger.warning(f"❌ Orden cancelada: {order['id']}")
-                except Exception as e:
-                    logger.error(f"Error cancelando orden {order['id']}: {e}")
-
-            # 2. Cerrar posiciones abiertas (vender todo el activo base)
             balance = await self._retry(self.exchange.fetch_balance)
-            symbol_base = SYMBOL.split('/')[0]
-            base_balance = balance.get(symbol_base, {}).get('free', 0)
 
-            if base_balance > 0:
-                amount = float(
-                    self.exchange.amount_to_precision(SYMBOL, base_balance)
-                )
-                if amount > 0:
-                    close_order = await self.exchange.create_order(
-                        SYMBOL, 'market', 'sell', amount
+            for sym in SYMBOLS:
+                try:
+                    # 1. Cancelar TODAS las órdenes abiertas del par
+                    open_orders = await self._retry(
+                        self.exchange.fetch_open_orders, sym
                     )
-                    logger.warning(
-                        f"📉 Posición cerrada a mercado: {close_order['id']} "
-                        f"| Vendido: {amount} {symbol_base}"
-                    )
+                    for order in open_orders:
+                        try:
+                            await self.exchange.cancel_order(order['id'], sym)
+                            logger.warning(f"❌ Orden cancelada: {order['id']} ({sym})")
+                        except Exception as e:
+                            logger.error(f"Error cancelando orden {order['id']}: {e}")
 
-            # 3. Marcar posiciones locales como cerradas
-            local_open = await get_open_positions(SYMBOL)
-            for pos in local_open:
-                await close_position(pos['id'], pnl=None)
+                    # 2. Cerrar posiciones abiertas (vender todo el activo base)
+                    symbol_base = sym.split('/')[0]
+                    base_balance = balance.get(symbol_base, {}).get('free', 0)
 
-            logger.critical("🏁 Emergency shutdown completado.")
+                    if base_balance > 0:
+                        amount = float(
+                            self.exchange.amount_to_precision(sym, base_balance)
+                        )
+                        if amount > 0:
+                            close_order = await self.exchange.create_order(
+                                sym, 'market', 'sell', amount
+                            )
+                            logger.warning(
+                                f"📉 Posición cerrada a mercado: {close_order['id']} "
+                                f"| Vendido: {amount} {symbol_base} ({sym})"
+                            )
+
+                    # 3. Marcar posiciones locales como cerradas
+                    local_open = await get_open_positions(sym)
+                    for pos in local_open:
+                        await close_position(pos['id'], pnl=None)
+
+                except Exception as e:
+                    logger.error(f"Error en emergency shutdown para {sym}: {e}")
+
+            logger.critical("🏁 Emergency shutdown completado para todos los pares.")
 
         except Exception as e:
             logger.critical(f"💀 Error FATAL durante emergency shutdown: {e}")

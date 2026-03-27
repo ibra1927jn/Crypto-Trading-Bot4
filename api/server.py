@@ -14,6 +14,8 @@ import json
 import os
 import numpy as np
 
+from config.settings import SYMBOLS
+
 
 class NumpySafeEncoder(json.JSONEncoder):
     """JSON encoder que convierte numpy types a Python nativo."""
@@ -182,3 +184,48 @@ async def serve_dashboard():
     if os.path.exists(index_path):
         return FileResponse(index_path)
     return {"error": "Dashboard not found"}
+
+
+@app.post("/api/backtest")
+async def run_backtest(params: dict = None):
+    """
+    Ejecuta backtest integrado.
+    POST body: {"coins": ["XRP","DOGE"], "days": 30, "sl": 3, "tp": 5, "rsi": 30, "sweep": false}
+    """
+    from engines.backtest_engine import BacktestEngine
+
+    params = params or {}
+    coins = params.get('coins', [c.split('/')[0] for c in SYMBOLS])
+    coins = [f"{c}/USDT" if '/' not in c else c for c in coins]
+    days = params.get('days', 30)
+    capital = params.get('capital', 30.0)
+    do_sweep = params.get('sweep', False)
+
+    bt = BacktestEngine(initial_balance=capital)
+    data = bt.fetch_data(coins, timeframe='1h', days=days)
+
+    if not data:
+        return {"error": "No data downloaded"}
+
+    if do_sweep:
+        results = bt.sweep(data)
+        return Response(
+            content=json.dumps([{
+                'label': r['label'], 'pnl': r['pnl'], 'trades': r['trades'],
+                'wr': r['wr'], 'max_dd': r['max_dd'], 'daily_pnl': r['daily_pnl'],
+            } for r in results], cls=NumpySafeEncoder),
+            media_type="application/json"
+        )
+    else:
+        m = bt.run(data,
+                   rsi_entry=params.get('rsi'),
+                   sl_pct=params.get('sl'),
+                   tp_pct=params.get('tp'),
+                   verbose=False)
+        # Remove non-serializable fields
+        m.pop('equity_curve', None)
+        m.pop('trades_list', None)
+        return Response(
+            content=json.dumps(m, cls=NumpySafeEncoder, default=str),
+            media_type="application/json"
+        )

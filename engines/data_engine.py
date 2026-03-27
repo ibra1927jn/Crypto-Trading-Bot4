@@ -1,25 +1,19 @@
 """
-Crypto-Trading-Bot4 — Data Engine (Los Ojos)
-=============================================
-Lee el mercado en tiempo real y calcula indicadores institucionales.
-
-Indicadores:
-  - EMA 200: Filtro Macro (la marea general)
-  - EMA 9/21: Gatillos de Momentum (crossover)
-  - ADX 14: Fuerza de tendencia (filtro anti-rango)
-  - ATR 14: Volatilidad real (para SL dinámico)
-  - VOL SMA 20: Volumen institucional (filtro de ballenas)
+Crypto-Trading-Bot4 — Data Engine v3 (Sniper Rotativo)
+======================================================
+Vigila MÚLTIPLES monedas simultáneamente via combined WebSocket.
+Calcula indicadores para cada moneda independientemente.
 """
 
 import asyncio
 import json
-from typing import Optional, Callable
+from typing import Optional, Callable, Dict
 import pandas as pd
 import pandas_ta as ta
 import websockets
 
 from config.settings import (
-    SYMBOL, TIMEFRAME, WARMUP_CANDLES, BINANCE_WS_BASE,
+    SYMBOLS, TIMEFRAME, WARMUP_CANDLES, BINANCE_WS_BASE,
     ATR_PERIOD, ADX_PERIOD, BB_PERIOD, BB_STD
 )
 from utils.logger import setup_logger
@@ -34,71 +28,76 @@ TIMEFRAME_MAP = {
 
 class DataEngine:
     """
-    Motor de datos: ojos del bot.
-    Mantiene un DataFrame de velas OHLCV + indicadores institucionales.
+    Motor de datos multi-moneda: vigila N monedas simultáneamente.
+    Mantiene un DataFrame por moneda con indicadores institucionales.
     """
 
     def __init__(self):
-        self.candles: Optional[pd.DataFrame] = None
-        self.current_price: float = 0.0
+        self.candles: Dict[str, pd.DataFrame] = {}  # {symbol: DataFrame}
+        self.current_prices: Dict[str, float] = {}   # {symbol: price}
         self.ws_connected: bool = False
         self._ws = None
         self._on_candle_close: Optional[Callable] = None
 
     # ==========================================================
-    # WARM-UP
+    # WARM-UP (descarga historial para TODAS las monedas)
     # ==========================================================
 
     async def warmup(self, exchange):
-        """
-        Descarga las últimas N velas históricas via REST.
-        Mínimo 250 para que la EMA 200 no devuelva NaN.
-        """
+        """Descarga velas históricas para cada moneda."""
         logger.info(
-            f"🔥 Warm-up: Descargando últimas {WARMUP_CANDLES} velas "
-            f"de {SYMBOL} ({TIMEFRAME})..."
+            f"🔥 Warm-up: {len(SYMBOLS)} monedas × {WARMUP_CANDLES} velas ({TIMEFRAME})"
         )
 
-        ohlcv = await exchange.fetch_ohlcv(
-            SYMBOL, TIMEFRAME, limit=WARMUP_CANDLES
-        )
+        for symbol in SYMBOLS:
+            try:
+                ohlcv = await exchange.fetch_ohlcv(
+                    symbol, TIMEFRAME, limit=WARMUP_CANDLES
+                )
 
-        self.candles = pd.DataFrame(
-            ohlcv,
-            columns=['timestamp', 'open', 'high', 'low', 'close', 'volume']
-        )
-        self.candles['timestamp'] = pd.to_datetime(
-            self.candles['timestamp'], unit='ms', utc=True
-        )
-        self.candles.set_index('timestamp', inplace=True)
+                df = pd.DataFrame(
+                    ohlcv,
+                    columns=['timestamp', 'open', 'high', 'low', 'close', 'volume']
+                )
+                df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms', utc=True)
+                df.set_index('timestamp', inplace=True)
 
-        self._calculate_indicators()
-        self.current_price = float(self.candles['close'].iloc[-1])
+                self.candles[symbol] = df
+                self._calculate_indicators(symbol)
+                self.current_prices[symbol] = float(df['close'].iloc[-1])
 
-        # Log con nuevos indicadores
-        last = self.candles.iloc[-2]  # Última vela CERRADA
-        logger.info(
-            f"✅ Warm-up completo: {len(self.candles)} velas | "
-            f"Precio: ${self.current_price:.2f} | "
-            f"EMA200: {self._safe(last, 'EMA_200'):.2f} | "
-            f"ADX: {self._safe(last, 'ADX_14'):.1f} | "
-            f"RSI: {self._safe(last, 'RSI_14'):.1f} | "
-            f"ATR: {self._safe(last, 'ATRr_14'):.2f}"
-        )
+                last = df.iloc[-2]  # Última vela CERRADA
+                logger.info(
+                    f"  ✅ {symbol}: {len(df)} velas | "
+                    f"${self.current_prices[symbol]:.6f} | "
+                    f"RSI7: {self._safe(last, 'RSI_7'):.1f}"
+                )
+            except Exception as e:
+                logger.error(f"  ❌ {symbol}: Error en warm-up: {e}")
+
+        logger.info(f"✅ Warm-up completo: {len(self.candles)} monedas listas")
 
     # ==========================================================
-    # WEBSOCKET
+    # WEBSOCKET MULTI-MONEDA (combined stream)
     # ==========================================================
 
     async def start_websocket(self):
-        """WebSocket con auto-reconnect y anti-zombie (ping_timeout)."""
-        symbol_ws = SYMBOL.replace('/', '').lower()
+        """WebSocket combined stream para todas las monedas."""
         tf = TIMEFRAME_MAP.get(TIMEFRAME, '5m')
-        ws_url = f"{BINANCE_WS_BASE}/{symbol_ws}@kline_{tf}"
+
+        # Binance combined stream: stream?streams=xrpusdt@kline_5m/dogeusdt@kline_5m/...
+        streams = []
+        for symbol in SYMBOLS:
+            sym_ws = symbol.replace('/', '').lower()
+            streams.append(f"{sym_ws}@kline_{tf}")
+
+        # Combined stream URL
+        base = BINANCE_WS_BASE.replace('/ws', '')
+        ws_url = f"{base}/stream?streams={'/'.join(streams)}"
 
         while True:
             try:
-                logger.info(f"🔌 Conectando WebSocket: {ws_url}")
+                logger.info(f"🔌 Conectando WebSocket multi-coin: {len(SYMBOLS)} monedas")
 
                 async with websockets.connect(
                     ws_url,
@@ -107,7 +106,9 @@ class DataEngine:
                 ) as ws:
                     self._ws = ws
                     self.ws_connected = True
-                    logger.info("✅ WebSocket conectado — recibiendo datos en vivo")
+                    logger.info(
+                        f"✅ WebSocket conectado — {', '.join(SYMBOLS)}"
+                    )
 
                     async for message in ws:
                         await self._process_ws_message(message)
@@ -123,11 +124,23 @@ class DataEngine:
                 await asyncio.sleep(10)
 
     async def _process_ws_message(self, message: str):
-        """Procesa un mensaje del WebSocket de klines."""
+        """Procesa mensaje del combined stream (tiene campo 'stream' extra)."""
         try:
             data = json.loads(message)
+
+            # Combined stream wraps data in {stream: "...", data: {...}}
+            if 'data' in data:
+                stream_name = data.get('stream', '')
+                data = data['data']
+            
             kline = data.get('k', {})
             if not kline:
+                return
+
+            # Identificar el símbolo
+            raw_symbol = kline.get('s', '').upper()  # e.g. "XRPUSDT"
+            symbol = self._raw_to_symbol(raw_symbol)
+            if not symbol or symbol not in self.candles:
                 return
 
             ts = pd.Timestamp(kline['t'], unit='ms', tz='UTC')
@@ -136,7 +149,9 @@ class DataEngine:
                 float(kline['c']), float(kline['v'])
             )
             is_closed = kline['x']
-            self.current_price = c
+            self.current_prices[symbol] = c
+
+            df = self.candles[symbol]
 
             if is_closed:
                 new_row = pd.DataFrame(
@@ -145,40 +160,39 @@ class DataEngine:
                     index=pd.DatetimeIndex([ts], name='timestamp')
                 )
 
-                if ts in self.candles.index:
-                    self.candles.loc[ts, ['open', 'high', 'low', 'close', 'volume']] = [o, h, l, c, v]
+                if ts in df.index:
+                    df.loc[ts, ['open', 'high', 'low', 'close', 'volume']] = [o, h, l, c, v]
                 else:
-                    self.candles = pd.concat([self.candles, new_row])
+                    self.candles[symbol] = pd.concat([df, new_row])
 
                 # Buffer circular
-                if len(self.candles) > WARMUP_CANDLES + 20:
-                    self.candles = self.candles.iloc[-WARMUP_CANDLES:]
+                if len(self.candles[symbol]) > WARMUP_CANDLES + 20:
+                    self.candles[symbol] = self.candles[symbol].iloc[-WARMUP_CANDLES:]
 
-                self._calculate_indicators()
+                self._calculate_indicators(symbol)
 
-                last = self.candles.iloc[-1]
+                last = self.candles[symbol].iloc[-1]
                 logger.debug(
-                    f"🕯️ Vela cerrada: C={c:.2f} | "
-                    f"EMA9={self._safe(last, 'EMA_9'):.2f} | "
-                    f"EMA21={self._safe(last, 'EMA_21'):.2f} | "
-                    f"ADX={self._safe(last, 'ADX_14'):.1f}"
+                    f"🕯️ {symbol} cerrada: C={c:.6f} | "
+                    f"RSI7={self._safe(last, 'RSI_7'):.1f}"
                 )
 
                 if self._on_candle_close:
                     await self._on_candle_close()
             else:
-                if ts in self.candles.index:
-                    self.candles.loc[ts, ['open', 'high', 'low', 'close', 'volume']] = [o, h, l, c, v]
-                else:
-                    new_row = pd.DataFrame(
-                        {'open': [o], 'high': [h], 'low': [l],
-                         'close': [c], 'volume': [v]},
-                        index=pd.DatetimeIndex([ts], name='timestamp')
-                    )
-                    self.candles = pd.concat([self.candles, new_row])
+                # Update current candle in-place
+                if ts in df.index:
+                    df.loc[ts, ['open', 'high', 'low', 'close', 'volume']] = [o, h, l, c, v]
 
         except Exception as e:
             logger.error(f"Error procesando mensaje WS: {e}")
+
+    def _raw_to_symbol(self, raw: str) -> Optional[str]:
+        """Convierte 'XRPUSDT' → 'XRP/USDT'."""
+        for symbol in SYMBOLS:
+            if symbol.replace('/', '') == raw:
+                return symbol
+        return None
 
     def set_on_candle_close(self, callback: Callable):
         self._on_candle_close = callback
@@ -190,67 +204,52 @@ class DataEngine:
             logger.info("WebSocket cerrado.")
 
     # ==========================================================
-    # INDICADORES INSTITUCIONALES
+    # INDICADORES (por moneda)
     # ==========================================================
 
-    def _calculate_indicators(self):
-        """
-        Calcula todos los indicadores institucionales vectorizados.
-        pandas-ta usa Numba (JIT → C nativo) para velocidad extrema.
-        """
-        if self.candles is None or len(self.candles) < 200:
-            return  # No hay historia suficiente para la EMA 200
+    def _calculate_indicators(self, symbol: str):
+        """Calcula indicadores para una moneda específica."""
+        df = self.candles.get(symbol)
+        if df is None or len(df) < 200:
+            return
 
         try:
-            df = self.candles
-
-            # 1. Filtro Macro (La Marea general)
+            # EMA 200
             ema200 = ta.ema(df['close'], length=200)
             if ema200 is not None:
                 df['EMA_200'] = ema200
 
-            # 1.5. EMAs adicionales (v2: para AllIn RSI + MomBurst)
-            ema5 = ta.ema(df['close'], length=5)
-            ema13 = ta.ema(df['close'], length=13)
-            ema50 = ta.ema(df['close'], length=50)
-            if ema5 is not None:
-                df['EMA_5'] = ema5
-            if ema13 is not None:
-                df['EMA_13'] = ema13
-            if ema50 is not None:
-                df['EMA_50'] = ema50
+            # EMAs cortas
+            for length in [5, 9, 13, 21, 50]:
+                ema = ta.ema(df['close'], length=length)
+                if ema is not None:
+                    df[f'EMA_{length}'] = ema
 
-            # 2. Gatillos de Momentum (Crossover EMA 9/21)
-            ema9 = ta.ema(df['close'], length=9)
-            ema21 = ta.ema(df['close'], length=21)
-            if ema9 is not None:
-                df['EMA_9'] = ema9
-            if ema21 is not None:
-                df['EMA_21'] = ema21
-
-            # 3. Fuerza de tendencia (ADX) + Volatilidad (ATR)
+            # ADX + ATR
             adx_df = ta.adx(df['high'], df['low'], df['close'], length=ADX_PERIOD)
             if adx_df is not None:
                 df['ADX_14'] = adx_df[f'ADX_{ADX_PERIOD}']
-                df['DMP_14'] = adx_df[f'DMP_{ADX_PERIOD}']
-                df['DMN_14'] = adx_df[f'DMN_{ADX_PERIOD}']
 
             atr = ta.atr(df['high'], df['low'], df['close'], length=ATR_PERIOD)
             if atr is not None:
                 df['ATRr_14'] = atr
 
-            # 4. RSI — EL NUEVO GATILLO (Buy the Dip)
-            rsi = ta.rsi(df['close'], length=14)
-            if rsi is not None:
-                df['RSI_14'] = rsi
+            # RSI 14 + RSI 7 (el gatillo principal del Sniper)
+            rsi14 = ta.rsi(df['close'], length=14)
+            if rsi14 is not None:
+                df['RSI_14'] = rsi14
+            rsi7 = ta.rsi(df['close'], length=7)
+            if rsi7 is not None:
+                df['RSI_7'] = rsi7
 
-            # 5. Volumen Institucional (SMA 20 periodos)
+            # Volumen
             df['VOL_SMA_20'] = df['volume'].rolling(window=20).mean()
+            vol_sma = df['VOL_SMA_20'].replace(0, 1e-10)
+            df['VOL_RATIO'] = df['volume'] / vol_sma
 
-            # 6. Bollinger Bands (Estrategia Bollinger Bounce)
+            # Bollinger Bands
             bbands = ta.bbands(df['close'], length=BB_PERIOD, std=BB_STD)
             if bbands is not None:
-                # Find columns dynamically (pandas_ta naming varies by version)
                 bb_cols = bbands.columns.tolist()
                 bbl = [c for c in bb_cols if c.startswith('BBL_')]
                 bbm = [c for c in bb_cols if c.startswith('BBM_')]
@@ -259,44 +258,83 @@ class DataEngine:
                     df['BB_LO'] = bbands[bbl[0]]
                     df['BB_MID'] = bbands[bbm[0]]
                     df['BB_HI'] = bbands[bbu[0]]
-                    # BB_PCT: 0.0 = banda inferior, 1.0 = banda superior
-                    bb_range = df['BB_HI'] - df['BB_LO']
-                    df['BB_PCT'] = (df['close'] - df['BB_LO']) / bb_range.replace(0, 1e-10)
+
+            # MACD
+            macd_df = ta.macd(df['close'])
+            if macd_df is not None:
+                mc = [c for c in macd_df.columns if c.startswith('MACD_')]
+                ms = [c for c in macd_df.columns if c.startswith('MACDs_')]
+                if mc:
+                    df['MACD'] = macd_df[mc[0]]
+                if ms:
+                    df['MACD_S'] = macd_df[ms[0]]
+
+            # Stochastic
+            stoch = ta.stoch(df['high'], df['low'], df['close'])
+            if stoch is not None:
+                sk = [c for c in stoch.columns if 'STOCHk' in c]
+                if sk:
+                    df['STOCH_K'] = stoch[sk[0]]
 
         except Exception as e:
-            logger.error(f"Error calculando indicadores vectorizados: {e}")
+            logger.error(f"Error calculando indicadores {symbol}: {e}")
 
     # ==========================================================
     # GETTERS
     # ==========================================================
 
     def _safe(self, row, col) -> float:
-        """Extrae valor numérico seguro de una fila del DataFrame."""
         val = row.get(col) if isinstance(row, dict) else row[col] if col in row.index else None
         return float(val) if val is not None and pd.notna(val) else 0.0
 
-    def get_dataframe(self) -> Optional[pd.DataFrame]:
-        """Retorna el DataFrame completo con indicadores."""
+    def get_dataframe(self, symbol: str = None) -> Optional[pd.DataFrame]:
+        """Retorna DataFrame de una moneda (o la primera si no se especifica)."""
+        if symbol:
+            return self.candles.get(symbol)
+        # Compatibilidad: devuelve la primera
+        if self.candles:
+            return list(self.candles.values())[0]
+        return None
+
+    def get_all_dataframes(self) -> Dict[str, pd.DataFrame]:
+        """Retorna todos los DataFrames."""
         return self.candles
 
-    def get_market_snapshot(self) -> dict:
-        """Retorna resumen del mercado para logging."""
-        if self.candles is None or len(self.candles) < 2:
-            return {'price': self.current_price, 'ws_connected': self.ws_connected}
+    def get_market_snapshot(self, symbol: str = None) -> dict:
+        """Retorna snapshot de UNA moneda."""
+        if symbol is None:
+            symbol = SYMBOLS[0] if SYMBOLS else None
+        if symbol is None or symbol not in self.candles:
+            return {'price': 0, 'ws_connected': self.ws_connected}
 
-        last = self.candles.iloc[-2]  # Última vela CERRADA
+        df = self.candles[symbol]
+        if len(df) < 2:
+            return {'price': self.current_prices.get(symbol, 0), 'ws_connected': self.ws_connected}
+
+        last = df.iloc[-2]  # Última vela CERRADA (anti-repainting)
         return {
-            'price': self.current_price,
+            'symbol': symbol,
+            'price': self.current_prices.get(symbol, 0),
             'last_close': self._safe(last, 'close'),
             'ema_200': self._safe(last, 'EMA_200'),
             'ema_9': self._safe(last, 'EMA_9'),
             'ema_21': self._safe(last, 'EMA_21'),
             'adx': self._safe(last, 'ADX_14'),
             'rsi': self._safe(last, 'RSI_14'),
+            'rsi_7': self._safe(last, 'RSI_7'),
             'atr': self._safe(last, 'ATRr_14'),
             'volume': self._safe(last, 'volume'),
             'vol_sma': self._safe(last, 'VOL_SMA_20'),
-            'bb_pct': self._safe(last, 'BB_PCT'),
+            'vol_ratio': self._safe(last, 'VOL_RATIO'),
+            'bb_lo': self._safe(last, 'BB_LO'),
+            'bb_mid': self._safe(last, 'BB_MID'),
+            'macd': self._safe(last, 'MACD'),
+            'macd_s': self._safe(last, 'MACD_S'),
+            'stoch_k': self._safe(last, 'STOCH_K'),
             'ws_connected': self.ws_connected,
-            'candles_count': len(self.candles),
+            'candles_count': len(df),
         }
+
+    def get_all_snapshots(self) -> Dict[str, dict]:
+        """Retorna snapshot de TODAS las monedas (para el Sniper Rotativo)."""
+        return {symbol: self.get_market_snapshot(symbol) for symbol in SYMBOLS}
