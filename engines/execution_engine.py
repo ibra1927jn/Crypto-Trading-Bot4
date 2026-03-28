@@ -48,8 +48,9 @@ class ExecutionEngine:
     # ==========================================================
 
     async def connect(self):
-        """Crea la conexión async a Binance Testnet."""
-        logger.info("Conectando a Binance Testnet...")
+        """Crea la conexion async al exchange (testnet o live segun config)."""
+        mode = "TESTNET/Sandbox" if EXCHANGE_SANDBOX else "LIVE"
+        logger.info(f"Conectando a {EXCHANGE_ID.upper()} ({mode})...")
 
         exchange_class = getattr(ccxt, EXCHANGE_ID)
         self.exchange = exchange_class({
@@ -63,11 +64,18 @@ class ExecutionEngine:
             }
         })
 
+        # Activar sandbox/testnet de CCXT si corresponde
+        if EXCHANGE_SANDBOX:
+            self.exchange.set_sandbox_mode(True)
+
         # Cargar mercados (necesario para precision de decimales)
         await self._retry(self.exchange.load_markets)
         self.markets_loaded = True
 
-        logger.info(f"✅ Conectado a Binance Testnet. Mercados cargados: {len(self.exchange.markets)}")
+        logger.info(
+            f"Conectado a {EXCHANGE_ID.upper()} ({mode}). "
+            f"Mercados: {len(self.exchange.markets)}"
+        )
 
     async def disconnect(self):
         """Cierra la conexión al exchange limpiamente."""

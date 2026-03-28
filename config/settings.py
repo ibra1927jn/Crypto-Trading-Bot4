@@ -17,7 +17,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- EXCHANGE ---
 EXCHANGE_ID = os.getenv("EXCHANGE_ID", "binance")
-EXCHANGE_SANDBOX = os.getenv("EXCHANGE_SANDBOX", "true").lower() == "true"
+# TESTNET y EXCHANGE_SANDBOX son sinonimos — cualquiera activa sandbox mode
+_testnet = os.getenv("TESTNET", "").lower() == "true"
+_sandbox = os.getenv("EXCHANGE_SANDBOX", "true").lower() == "true"
+EXCHANGE_SANDBOX = _testnet or _sandbox
 
 # --- CREDENCIALES ---
 API_KEY = os.getenv("API_KEY", "")
