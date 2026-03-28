@@ -16,6 +16,7 @@
 - [2026-03-28] | Scoring Engine — engines/scoring_engine.py (reglas ponderadas: RSI, volumen, momentum, MACD, BB, ADX)
 - [2026-03-28] | Backtest Runner — scripts/backtest/backtest_runner.py (PnL, win rate, drawdown, Sharpe, JSON output)
 - [2026-03-28] | .gitignore reparado (estaba corrupto con encoding roto)
+- [2026-03-28] | Position sizing 90%→10%, trend filter EMA50/EMA200, backtest slippage 0.1% | Commit f516759
 
 ## Pendiente
 - Ejecucion completa con agentes de IA autonomos | Prioridad: baja
