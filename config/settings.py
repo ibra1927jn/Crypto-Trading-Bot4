@@ -40,7 +40,7 @@ WARMUP_CANDLES = 250
 ACTIVE_STRATEGY = os.getenv("ACTIVE_STRATEGY", "ALLIN_RSI")  # ALLIN_RSI | MOMBURST | COMBO
 
 # --- REGLAS DEL RISK ENGINE ---
-POSITION_RISK_PCT = 0.90      # 90% all-in en la mejor señal (Sniper Rotativo)
+POSITION_RISK_PCT = float(os.getenv("POSITION_RISK_PCT", "0.10"))  # 10% por trade (supervivencia > agresividad)
 MAX_DAILY_DRAWDOWN = 0.10     # Kill Switch: apagar si perdemos >10% en un día
 MAX_CONSECUTIVE_ERRORS = 5
 ATR_PERIOD = 14

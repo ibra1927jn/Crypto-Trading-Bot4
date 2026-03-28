@@ -252,6 +252,17 @@ class ScoringEngine:
                 signals: dict con score individual de cada senal
                 recommendation: texto legible
         """
+        # Filtro de tendencia: si EMA50 < EMA200, mercado bajista → score 0
+        ema50 = _safe_val(data, 'ema_50', 0)
+        ema200 = _safe_val(data, 'ema_200', 0)
+        if ema50 > 0 and ema200 > 0 and ema50 < ema200 * 0.98:
+            return {
+                'score': 0, 'verdict': 'SKIP',
+                'recommendation': 'Tendencia bajista (EMA50 < EMA200). No entrar.',
+                'signals': {k: 0.0 for k in self.weights},
+                'weights': self.weights,
+            }
+
         signals = {
             'rsi':       self._score_rsi(data),
             'volume':    self._score_volume(data),
@@ -332,6 +343,7 @@ class ScoringEngine:
             'ema_9':          _get(row, 'EMA_9', 0),
             'ema_21':         _get(row, 'EMA_21', 0),
             'ema_50':         _get(row, 'EMA_50', 0),
+            'ema_200':        _get(row, 'EMA_200', 0),
             'macd':           macd_val,
             'macd_signal':    macd_s,
             'macd_hist':      macd_hist,

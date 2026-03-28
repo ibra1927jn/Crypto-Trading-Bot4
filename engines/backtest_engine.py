@@ -12,6 +12,7 @@ Uso:
 
 import asyncio
 import argparse
+import os
 import sys
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Optional
@@ -24,6 +25,10 @@ from config.settings import (
     POSITION_RISK_PCT, RSI_EXTREME_THRESHOLD, RSI_EXIT_THRESHOLD,
     SL_PCT, TP_PCT, TRAIL_PCT, ATR_PERIOD, ADX_PERIOD, BB_PERIOD, BB_STD
 )
+
+# Slippage: simula la diferencia entre precio teorico y precio real de ejecucion
+# 0.001 = 0.1% (conservador para altcoins liquidas en Binance)
+SLIPPAGE_PCT = float(os.getenv("BACKTEST_SLIPPAGE", "0.001"))
 from utils.logger import setup_logger
 
 logger = setup_logger("BACKTEST")
@@ -46,6 +51,12 @@ def score_buy(row, prev, rsi_threshold=None):
     rsi7_prev = _safe(prev, 'RSI_7', 50)
 
     if rsi7 >= rsi_th or rsi7 <= rsi7_prev:
+        return 0.0
+
+    # Filtro de tendencia: no comprar si EMA50 < EMA200 (mercado bajista)
+    ema50 = _safe(row, 'EMA_50', 0)
+    ema200 = _safe(row, 'EMA_200', 0)
+    if ema50 > 0 and ema200 > 0 and ema50 < ema200 * 0.98:
         return 0.0
 
     score = min((rsi_th - rsi7) * 2, 40)
@@ -229,6 +240,8 @@ class BacktestEngine:
                 rsi_out = rsi7 > rsi_x
 
                 if hit_sl or hit_tp or rsi_out:
+                    # Slippage en salida: recibimos un poco menos del precio teorico
+                    price = price * (1 - SLIPPAGE_PCT)
                     pnl = (price - pos['entry']) * pos['amount']
                     bal += pnl
                     peak = max(peak, bal)
@@ -258,6 +271,8 @@ class BacktestEngine:
 
                 if best_coin and best_score >= min_score:
                     price = data[best_coin].loc[ts, 'close']
+                    # Slippage en entrada: pagamos un poco mas del precio teorico
+                    price = price * (1 + SLIPPAGE_PCT)
                     amount = (bal * pos_pct / 100) / price
                     pos = {
                         'coin': best_coin, 'entry': price, 'amount': amount,

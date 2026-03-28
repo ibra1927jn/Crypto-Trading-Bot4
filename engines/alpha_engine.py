@@ -60,11 +60,19 @@ class AlphaEngine:
         bb_mid = self._safe(last, 'BB_MID', 0)
         price = snapshot.get('price', 0)
 
+        ema50 = self._safe(last, 'EMA_50', 0)
+        ema200 = self._safe(last, 'EMA_200', 0)
+
         score = 0.0
 
         # ── CONDICIÓN BASE: RSI7 debe estar bajo y SUBIENDO ──
         if rsi7 >= RSI_EXTREME_THRESHOLD or rsi7 <= rsi7_prev:
             return 0.0  # No hay señal
+
+        # ── FILTRO DE TENDENCIA: no comprar en caida libre ──
+        # Si EMA200 existe y EMA50 esta por debajo, el mercado es bajista
+        if ema50 > 0 and ema200 > 0 and ema50 < ema200 * 0.98:
+            return 0.0  # Tendencia bajista confirmada, no comprar
 
         # ── PUNTOS POR RSI7 (más bajo = mejor) ──
         # RSI7 = 5 → 40 pts, RSI7 = 15 → 20 pts, RSI7 = 24 → 2 pts

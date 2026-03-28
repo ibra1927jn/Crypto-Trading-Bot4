@@ -21,6 +21,11 @@
 - [2026-03-28] | requirements.txt | Línea 3 tenía `fastapi>=0.110.0 ===` (malformado) → pip install fallaba | Limpiado a `fastapi>=0.110.0`
 - [2026-03-28] | .gitignore | Archivo corrupto con encoding roto, faltaban reglas críticas | Reescrito con cobertura: __pycache__/, *.pyc, .env, db/*.db, *.csv, *.txt, scoring_ai/vector_db.json, build/
 
+## Risk Management (2026-03-28)
+- [2026-03-28] | config/settings.py | POSITION_RISK_PCT=0.90 (90% all-in) — 3-4 SL consecutivos activan kill switch, quemando el dia de trading | Reducido a 0.10 (10%) con override via env var. Supervivencia > agresividad
+- [2026-03-28] | engines/alpha_engine.py, scoring_engine.py, backtest_engine.py | Sin filtro de tendencia — el bot compraba RSI oversold en tendencias bajistas (caida libre) | Agregado filtro EMA50 < EMA200*0.98 → score=0. Aplicado en alpha, scoring y backtest
+- [2026-03-28] | engines/backtest_engine.py | Backtest ejecutaba a precio de cierre exacto sin slippage — resultados irreales vs live | Agregado SLIPPAGE_PCT=0.1% en entrada (+) y salida (-). Configurable via BACKTEST_SLIPPAGE env var
+
 ## General
 - [TEMPLATE] | cualquier módulo | Marcar tarea como done sin tests
   FIX: tests en verde antes de actualizar PROGRESS.md
