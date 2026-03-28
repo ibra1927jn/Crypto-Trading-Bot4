@@ -11,6 +11,8 @@
 
 ## Seguridad
 - [2026-03-28] | deploy_v15.py, scripts/daily_report.py, scripts/test_telegram.py, scripts/telegram_monitor.py | Credenciales hardcodeadas (IP, password, Telegram token) en codigo fuente | Migrado a os.getenv() + dotenv. Quedan ~20 scripts mas con el mismo patron (check_*, deploy_*, diag_*, fetch_*, fix_*, etc.) — limpiar progresivamente
+- [2026-03-28] | 22 scripts raiz (check_*, deploy_*, diag_*, fetch_*, fix_*, full_nuke, get_pnl, inspect_states, restart_*, test_api, upload_v15, backtest_v12, backtest_v14_compare) | Credenciales SSH hardcodeadas en cada script | Creado utils/ssh_helper.py centralizado. Todos los scripts migrados a usar get_ssh_client() con .env vars
+- [2026-03-28] | api/server.py | Dashboard API sin autenticacion — cualquiera con la IP podia ver el estado del bot | Agregado middleware ApiKeyMiddleware que valida X-API-Key header. /api/health queda publico. DASHBOARD_API_KEY en .env
 
 ## Estabilización crítica (2026-03-28)
 - [2026-03-28] | engines/execution_engine.py | _wait_for_fill usaba variable `symbol` sin recibirla como parámetro → NameError en runtime | Añadido param `symbol` a la firma y pasado desde execute_market_order

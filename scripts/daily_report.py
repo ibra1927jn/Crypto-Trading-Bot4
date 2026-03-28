@@ -24,8 +24,8 @@ from datetime import datetime, timezone, timedelta
 from urllib.parse import quote
 
 # =============================================
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8786260046:AAHWr2sZB3MpHS2Y_OTNX0cBa-JkVt-dEO4")
-CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "5822131920")
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
+CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 API_URL = os.environ.get("BOT_API", "http://localhost:8080/api/status")
 REPORT_LOOP_HOURS = 6
 # =============================================

@@ -1,10 +1,18 @@
 """Quick Telegram test."""
-import aiohttp, asyncio
+import aiohttp, asyncio, os
+from dotenv import load_dotenv
 
-TOKEN = "8786260046:AAHWr2sZB3MpHS2Y_OTNX0cBa-JkVt-dEO4"
-CHAT = "5822131920"
+# Cargar variables de entorno
+load_dotenv()
+
+TOKEN = os.getenv("TELEGRAM_TOKEN", "")
+CHAT = os.getenv("TELEGRAM_CHAT_ID", "")
 
 async def main():
+    if not TOKEN or not CHAT:
+        print("ERROR: Set TELEGRAM_TOKEN and TELEGRAM_CHAT_ID in .env")
+        return
+
     conn = aiohttp.TCPConnector(ssl=False)
     timeout = aiohttp.ClientTimeout(total=20)
     async with aiohttp.ClientSession(connector=conn, timeout=timeout) as s:
@@ -13,17 +21,17 @@ async def main():
         async with s.get(f"https://api.telegram.org/bot{TOKEN}/getMe") as r:
             print(f"    Status: {r.status}")
             data = await r.json()
-            print(f"    Bot: {data.get('result', {}).get('username', 'unknown')}")
+            print(f"    Response: {data}")
 
-        # Test 2: sendMessage via GET (URL params)
-        print("[2] Sending test message via GET...")
-        msg = "🎯 CT4 — Test de conexión OK"
-        url = f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={CHAT}&text={msg}"
-        async with s.get(url) as r:
+        # Test 2: sendMessage
+        print("[2] Testing sendMessage...")
+        msg = "CT4 Telegram test - connection OK"
+        async with s.post(
+            f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+            json={"chat_id": CHAT, "text": msg}
+        ) as r:
             print(f"    Status: {r.status}")
-            body = await r.json()
-            print(f"    OK: {body.get('ok')}")
-            if not body.get('ok'):
-                print(f"    Error: {body.get('description')}")
+            data = await r.json()
+            print(f"    Response: {data}")
 
 asyncio.run(main())

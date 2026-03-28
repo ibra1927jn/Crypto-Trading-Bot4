@@ -5,16 +5,46 @@ FastAPI ultraligero que expone el cerebro del bot en vivo.
 Lee directamente de la RAM de los motores (microsegundos).
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from starlette.responses import Response
+from starlette.responses import Response, JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from datetime import datetime, timezone
 import json
 import os
 import numpy as np
 
 from config.settings import SYMBOLS
+
+# --- Middleware de autenticacion por API key ---
+DASHBOARD_API_KEY = os.getenv("DASHBOARD_API_KEY", "")
+
+# Rutas que no requieren autenticacion
+_PUBLIC_PATHS = {"/api/health", "/docs", "/openapi.json"}
+
+
+class ApiKeyMiddleware(BaseHTTPMiddleware):
+    """Valida X-API-Key header en todas las rutas excepto las publicas."""
+
+    async def dispatch(self, request: Request, call_next):
+        # Si no hay key configurada, dejar pasar todo (dev mode)
+        if not DASHBOARD_API_KEY:
+            return await call_next(request)
+
+        # Rutas publicas no requieren auth
+        if request.url.path in _PUBLIC_PATHS:
+            return await call_next(request)
+
+        # Verificar header
+        provided_key = request.headers.get("X-API-Key", "")
+        if provided_key != DASHBOARD_API_KEY:
+            return JSONResponse(
+                status_code=401,
+                content={"error": "Invalid or missing API key"},
+            )
+
+        return await call_next(request)
 
 
 class NumpySafeEncoder(json.JSONEncoder):
@@ -32,6 +62,7 @@ class NumpySafeEncoder(json.JSONEncoder):
 
 
 app = FastAPI(title="Crypto-Trading-Bot4 Dashboard")
+app.add_middleware(ApiKeyMiddleware)
 
 # Referencia global a los motores (se inyecta desde main.py)
 _bot = None
@@ -41,6 +72,12 @@ def set_bot_reference(bot):
     """Inyecta la referencia al bot para leer su estado."""
     global _bot
     _bot = bot
+
+
+@app.get("/api/health")
+async def health_check():
+    """Endpoint publico: ping basico sin autenticacion."""
+    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 @app.get("/api/status")
