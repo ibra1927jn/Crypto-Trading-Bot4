@@ -1,6 +1,6 @@
-# === Crypto-Trading-Bot# CT4 Dependencies
+# CT4 Dependencies
 uvicorn>=0.30.0
-fastapi>=0.110.0 ===
+fastapi>=0.110.0
 
 # Exchange API (async)
 ccxt>=4.2.0

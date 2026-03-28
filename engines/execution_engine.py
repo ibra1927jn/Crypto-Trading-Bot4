@@ -146,12 +146,15 @@ class ExecutionEngine:
         Caso B: Exchange tiene activos que SQLite no conoce → ORPHANED
         """
         exchange_order_ids = {o['id'] for o in open_orders}
-        symbol_base = SYMBOL.split('/')[0]  # "BTC" de "BTC/USDT"
-        exchange_base_balance = balance.get(symbol_base, {}).get('total', 0)
 
         # --- CASO A: SQLite OPEN pero exchange ya cerró ---
         open_positions_remaining = []
         for pos in local_positions:
+            # Usar el símbolo de cada posición, no el global
+            pos_symbol = pos.get('symbol', SYMBOL)
+            pos_base = pos_symbol.split('/')[0]
+            pos_base_balance = balance.get(pos_base, {}).get('total', 0)
+
             sl_id = pos.get('sl_order_id')
             tp_id = pos.get('tp_order_id')
 
@@ -162,7 +165,7 @@ class ExecutionEngine:
 
                 if not has_sl and not has_tp:
                     logger.warning(
-                        f"📌 Posición #{pos['id']} ({pos['symbol']}): "
+                        f"📌 Posición #{pos['id']} ({pos_symbol}): "
                         f"SL/TP ya no están en exchange → CLOSED"
                     )
                     pnl = await self._fetch_closed_pnl(pos)
@@ -172,11 +175,11 @@ class ExecutionEngine:
             else:
                 # CASO A2 (GASLIGHTING): Posición SIN órdenes protectoras
                 # ¿El exchange realmente tiene el activo correspondiente?
-                if exchange_base_balance < pos.get('amount', 0) * 0.5:
+                if pos_base_balance < pos.get('amount', 0) * 0.5:
                     logger.warning(
                         f"🕵️ GASLIGHTING DETECTADO: Posición #{pos['id']} dice OPEN "
-                        f"pero exchange solo tiene {exchange_base_balance:.6f} "
-                        f"{symbol_base} (necesita {pos['amount']:.6f}) → CLOSED"
+                        f"pero exchange solo tiene {pos_base_balance:.6f} "
+                        f"{pos_base} (necesita {pos['amount']:.6f}) → CLOSED"
                     )
                     pnl = await self._fetch_closed_pnl(pos)
                     await close_position(pos['id'], pnl)
@@ -184,22 +187,31 @@ class ExecutionEngine:
                     open_positions_remaining.append(pos)
 
         # --- CASO B: Exchange tiene algo que SQLite no conoce ---
-        if exchange_base_balance > 0 and len(open_positions_remaining) == 0:
-            logger.warning(
-                f"⚠️ ALERTA: Exchange tiene {exchange_base_balance} {symbol_base} "
-                f"pero SQLite no tiene posiciones OPEN. ¡POSICIÓN HUÉRFANA!"
+        # Revisar cada símbolo monitoreado por si hay activos huérfanos
+        for sym in SYMBOLS:
+            sym_base = sym.split('/')[0]
+            sym_base_balance = balance.get(sym_base, {}).get('total', 0)
+            # Verificar si hay posiciones locales abiertas para este símbolo
+            has_local = any(
+                p.get('symbol', '').split('/')[0] == sym_base
+                for p in open_positions_remaining
             )
-            ticker = await self._retry(
-                self.exchange.fetch_ticker, SYMBOL
-            )
-            current_price = ticker['last']
-            pos_id = await save_position(
-                symbol=SYMBOL,
-                side='BUY',
-                amount=exchange_base_balance,
-                entry_price=current_price,
-            )
-            await mark_position_orphaned(pos_id)
+            if sym_base_balance > 0 and not has_local:
+                logger.warning(
+                    f"⚠️ ALERTA: Exchange tiene {sym_base_balance} {sym_base} "
+                    f"pero SQLite no tiene posiciones OPEN. ¡POSICIÓN HUÉRFANA!"
+                )
+                ticker = await self._retry(
+                    self.exchange.fetch_ticker, sym
+                )
+                current_price = ticker['last']
+                pos_id = await save_position(
+                    symbol=sym,
+                    side='BUY',
+                    amount=sym_base_balance,
+                    entry_price=current_price,
+                )
+                await mark_position_orphaned(pos_id)
 
     async def _fetch_closed_pnl(self, position: dict) -> Optional[float]:
         """Intenta calcular el PnL de una posición cerrada via historial de trades."""
@@ -407,7 +419,7 @@ class ExecutionEngine:
             # antes de colocar OCO. Si no, Binance rechazará el SL/TP
             # con "Insufficient Balance" porque el activo aún no llegó.
             if order.get('status') != 'closed':  # CCXT: 'closed' = filled
-                order = await self._wait_for_fill(order['id'])
+                order = await self._wait_for_fill(order['id'], symbol=sym)
                 entry_price = order.get('average') or order.get('price', entry_price)
                 logger.info(f"✅ Orden confirmada como FILLED. Precio final: {entry_price}")
 
@@ -506,7 +518,7 @@ class ExecutionEngine:
     # WAIT FOR ORDER FILL (Race Condition Prevention)
     # ==========================================================
 
-    async def _wait_for_fill(self, order_id: str, max_checks: int = 10) -> dict:
+    async def _wait_for_fill(self, order_id: str, symbol: str = None, max_checks: int = 10) -> dict:
         """
         Espera a que una orden de mercado se llene (status=closed).
         
@@ -524,7 +536,7 @@ class ExecutionEngine:
         for i in range(max_checks):
             await asyncio.sleep(0.3 * (1.5 ** i))  # 0.3s, 0.45s, 0.67s...
             order = await self._retry(
-                self.exchange.fetch_order, order_id, symbol  # FIX: usar símbolo pasado como parámetro
+                self.exchange.fetch_order, order_id, symbol or SYMBOL
             )
             status = order.get('status')
             logger.debug(f"⏳ Esperando fill... intento {i+1}/{max_checks} | status={status}")
@@ -600,10 +612,11 @@ class ExecutionEngine:
     # UTILIDADES
     # ==========================================================
 
-    async def get_balance(self) -> dict:
-        """Obtiene el balance actual del exchange."""
+    async def get_balance(self, symbol: str = None) -> dict:
+        """Obtiene el balance actual del exchange para un símbolo dado."""
         balance = await self._retry(self.exchange.fetch_balance)
-        base = SYMBOL.split('/')[0]  # FIX M2: Dinámico en vez de hardcoded BTC
+        sym = symbol or SYMBOL
+        base = sym.split('/')[0]
         return {
             'USDT_free': balance.get('USDT', {}).get('free', 0),
             'USDT_total': balance.get('USDT', {}).get('total', 0),

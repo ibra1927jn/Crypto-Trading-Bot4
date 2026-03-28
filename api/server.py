@@ -148,13 +148,16 @@ async def _calculate_equity():
 
     try:
         balance = await _bot.execution_engine.get_balance()
-        price = _bot.data_engine.current_price or 0
-
+        # Calcular valor total de todos los activos base monitoreados
         usdt_free = balance.get('USDT_free', 0)
         usdt_total = balance.get('USDT_total', 0)
-        btc_total = balance.get('BTC_total', 0)
-        btc_value = btc_total * price
-        total_equity = usdt_total + btc_value
+        base_total = balance.get('base_total', 0)
+        base_symbol = balance.get('base_symbol', '')
+        # Obtener precio del activo base desde current_prices (dict multi-coin)
+        from config.settings import SYMBOL
+        price = _bot.data_engine.current_prices.get(SYMBOL, 0)
+        base_value = base_total * price
+        total_equity = usdt_total + base_value
 
         starting = _bot.risk_engine.starting_balance
         drawdown = (starting - total_equity) / starting if starting > 0 else 0
@@ -162,8 +165,8 @@ async def _calculate_equity():
         return {
             'usdt_free': usdt_free,
             'usdt_total': usdt_total,
-            'btc_total': btc_total,
-            'btc_value': btc_value,
+            'btc_total': base_total,
+            'btc_value': base_value,
             'total_equity': total_equity,
             'drawdown_pct': max(0, drawdown),
         }
