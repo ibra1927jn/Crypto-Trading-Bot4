@@ -46,7 +46,8 @@ class DataManager:
     }
 
     def calculate_volatility(self, window=20):
-        if self.data is None: return 0.0
+        if self.data is None or len(self.data) < 2: return 0.0
         returns = np.log(self.data['close'] / self.data['close'].shift(1))
         bars_per_year = self.BARS_PER_YEAR.get(self.timeframe, 365 * 24 * 60)
-        return float(returns.tail(window).std() * np.sqrt(bars_per_year) * 100)
+        vol = returns.tail(window).std() * np.sqrt(bars_per_year) * 100
+        return 0.0 if np.isnan(vol) else float(vol)
