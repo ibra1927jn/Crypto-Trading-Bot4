@@ -73,8 +73,8 @@ class AI_Predictor:
             self.scaler.fit(feats)
             scaled = self.scaler.transform(feats[-self.lookback:])
             
-            tensor = torch.tensor(np.array([scaled]), dtype=torch.float32).to(self.device)
-            with torch.no_grad(): pred = self.model(tensor.unsqueeze(0)).item()
+            tensor = torch.tensor(scaled, dtype=torch.float32).unsqueeze(0).to(self.device)
+            with torch.no_grad(): pred = self.model(tensor).item()
             
             pct = (np.exp(pred) - 1) * 100
             icon = "↗️" if pct > 0 else "↘️"
