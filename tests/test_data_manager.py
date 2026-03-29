@@ -2,10 +2,8 @@
 import pytest
 import pandas as pd
 import numpy as np
-import sys, os
 from unittest.mock import AsyncMock, MagicMock
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from modules.data_manager import DataManager
 
 
