@@ -11,10 +11,10 @@ Esta arquitectura modular permite añadir nuevas estrategias fácilmente.
 
 import pandas as pd
 from typing import Dict, Any, Optional, Tuple
-from colorlog import getLogger
+import logging
 from enum import Enum
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class MarketCondition(Enum):
