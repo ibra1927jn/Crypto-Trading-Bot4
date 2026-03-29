@@ -8,9 +8,6 @@ import colorlog
 from datetime import datetime
 import ccxt.async_support as ccxt
 
-print("\n" + "="*50)
-print("📡 RADAR IA ACTIVADO")
-print("="*50)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(dotenv_path=os.path.join(BASE_DIR, '.env'), override=True)
 
@@ -34,6 +31,9 @@ def setup_logging():
     return logger
 
 logger = setup_logging()
+logger.info("=" * 50)
+logger.info("RADAR IA ACTIVADO")
+logger.info("=" * 50)
 
 class CryptoRadar:
     def __init__(self):
