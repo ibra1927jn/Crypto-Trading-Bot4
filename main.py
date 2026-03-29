@@ -8,7 +8,9 @@ import colorlog
 from datetime import datetime
 import ccxt.async_support as ccxt
 
-print("\n" + "="*50); print("📡 RADAR IA ACTIVADO"); print("="*50)
+print("\n" + "="*50)
+print("📡 RADAR IA ACTIVADO")
+print("="*50)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(dotenv_path=os.path.join(BASE_DIR, '.env'), override=True)
 
@@ -24,8 +26,11 @@ from strategies.strategy import HybridStrategy
 
 def setup_logging():
     formatter = colorlog.ColoredFormatter("%(log_color)s%(asctime)s %(levelname)s: %(message)s", datefmt='%H:%M:%S', log_colors={'INFO': 'green', 'WARNING': 'yellow', 'ERROR': 'red'})
-    handler = logging.StreamHandler(); handler.setFormatter(formatter)
-    logger = logging.getLogger(); logger.addHandler(handler); logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    logger = logging.getLogger()
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
     return logger
 
 logger = setup_logging()
@@ -63,8 +68,11 @@ class CryptoRadar:
         while True:
             try:
                 await self._scan()
-                logger.info("⏳ Esperando 60s..."); await asyncio.sleep(60)
-            except Exception as e: logger.error(f"Error: {e}"); await asyncio.sleep(5)
+                logger.info("⏳ Esperando 60s...")
+                await asyncio.sleep(60)
+            except Exception as e:
+                logger.error(f"Error: {e}")
+                await asyncio.sleep(5)
 
     async def _scan(self):
         logger.info(f"\n📡 --- {datetime.now().strftime('%H:%M:%S')} ---")
@@ -82,7 +90,8 @@ class CryptoRadar:
                 
                 icon = "🟢" if signal.value == "BUY" else "🔴" if signal.value == "SELL" else "⚪"
                 print(f"{icon} {symbol:<10} ${price:<10.2f} | Señal: {signal.value}")
-            except Exception as e: logger.error(f"Error {symbol}: {e}")
+            except Exception as e:
+                logger.error(f"Error {symbol}: {e}")
 
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
