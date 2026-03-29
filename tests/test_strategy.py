@@ -256,3 +256,42 @@ class TestSwingSellSignal:
                           ai_conf=0.9, ai_pred=-0.5)
         signal, conf, details = s.get_signal(dummy_df)
         assert signal == Signal.SELL
+
+
+class TestSwingNeutralSignal:
+    def test_weak_signals_give_neutral(self, dummy_df):
+        """When combined_value is between -0.3 and 0.3, result should be NEUTRAL."""
+        # AI pred=0.01 (below 0.02 threshold) → ai_signal=NEUTRAL → ai_value=0
+        # Indicators NEUTRAL → ind_value=0
+        # combined_value = 0*0.7*0.5 + 0*0.3*0.0 = 0.0 → NEUTRAL
+        s = make_strategy(volatility=1.0, ind_signal='NEUTRAL', ind_conf=0.0,
+                          ai_conf=0.5, ai_pred=0.01)
+        signal, conf, details = s.get_signal(dummy_df)
+        assert signal == Signal.NEUTRAL
+
+    def test_conflicting_cancel_out(self, dummy_df):
+        """Evenly matched opposing signals should produce NEUTRAL."""
+        # AI BUY (pred=0.5, conf=0.3) → ai_value=1
+        # Indicators SELL (conf=0.7) → ind_value=-1
+        # combined = 1*0.7*0.3 + (-1)*0.3*0.7 = 0.21 - 0.21 = 0.0 → NEUTRAL
+        s = make_strategy(volatility=1.0, ind_signal='SELL', ind_conf=0.7,
+                          ai_conf=0.3, ai_pred=0.5)
+        signal, conf, details = s.get_signal(dummy_df)
+        assert signal == Signal.NEUTRAL
+
+
+class TestErrorHandlingEdgeCases:
+    def test_analyze_market_exception_returns_unknown(self):
+        """When data_manager.calculate_volatility raises, return UNKNOWN."""
+        s = make_strategy()
+        s.data_manager.calculate_volatility = lambda: (_ for _ in ()).throw(RuntimeError("boom"))
+        cond = s.analyze_market_condition()
+        assert cond == MarketCondition.UNKNOWN
+
+    def test_get_signal_exception_returns_neutral(self, dummy_df):
+        """When analyze_market_condition raises internally, get_signal returns NEUTRAL."""
+        s = make_strategy()
+        s.data_manager.calculate_volatility = lambda: (_ for _ in ()).throw(RuntimeError("boom"))
+        signal, conf, details = s.get_signal(dummy_df)
+        assert signal == Signal.NEUTRAL
+        assert conf == 0.0

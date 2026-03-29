@@ -200,3 +200,40 @@ class TestCombinedSignalNeutral:
         sig, conf = indicators.get_combined_signal(df)
         assert sig == 'NEUTRAL'
         assert conf == 0.0
+
+
+class TestErrorPaths:
+    """Tests for error handling branches in indicators."""
+
+    def test_calculate_all_bad_column(self, indicators):
+        """Missing 'close' column triggers except branch."""
+        df = pd.DataFrame({'price': [1, 2, 3]})
+        result = indicators.calculate_all(df)
+        assert result is not None
+
+    def test_get_macd_signal_missing_columns(self, indicators):
+        """No MACD columns triggers except branch."""
+        df = pd.DataFrame({'close': [1, 2, 3]})
+        sig, conf = indicators.get_macd_signal(df)
+        assert sig == 'NEUTRAL'
+        assert conf == 0.0
+
+    def test_get_bollinger_signal_missing_columns(self, indicators):
+        """No BB columns returns NEUTRAL."""
+        df = pd.DataFrame({'close': [1, 2, 3]})
+        sig, conf = indicators.get_bollinger_signal(df)
+        assert sig == 'NEUTRAL'
+        assert conf == 0.0
+
+    def test_get_combined_signal_missing_rsi(self, indicators):
+        """No 'rsi' column triggers except branch."""
+        df = pd.DataFrame({'close': [1, 2, 3]})
+        sig, conf = indicators.get_combined_signal(df)
+        assert sig == 'NEUTRAL'
+        assert conf == 0.0
+
+    def test_get_indicators_summary_missing_rsi(self, indicators):
+        """No 'rsi' column triggers except branch."""
+        df = pd.DataFrame({'close': [1, 2, 3]})
+        result = indicators.get_indicators_summary(df)
+        assert result == {}
