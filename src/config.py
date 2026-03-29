@@ -10,7 +10,7 @@ Este módulo gestiona todas las configuraciones del bot, incluyendo:
 
 import os
 from dotenv import load_dotenv
-from typing import Dict, Any
+from typing import Any
 
 # Cargar variables de entorno
 load_dotenv()
@@ -107,7 +107,7 @@ class Config:
     LOG_FILE = os.getenv("LOG_FILE", "./logs/trading_bot.log")
 
     @classmethod
-    def get_exchange_config(cls) -> Dict[str, Any]:
+    def get_exchange_config(cls) -> dict[str, Any]:
         """Retorna la configuración del exchange en formato dict"""
         config = {
             'apiKey': cls.API_KEY,

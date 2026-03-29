@@ -10,7 +10,7 @@ Esta arquitectura modular permite añadir nuevas estrategias fácilmente.
 """
 
 import pandas as pd
-from typing import Dict, Any, Tuple
+from typing import Any
 import logging
 from enum import Enum
 
@@ -45,7 +45,7 @@ class HybridStrategy:
         data_manager,
         indicators,
         ai_predictor,
-        config: Dict[str, Any]
+        config: dict[str, Any]
     ):
         """
         Inicializa la estrategia híbrida
@@ -99,7 +99,7 @@ class HybridStrategy:
             logger.error(f"❌ Error analyzing market condition: {e}")
             return MarketCondition.UNKNOWN
 
-    def get_signal(self, df: pd.DataFrame) -> Tuple[Signal, float, Dict[str, Any]]:
+    def get_signal(self, df: pd.DataFrame) -> tuple[Signal, float, dict[str, Any]]:
         """
         Genera señal de trading según la estrategia apropiada
 
@@ -146,7 +146,7 @@ class HybridStrategy:
             logger.error(f"❌ Error getting signal: {e}")
             return Signal.NEUTRAL, 0.0, {'error': str(e)}
 
-    def _scalping_strategy(self, df: pd.DataFrame) -> Tuple[Signal, float, Dict[str, Any]]:
+    def _scalping_strategy(self, df: pd.DataFrame) -> tuple[Signal, float, dict[str, Any]]:
         """
         Estrategia de SCALPING para alta volatilidad
 
@@ -189,7 +189,7 @@ class HybridStrategy:
             logger.error(f"❌ Error in scalping strategy: {e}")
             return Signal.NEUTRAL, 0.0, {'error': str(e)}
 
-    def _swing_strategy(self, df: pd.DataFrame) -> Tuple[Signal, float, Dict[str, Any]]:
+    def _swing_strategy(self, df: pd.DataFrame) -> tuple[Signal, float, dict[str, Any]]:
         """
         Estrategia de SWING para baja volatilidad
 
@@ -350,7 +350,7 @@ class HybridStrategy:
         signal: Signal,
         stop_loss_percent: float,
         take_profit_percent: float
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Calcula niveles de Stop Loss y Take Profit
 
@@ -400,7 +400,7 @@ class HybridStrategy:
             # Swing: chequear menos frecuentemente
             return self.swing_config.get('check_interval', 60)
 
-    def get_strategy_summary(self) -> Dict[str, Any]:
+    def get_strategy_summary(self) -> dict[str, Any]:
         """
         Retorna un resumen del estado actual de la estrategia
 
