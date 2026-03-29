@@ -60,7 +60,7 @@ scaled = scaler.fit_transform(features)
 
 model = CryptoTransformer().to(device)
 try: model.load_state_dict(torch.load(MODEL_PATH, map_location=device)); model.eval()
-except: exit("❌ Error: Modelo no compatible.")
+except Exception: exit("❌ Error: Modelo no compatible.")
 
 # Test
 start_idx = random.randint(0, len(scaled) - TEST_BARS - LOOKBACK)
