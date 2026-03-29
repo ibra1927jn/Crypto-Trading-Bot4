@@ -83,7 +83,9 @@ class AI_Predictor:
 
             confidence = min(abs(pct) / 0.1, 0.9)
             return pct, confidence
-        except: return 0.0, 0.0
+        except Exception as e:
+            logger.error(f"❌ Error en predict: {e}")
+            return 0.0, 0.0
 
     def get_signal(self, df, threshold=0.65):
         pct, confidence = self.predict(df)

@@ -27,7 +27,8 @@ class DataManager:
                 try:
                     funding = await self.exchange.fetch_funding_rate(self.symbol)
                     df['funding_rate'] = funding['fundingRate']
-                except:
+                except Exception as e:
+                    logger.warning(f"⚠️ Funding rate no disponible: {e}")
                     df['funding_rate'] = 0.0
                     
                 self.data = df

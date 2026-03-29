@@ -36,7 +36,9 @@ class TechnicalIndicators:
             if prev_macd < prev_sig and curr_macd > curr_sig: return 'BUY', 0.8
             elif prev_macd > prev_sig and curr_macd < curr_sig: return 'SELL', 0.8
             return 'NEUTRAL', 0.0
-        except: return 'NEUTRAL', 0.0
+        except Exception as e:
+            logger.error(f"❌ Error en MACD signal: {e}")
+            return 'NEUTRAL', 0.0
 
     def get_bollinger_signal(self, df):
         if df is None or df.empty: return 'NEUTRAL', 0.0
@@ -49,7 +51,9 @@ class TechnicalIndicators:
             if bbl and close < latest[bbl[0]]: return 'BUY', 0.9
             if bbu and close > latest[bbu[0]]: return 'SELL', 0.9
             return 'NEUTRAL', 0.0
-        except: return 'NEUTRAL', 0.0
+        except Exception as e:
+            logger.error(f"❌ Error en Bollinger signal: {e}")
+            return 'NEUTRAL', 0.0
 
     def get_combined_signal(self, df):
         if df is None or df.empty: return 'NEUTRAL', 0.0
@@ -71,9 +75,13 @@ class TechnicalIndicators:
             if buy > sell: return 'BUY', 0.7
             elif sell > buy: return 'SELL', 0.7
             return 'NEUTRAL', 0.0
-        except: return 'NEUTRAL', 0.0
+        except Exception as e:
+            logger.error(f"❌ Error en combined signal: {e}")
+            return 'NEUTRAL', 0.0
 
     def get_indicators_summary(self, df):
         if df is None or df.empty: return {}
         try: return {'rsi': df['rsi'].iloc[-1]}
-        except: return {}
+        except Exception as e:
+            logger.error(f"❌ Error en indicators summary: {e}")
+            return {}
