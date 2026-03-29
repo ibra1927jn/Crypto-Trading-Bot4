@@ -59,3 +59,83 @@ class TestGetExchangeConfig:
         config = Config.get_exchange_config()
         assert 'options' in config
         Config.TESTNET = original
+
+    def test_non_testnet_config(self):
+        original = Config.TESTNET
+        Config.TESTNET = False
+        config = Config.get_exchange_config()
+        assert 'urls' not in config
+        Config.TESTNET = original
+
+    def test_testnet_binance_has_urls(self):
+        original_testnet = Config.TESTNET
+        original_exchange = Config.EXCHANGE
+        Config.TESTNET = True
+        Config.EXCHANGE = 'binance'
+        config = Config.get_exchange_config()
+        assert 'urls' in config
+        Config.TESTNET = original_testnet
+        Config.EXCHANGE = original_exchange
+
+    def test_testnet_non_binance_no_urls(self):
+        original_testnet = Config.TESTNET
+        original_exchange = Config.EXCHANGE
+        Config.TESTNET = True
+        Config.EXCHANGE = 'kraken'
+        config = Config.get_exchange_config()
+        assert 'urls' not in config
+        Config.TESTNET = original_testnet
+        Config.EXCHANGE = original_exchange
+
+
+class TestValidateConfig:
+    def test_validate_no_credentials(self, capsys):
+        original_key = Config.API_KEY
+        original_secret = Config.API_SECRET
+        Config.API_KEY = ""
+        Config.API_SECRET = ""
+        result = Config.validate_config()
+        assert result is False
+        output = capsys.readouterr().out
+        assert "WARNING" in output
+        Config.API_KEY = original_key
+        Config.API_SECRET = original_secret
+
+    def test_validate_with_credentials_testnet(self, capsys):
+        original_key = Config.API_KEY
+        original_secret = Config.API_SECRET
+        original_testnet = Config.TESTNET
+        Config.API_KEY = "test_key"
+        Config.API_SECRET = "test_secret"
+        Config.TESTNET = True
+        result = Config.validate_config()
+        assert result is True
+        output = capsys.readouterr().out
+        assert "TESTNET" in output
+        Config.API_KEY = original_key
+        Config.API_SECRET = original_secret
+        Config.TESTNET = original_testnet
+
+    def test_validate_production_mode(self, capsys):
+        original_key = Config.API_KEY
+        original_secret = Config.API_SECRET
+        original_testnet = Config.TESTNET
+        Config.API_KEY = "test_key"
+        Config.API_SECRET = "test_secret"
+        Config.TESTNET = False
+        result = Config.validate_config()
+        assert result is True
+        output = capsys.readouterr().out
+        assert "PRODUCTION" in output
+        Config.API_KEY = original_key
+        Config.API_SECRET = original_secret
+        Config.TESTNET = original_testnet
+
+
+class TestPrintConfig:
+    def test_print_config_output(self, capsys):
+        Config.print_config()
+        output = capsys.readouterr().out
+        assert "CRYPTO TRADING BOT" in output
+        assert Config.EXCHANGE in output
+        assert Config.SYMBOL in output
