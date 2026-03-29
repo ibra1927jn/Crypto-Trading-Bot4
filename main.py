@@ -25,7 +25,7 @@ from strategies.strategy import HybridStrategy
 def setup_logging():
     formatter = colorlog.ColoredFormatter("%(log_color)s%(asctime)s %(levelname)s: %(message)s", datefmt='%H:%M:%S', log_colors={'INFO': 'green', 'WARNING': 'yellow', 'ERROR': 'red'})
     handler = logging.StreamHandler(); handler.setFormatter(formatter)
-    logger = colorlog.getLogger(); logger.addHandler(handler); logger.setLevel(logging.INFO)
+    logger = logging.getLogger(); logger.addHandler(handler); logger.setLevel(logging.INFO)
     return logger
 
 logger = setup_logging()
