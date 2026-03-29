@@ -1,6 +1,0 @@
-2026-03-24 11:13:17 [AutoLearn] 🤖 Auto-Learning Daemon Started
-2026-03-24 11:13:17 [AutoLearn] Watching CSVs: ['v15_trades.csv', 'v12_trades.csv']
-2026-03-24 11:13:55 [AutoLearn] Daemon stopped by user.
-2026-03-24 11:38:09 [AutoLearn] Found 1 new trades in test_v15_trades.csv
-2026-03-24 11:38:10 [AutoLearn] ✅ Added 1 new trades to Vector DB.
-2026-03-24 11:38:10 [AutoLearn]    Total Trades: 9597 | Win Rate: 45.0%
