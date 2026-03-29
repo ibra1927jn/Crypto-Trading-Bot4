@@ -60,7 +60,6 @@ class TechnicalIndicators:
         try:
             signals = []
             rsi = df['rsi'].iloc[-1]
-            # Lógica Real (No trucada)
             if rsi < 30: signals.append('BUY')
             elif rsi > 70: signals.append('SELL')
             
