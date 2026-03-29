@@ -1,8 +1,12 @@
 import ccxt
+import logging
 import pandas as pd
 import time
 import os
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 
 # ==========================================
 # ⚙️ CONFIGURACIÓN "HIGH DEFINITION"
@@ -18,12 +22,12 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 # Usamos el cliente de Futuros para tener acceso a datos avanzados
 exchange = ccxt.binance({'options': {'defaultType': 'future'}})
 
-print(f"\n🚀 INICIANDO RECOLECCIÓN HD (Alta Definición)")
-print(f"🎯 Objetivo: {YEARS} años de datos minuto a minuto + Funding Rates")
-print("="*70)
+logger.info("INICIANDO RECOLECCION HD (Alta Definicion)")
+logger.info("Objetivo: %d años de datos minuto a minuto + Funding Rates", YEARS)
+logger.info("=" * 70)
 
 for symbol in SYMBOLS:
-    print(f"\n📦 Procesando {symbol}...")
+    logger.info("Procesando %s...", symbol)
     
     # -------------------------------------------
     # 1. DESCARGA DE PRECIOS (OHLCV 1m)
@@ -32,7 +36,7 @@ for symbol in SYMBOLS:
     since = now - (YEARS * 365 * 24 * 60 * 60 * 1000)
     
     all_ohlcv = []
-    print(f"   📊 Descargando Velas de 1 minuto...")
+    logger.info("Descargando Velas de 1 minuto...")
     
     start_time = time.time()
     temp_since = since
@@ -40,7 +44,7 @@ for symbol in SYMBOLS:
     while temp_since < now:
         try:
             dt_str = datetime.fromtimestamp(temp_since/1000).strftime('%Y-%m-%d')
-            print(f"      ⏳ Fecha: {dt_str} | Velas: {len(all_ohlcv):,}", end='\r')
+            logger.info("Fecha: %s | Velas: %s", dt_str, f"{len(all_ohlcv):,}")
             
             ohlcv = exchange.fetch_ohlcv(symbol, TIMEFRAME, temp_since, limit=1000)
             
@@ -52,13 +56,13 @@ for symbol in SYMBOLS:
             time.sleep(0.1) # Pequeña pausa para cuidar la API
             
         except Exception as e:
-            print(f"\n      ❌ Error (Velas): {e}")
+            logger.error("Error (Velas): %s", e)
             time.sleep(5)
 
     # -------------------------------------------
     # 2. DESCARGA DE FUNDING RATES (El Sentimiento)
     # -------------------------------------------
-    print(f"\n   🧠 Descargando Funding Rates (Contexto de mercado)...")
+    logger.info("Descargando Funding Rates (Contexto de mercado)...")
     all_funding = []
     temp_since = since
     
@@ -113,12 +117,12 @@ for symbol in SYMBOLS:
         df_final.reset_index().to_csv(filename, index=False)
         
         duration = time.time() - start_time
-        print(f"\n   ✅ COMPLETADO: {symbol}")
-        print(f"      💾 Archivo: {filename}")
-        print(f"      📈 Datos Totales: {len(df_final):,} filas (Tiempo: {duration:.1f}s)")
+        logger.info("COMPLETADO: %s", symbol)
+        logger.info("Archivo: %s", filename)
+        logger.info("Datos Totales: %s filas (Tiempo: %.1fs)", f"{len(df_final):,}", duration)
     else:
-        print(f"\n   ⚠️ No se encontraron datos para {symbol}")
+        logger.warning("No se encontraron datos para %s", symbol)
 
-print("\n" + "="*70)
-print(f"🎉 BASE DE DATOS HD COMPLETADA")
-print(f"   Ahora tu IA tendrá visión de Rayos X (1m + Funding)")
+logger.info("=" * 70)
+logger.info("BASE DE DATOS HD COMPLETADA")
+logger.info("Ahora tu IA tendra vision de Rayos X (1m + Funding)")
