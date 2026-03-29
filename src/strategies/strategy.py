@@ -10,7 +10,7 @@ Esta arquitectura modular permite añadir nuevas estrategias fácilmente.
 """
 
 import pandas as pd
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Tuple
 import logging
 from enum import Enum
 
