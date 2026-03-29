@@ -8,12 +8,15 @@ from torch.utils.data import Dataset, DataLoader
 import glob
 import os
 import math
+import logging
 import warnings
 import wandb
 
 warnings.filterwarnings("ignore")
 os.environ["PYTHONWARNINGS"] = "ignore"
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+logger = logging.getLogger(__name__)
 
 # ==========================================
 # ⚡ CONFIGURACIÓN BASE (SWEEP PUEDE OVERRIDE)
@@ -157,7 +160,7 @@ def load_and_prepare_data(data_folder, config):
             all_features.append(feats)
             all_targets.append(targs)
         except Exception as e:
-            print(f"⚠️ Skipping {file}: {e}")
+            logger.warning("Skipping %s: %s", file, e)
 
     X_raw = np.concatenate(all_features)
     y_raw = np.concatenate(all_targets)
