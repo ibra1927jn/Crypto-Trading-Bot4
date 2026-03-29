@@ -1,7 +1,6 @@
 import torch
 import ccxt
 import pandas_ta as ta
-import sys
 
 print("\n" + "="*50)
 print("🚀 DIAGNÓSTICO FINAL DEL SISTEMA")
