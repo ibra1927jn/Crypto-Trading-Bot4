@@ -19,7 +19,8 @@ class PositionalEncoding(nn.Module):
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(position * div_term); pe[:, 1::2] = torch.cos(position * div_term)
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe.unsqueeze(0))
     def forward(self, x): return x + self.pe[:, :x.size(1)]
 
@@ -32,8 +33,11 @@ class CryptoTransformer(nn.Module):
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=NUM_LAYERS)
         self.decoder = nn.Linear(D_MODEL, 1)
     def forward(self, x):
-        x = self.embedding(x); x = self.pos_encoder(x); x = self.transformer(x); x = x.mean(dim=1); out = self.decoder(x)
-        return out
+        x = self.embedding(x)
+        x = self.pos_encoder(x)
+        x = self.transformer(x)
+        x = x.mean(dim=1)
+        return self.decoder(x)
 
 class AI_Predictor:
     def __init__(self, config):
@@ -63,11 +67,15 @@ class AI_Predictor:
             data['log_vol'] = np.log(data['volume'] + 1).pct_change()
             data['rsi'] = ta.rsi(data['close'], length=14) / 100.0
             data['atr_rel'] = ta.atr(data['high'], data['low'], data['close'], length=14) / data['close'].clip(lower=1e-8)
-            macd = ta.macd(data['close']); data['macd'] = macd['MACD_12_26_9']; data['macd_sig'] = macd['MACDs_12_26_9']
-            ema = ta.ema(data['close'], length=50); data['dist_ema'] = (data['close'] - ema) / ema.clip(lower=1e-8)
+            macd = ta.macd(data['close'])
+            data['macd'] = macd['MACD_12_26_9']
+            data['macd_sig'] = macd['MACDs_12_26_9']
+            ema = ta.ema(data['close'], length=50)
+            data['dist_ema'] = (data['close'] - ema) / ema.clip(lower=1e-8)
             data['funding'] = data.get('funding_rate', 0.0)
 
-            data.replace([np.inf, -np.inf], np.nan, inplace=True); data.dropna(inplace=True)
+            data.replace([np.inf, -np.inf], np.nan, inplace=True)
+            data.dropna(inplace=True)
             if len(data) < self.lookback: return 0.0, 0.0
 
             feats = data[['return', 'log_vol', 'rsi', 'macd', 'macd_sig', 'atr_rel', 'dist_ema', 'funding']].values
