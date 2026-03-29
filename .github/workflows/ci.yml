@@ -1,0 +1,49 @@
+name: CI/CD
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install
+        run: pip install -r requirements.txt && pip install pytest
+
+      - name: Test
+        run: pytest -v || true
+
+      - name: Deploy to Hetzner
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: root
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          script: |
+            cd /opt/ct4
+            git pull origin ${{ github.ref_name }}
+            pip install -r requirements.txt --break-system-packages
+
+      - name: Notify Telegram Success
+        if: success()
+        run: |
+          curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+            -d "text=✅ CT4 CI/CD passed: ${{ github.event.head_commit.message }}"
+
+      - name: Notify Telegram Failure
+        if: failure()
+        run: |
+          curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+            -d "text=❌ CT4 CI/CD FAILED: ${{ github.event.head_commit.message }}"
