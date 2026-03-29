@@ -4,7 +4,6 @@ import torch
 import numpy as np
 import pandas as pd
 import sys, os
-import math
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from modules.ai_predictor import CryptoTransformer, PositionalEncoding, AI_Predictor
