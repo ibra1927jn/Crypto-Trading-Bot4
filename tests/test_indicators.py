@@ -159,3 +159,46 @@ class TestCombinedSignal:
         df.iloc[-1, df.columns.get_loc('close')] = mid
         sig, conf = indicators.get_combined_signal(df)
         assert sig == 'SELL'
+
+
+class TestGetIndicatorsSummary:
+    def test_returns_dict_with_rsi(self, indicators, df_with_indicators):
+        result = indicators.get_indicators_summary(df_with_indicators)
+        assert isinstance(result, dict)
+        assert 'rsi' in result
+
+    def test_none_input_returns_empty(self, indicators):
+        result = indicators.get_indicators_summary(None)
+        assert result == {}
+
+    def test_empty_input_returns_empty(self, indicators):
+        result = indicators.get_indicators_summary(pd.DataFrame())
+        assert result == {}
+
+
+class TestBollingerSignalNeutral:
+    def test_neutral_when_between_bands(self, indicators):
+        df = make_ohlcv(200)
+        df = indicators.calculate_all(df)
+        bbl_col = [c for c in df.columns if c.startswith('BBL')][0]
+        bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
+        mid = (df[bbl_col].iloc[-1] + df[bbu_col].iloc[-1]) / 2
+        df.iloc[-1, df.columns.get_loc('close')] = mid
+        sig, conf = indicators.get_bollinger_signal(df)
+        assert sig == 'NEUTRAL'
+        assert conf == 0.0
+
+
+class TestCombinedSignalNeutral:
+    def test_mid_rsi_neutral_bollinger(self, indicators):
+        """RSI in 30-70 range with neutral Bollinger should give NEUTRAL."""
+        df = make_ohlcv(200)
+        df = indicators.calculate_all(df)
+        df.iloc[-1, df.columns.get_loc('rsi')] = 50.0
+        bbl_col = [c for c in df.columns if c.startswith('BBL')][0]
+        bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
+        mid = (df[bbl_col].iloc[-1] + df[bbu_col].iloc[-1]) / 2
+        df.iloc[-1, df.columns.get_loc('close')] = mid
+        sig, conf = indicators.get_combined_signal(df)
+        assert sig == 'NEUTRAL'
+        assert conf == 0.0

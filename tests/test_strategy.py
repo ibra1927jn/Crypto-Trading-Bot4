@@ -209,3 +209,52 @@ class TestCheckInterval:
         s = make_strategy(volatility=1.0)
         s.analyze_market_condition()
         assert s.get_check_interval() == 60
+
+
+class TestGetStrategySummary:
+    def test_summary_keys(self):
+        s = make_strategy(volatility=3.0)
+        s.analyze_market_condition()
+        summary = s.get_strategy_summary()
+        assert 'current_condition' in summary
+        assert 'volatility_threshold' in summary
+        assert 'current_volatility' in summary
+        assert 'last_signal' in summary
+        assert 'check_interval' in summary
+        assert 'strategy_active' in summary
+        assert 'ai_enabled' in summary
+
+    def test_high_vol_summary(self):
+        s = make_strategy(volatility=3.0)
+        s.analyze_market_condition()
+        summary = s.get_strategy_summary()
+        assert summary['strategy_active'] == 'SCALPING'
+        assert summary['ai_enabled'] is False
+
+    def test_low_vol_summary(self):
+        s = make_strategy(volatility=1.0)
+        s.analyze_market_condition()
+        summary = s.get_strategy_summary()
+        assert summary['strategy_active'] == 'SWING'
+        assert summary['ai_enabled'] is True
+
+
+class TestScalpingSignals:
+    def test_scalping_sell(self, dummy_df):
+        s = make_strategy(volatility=3.0, ind_signal='SELL', ind_conf=0.8)
+        signal, conf, details = s.get_signal(dummy_df)
+        assert signal == Signal.SELL
+        assert details['strategy_used'] == 'SCALPING'
+
+    def test_scalping_neutral(self, dummy_df):
+        s = make_strategy(volatility=3.0, ind_signal='NEUTRAL', ind_conf=0.0)
+        signal, conf, details = s.get_signal(dummy_df)
+        assert signal == Signal.NEUTRAL
+
+
+class TestSwingSellSignal:
+    def test_ai_sell_dominates(self, dummy_df):
+        s = make_strategy(volatility=1.0, ind_signal='NEUTRAL', ind_conf=0.0,
+                          ai_conf=0.9, ai_pred=-0.5)
+        signal, conf, details = s.get_signal(dummy_df)
+        assert signal == Signal.SELL

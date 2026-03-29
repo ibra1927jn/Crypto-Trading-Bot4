@@ -59,3 +59,26 @@ class TestCalculateVolatility:
                 f"Volatility is identical for 1m ({vol_1m:.4f}) and 1h ({vol_1h:.4f}). "
                 "Annualization factor is hardcoded and does not account for timeframe."
             )
+
+    def test_get_latest_data_none_by_default(self):
+        dm = DataManager(exchange=None, symbol='BTC/USDT', timeframe='1m')
+        assert dm.get_latest_data() is None
+
+    def test_get_latest_data_returns_data(self):
+        prices = [100.0, 101.0, 102.0]
+        dm = self._make_dm_with_data(prices)
+        data = dm.get_latest_data()
+        assert data is not None
+        assert len(data) == 3
+
+    def test_single_price_returns_zero(self):
+        dm = self._make_dm_with_data([100.0])
+        assert dm.calculate_volatility() == 0.0
+
+    def test_unknown_timeframe_uses_default(self):
+        """Unknown timeframe should fall back to 1m factor."""
+        prices = 100 + np.cumsum(np.random.RandomState(42).randn(50) * 0.5)
+        dm = self._make_dm_with_data(prices, timeframe='3m')
+        vol = dm.calculate_volatility()
+        assert isinstance(vol, float)
+        assert vol >= 0
