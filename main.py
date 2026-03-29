@@ -86,10 +86,10 @@ class CryptoRadar:
                 df = self.indicators.calculate_all(df)
                 price = df['close'].iloc[-1]
 
-                signal, conf, _ = self.strategies[symbol].get_signal(df)
+                signal, _, _ = self.strategies[symbol].get_signal(df)
                 
                 icon = "🟢" if signal.value == "BUY" else "🔴" if signal.value == "SELL" else "⚪"
-                print(f"{icon} {symbol:<10} ${price:<10.2f} | Señal: {signal.value}")
+                logger.info(f"{icon} {symbol:<10} ${price:<10.2f} | Señal: {signal.value}")
             except Exception as e:
                 logger.error(f"Error {symbol}: {e}")
 
