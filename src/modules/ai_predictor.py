@@ -62,9 +62,9 @@ class AI_Predictor:
             data['return'] = np.log(data['close'] / data['close'].shift(1))
             data['log_vol'] = np.log(data['volume'] + 1).pct_change()
             data['rsi'] = ta.rsi(data['close'], length=14) / 100.0
-            data['atr_rel'] = ta.atr(data['high'], data['low'], data['close'], length=14) / data['close']
+            data['atr_rel'] = ta.atr(data['high'], data['low'], data['close'], length=14) / data['close'].clip(lower=1e-8)
             macd = ta.macd(data['close']); data['macd'] = macd['MACD_12_26_9']; data['macd_sig'] = macd['MACDs_12_26_9']
-            ema = ta.ema(data['close'], length=50); data['dist_ema'] = (data['close'] - ema) / ema
+            ema = ta.ema(data['close'], length=50); data['dist_ema'] = (data['close'] - ema) / ema.clip(lower=1e-8)
             data['funding'] = data.get('funding_rate', 0.0)
 
             data.replace([np.inf, -np.inf], np.nan, inplace=True); data.dropna(inplace=True)
