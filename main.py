@@ -51,10 +51,11 @@ class CryptoRadar:
         self.indicators = TechnicalIndicators({})
         self.ai_predictor = AI_Predictor({})
         
+        self.strategies = {}
         for sym in SYMBOLS:
-            self.managers[sym] = DataManager(self.exchange, sym, self.timeframe, historical_bars=300) # 300 velas para cubrir Lookback 180
-            
-        self.strategy = HybridStrategy(None, self.indicators, self.ai_predictor, {})
+            mgr = DataManager(self.exchange, sym, self.timeframe, historical_bars=300)
+            self.managers[sym] = mgr
+            self.strategies[sym] = HybridStrategy(mgr, self.indicators, self.ai_predictor, {})
         return True
 
     async def run(self):
@@ -76,9 +77,8 @@ class CryptoRadar:
 
                 df = self.indicators.calculate_all(df)
                 price = df['close'].iloc[-1]
-                
-                self.strategy.data_manager = mgr
-                signal, conf, _ = self.strategy.get_signal(df)
+
+                signal, conf, _ = self.strategies[symbol].get_signal(df)
                 
                 icon = "🟢" if signal.value == "BUY" else "🔴" if signal.value == "SELL" else "⚪"
                 print(f"{icon} {symbol:<10} ${price:<10.2f} | Señal: {signal.value}")
