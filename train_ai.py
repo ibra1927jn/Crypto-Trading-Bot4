@@ -7,7 +7,6 @@ from sklearn.preprocessing import RobustScaler
 from torch.utils.data import Dataset, DataLoader
 import glob
 import os
-import time
 import math
 import warnings
 import wandb
@@ -157,7 +156,7 @@ def load_and_prepare_data(data_folder, config):
             targs = df['return'].values.astype(np.float32)
             all_features.append(feats)
             all_targets.append(targs)
-        except:
+        except Exception:
             pass
 
     X_raw = np.concatenate(all_features)

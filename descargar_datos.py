@@ -2,7 +2,7 @@ import ccxt
 import pandas as pd
 import time
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # ==========================================
 # ⚙️ CONFIGURACIÓN "HIGH DEFINITION"
