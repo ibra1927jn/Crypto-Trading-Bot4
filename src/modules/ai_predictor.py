@@ -11,7 +11,10 @@ import math
 logger = logging.getLogger(__name__)
 
 # ARQUITECTURA
-D_MODEL=128; NHEAD=4; NUM_LAYERS=4; DROPOUT=0.0
+D_MODEL = 128
+NHEAD = 4
+NUM_LAYERS = 4
+DROPOUT = 0.0
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
