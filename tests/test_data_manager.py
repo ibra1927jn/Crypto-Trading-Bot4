@@ -51,9 +51,7 @@ class TestCalculateVolatility:
         vol_1m = dm_1m.calculate_volatility()
         vol_1h = dm_1h.calculate_volatility()
 
-        # Bug: currently both return the same value because factor is hardcoded
-        # After fix, 1h should give lower annualized vol (fewer bars/year)
-        # This test documents the bug - if factor is hardcoded, both are equal
+        # 1h should give lower annualized vol (fewer bars/year)
         # The ratio should be sqrt(60) ≈ 7.75 difference
         if abs(vol_1m - vol_1h) < 0.001:
             pytest.fail(
