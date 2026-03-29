@@ -156,8 +156,8 @@ def load_and_prepare_data(data_folder, config):
             targs = df['return'].values.astype(np.float32)
             all_features.append(feats)
             all_targets.append(targs)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"⚠️ Skipping {file}: {e}")
 
     X_raw = np.concatenate(all_features)
     y_raw = np.concatenate(all_targets)
