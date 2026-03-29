@@ -35,7 +35,17 @@ class DataManager:
 
     def get_latest_data(self): return self.data
     
+    BARS_PER_YEAR = {
+        '1m': 365 * 24 * 60,
+        '5m': 365 * 24 * 12,
+        '15m': 365 * 24 * 4,
+        '1h': 365 * 24,
+        '4h': 365 * 6,
+        '1d': 365,
+    }
+
     def calculate_volatility(self, window=20):
         if self.data is None: return 0.0
         returns = np.log(self.data['close'] / self.data['close'].shift(1))
-        return float(returns.tail(window).std() * np.sqrt(365*24*60) * 100)
+        bars_per_year = self.BARS_PER_YEAR.get(self.timeframe, 365 * 24 * 60)
+        return float(returns.tail(window).std() * np.sqrt(bars_per_year) * 100)
