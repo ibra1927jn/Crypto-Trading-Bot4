@@ -81,7 +81,7 @@ class AI_Predictor:
             icon = "↗️" if pct > 0 else "↘️"
             logger.info(f"🔮 IA: {icon} {pct:.4f}%")
 
-            confidence = min(abs(pct) / 0.1, 0.9)
+            confidence = min(abs(pct) / 1.0, 0.95)
             return pct, confidence
         except Exception as e:
             logger.error(f"❌ Error en predict: {e}")
