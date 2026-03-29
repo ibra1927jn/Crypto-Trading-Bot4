@@ -13,8 +13,7 @@ YEARS = 4            # 4 años de 1m son 2 millones de velas (Suficiente para RA
 OUTPUT_FOLDER = 'data'
 
 # Crear carpeta
-if not os.path.exists(OUTPUT_FOLDER):
-    os.makedirs(OUTPUT_FOLDER)
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 # Usamos el cliente de Futuros para tener acceso a datos avanzados
 exchange = ccxt.binance({'options': {'defaultType': 'future'}})
