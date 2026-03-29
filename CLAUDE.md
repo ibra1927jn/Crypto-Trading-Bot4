@@ -48,4 +48,4 @@ DASHBOARD_API_KEY
 - Sniper Rotativo operativo: vigila 5 monedas, compra la mejor senal, rota
 - Scoring engine + backtest runner: validacion en testnet al 50%
 - Pendiente: integrar scoring_engine en alpha_engine para decisiones en vivo
-- Deploy: Oracle Cloud VM (Ubuntu), systemd services ct4-bot y ct4-monitor
+- Deploy: Hetzner CX43 (Ubuntu), /opt/ct4, systemd services ct4-bot y ct4-monitor
