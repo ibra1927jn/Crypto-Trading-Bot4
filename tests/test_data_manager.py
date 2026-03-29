@@ -3,6 +3,7 @@ import pytest
 import pandas as pd
 import numpy as np
 import sys, os
+from unittest.mock import AsyncMock, MagicMock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from modules.data_manager import DataManager
@@ -82,3 +83,71 @@ class TestCalculateVolatility:
         vol = dm.calculate_volatility()
         assert isinstance(vol, float)
         assert vol >= 0
+
+
+class TestUpdateData:
+    def _make_exchange(self, ohlcv_data=None, funding_rate=0.001, has_ohlcv=True,
+                       funding_raises=False):
+        exchange = AsyncMock()
+        exchange.has = {'fetchOHLCV': has_ohlcv}
+        exchange.fetch_ohlcv = AsyncMock(return_value=ohlcv_data)
+        if funding_raises:
+            exchange.fetch_funding_rate = AsyncMock(side_effect=Exception("no funding"))
+        else:
+            exchange.fetch_funding_rate = AsyncMock(
+                return_value={'fundingRate': funding_rate}
+            )
+        return exchange
+
+    @pytest.mark.asyncio
+    async def test_update_data_populates_df(self):
+        ohlcv = [
+            [1000000, 100.0, 105.0, 95.0, 102.0, 5000.0],
+            [1060000, 102.0, 106.0, 98.0, 104.0, 6000.0],
+        ]
+        exchange = self._make_exchange(ohlcv_data=ohlcv)
+        dm = DataManager(exchange, 'BTC/USDT', '1m')
+        await dm.update_data()
+        data = dm.get_latest_data()
+        assert data is not None
+        assert len(data) == 2
+        assert 'close' in data.columns
+        assert 'funding_rate' in data.columns
+        assert data['funding_rate'].iloc[0] == 0.001
+
+    @pytest.mark.asyncio
+    async def test_update_data_funding_fallback(self):
+        """When funding rate fetch fails, column should default to 0.0."""
+        ohlcv = [[1000000, 100.0, 105.0, 95.0, 102.0, 5000.0]]
+        exchange = self._make_exchange(ohlcv_data=ohlcv, funding_raises=True)
+        dm = DataManager(exchange, 'BTC/USDT', '1m')
+        await dm.update_data()
+        data = dm.get_latest_data()
+        assert data is not None
+        assert data['funding_rate'].iloc[0] == 0.0
+
+    @pytest.mark.asyncio
+    async def test_update_data_no_ohlcv_support(self):
+        """If exchange doesn't support fetchOHLCV, data stays None."""
+        exchange = self._make_exchange(has_ohlcv=False)
+        dm = DataManager(exchange, 'BTC/USDT', '1m')
+        await dm.update_data()
+        assert dm.get_latest_data() is None
+
+    @pytest.mark.asyncio
+    async def test_update_data_empty_ohlcv(self):
+        """If exchange returns empty list, data stays None."""
+        exchange = self._make_exchange(ohlcv_data=[])
+        dm = DataManager(exchange, 'BTC/USDT', '1m')
+        await dm.update_data()
+        assert dm.get_latest_data() is None
+
+    @pytest.mark.asyncio
+    async def test_update_data_exception_handled(self):
+        """If fetch_ohlcv raises, data stays None (no crash)."""
+        exchange = AsyncMock()
+        exchange.has = {'fetchOHLCV': True}
+        exchange.fetch_ohlcv = AsyncMock(side_effect=Exception("network error"))
+        dm = DataManager(exchange, 'BTC/USDT', '1m')
+        await dm.update_data()
+        assert dm.get_latest_data() is None
