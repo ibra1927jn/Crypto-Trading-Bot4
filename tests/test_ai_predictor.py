@@ -70,16 +70,16 @@ class TestAIPredictorPredict:
     def test_predict_insufficient_data(self):
         predictor = AI_Predictor({})
         df = self._make_df(50)
-        signal, conf = predictor.predict(df)
-        assert signal == 'NEUTRAL'
+        pct, conf = predictor.predict(df)
+        assert pct == 0.0
         assert conf == 0.0
 
     def test_predict_no_model(self):
         predictor = AI_Predictor({})
         predictor.model = None
         df = self._make_df(300)
-        signal, conf = predictor.predict(df)
-        assert signal == 'NEUTRAL'
+        pct, conf = predictor.predict(df)
+        assert pct == 0.0
 
     def test_tensor_shape_in_predict(self):
         """Verifica que el tensor enviado al modelo tiene forma correcta (batch, seq, features)."""

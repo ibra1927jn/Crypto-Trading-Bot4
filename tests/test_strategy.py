@@ -35,13 +35,17 @@ class MockAIPredictor:
     def __init__(self, signal='NEUTRAL', confidence=0.0, prediction=0.0):
         self._signal = signal
         self._confidence = confidence
-        self._prediction = prediction
+        self._prediction = prediction  # pct value (float)
 
     def predict(self, df):
         return self._prediction, self._confidence
 
     def get_signal(self, df, threshold=0.65):
-        return self._signal
+        if self._prediction > 0.02 and self._confidence >= threshold:
+            return 'BUY'
+        elif self._prediction < -0.02 and self._confidence >= threshold:
+            return 'SELL'
+        return 'NEUTRAL'
 
 
 def make_strategy(volatility=1.0, ind_signal='NEUTRAL', ind_conf=0.0,
@@ -92,7 +96,7 @@ class TestGetSignal:
         assert signal == Signal.BUY
 
     def test_low_vol_uses_swing(self, dummy_df):
-        s = make_strategy(volatility=1.0, ai_signal='BUY', ai_conf=0.9, ai_pred=0.5)
+        s = make_strategy(volatility=1.0, ai_conf=0.9, ai_pred=0.5)
         signal, conf, details = s.get_signal(dummy_df)
         assert details['strategy_used'] == 'SWING'
 
@@ -106,17 +110,30 @@ class TestSwingStrategy:
     def test_ai_weight_dominates(self, dummy_df):
         """AI con señal BUY fuerte debe dominar sobre indicadores neutrales."""
         s = make_strategy(volatility=1.0, ind_signal='NEUTRAL', ind_conf=0.0,
-                          ai_signal='BUY', ai_conf=0.9, ai_pred=0.5)
+                          ai_conf=0.9, ai_pred=0.5)
         signal, conf, details = s.get_signal(dummy_df)
         assert signal == Signal.BUY
 
     def test_conflicting_signals(self, dummy_df):
         """Indicadores SELL + AI BUY: AI (70%) debe ganar."""
         s = make_strategy(volatility=1.0, ind_signal='SELL', ind_conf=0.7,
-                          ai_signal='BUY', ai_conf=0.9, ai_pred=0.5)
+                          ai_conf=0.9, ai_pred=0.5)
         signal, conf, details = s.get_signal(dummy_df)
         # combined = 1*0.7*0.9 + (-1)*0.3*0.7 = 0.63 - 0.21 = 0.42 > 0.3
         assert signal == Signal.BUY
+
+
+class TestSwingStrategyLogging:
+    def test_swing_does_not_crash_on_log(self, dummy_df):
+        """Regression: predict() returning string caused f-string .2f crash in logger."""
+        import logging
+        s = make_strategy(volatility=1.0, ind_signal='BUY', ind_conf=0.7,
+                          ai_conf=0.9, ai_pred=0.5)
+        logging.basicConfig(level=logging.DEBUG)
+        signal, conf, details = s.get_signal(dummy_df)
+        # Must not silently fall to NEUTRAL due to exception
+        assert signal == Signal.BUY
+        assert 'error' not in details
 
 
 class TestShouldOpenPosition:

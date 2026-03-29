@@ -54,7 +54,8 @@ class AI_Predictor:
         except Exception as e: logger.error(f"❌ Error: {e}")
 
     def predict(self, df):
-        if self.model is None or len(df) < self.lookback + 20: return 'NEUTRAL', 0.0
+        """Returns (pct_prediction, confidence) as floats."""
+        if self.model is None or len(df) < self.lookback + 20: return 0.0, 0.0
         try:
             data = df.copy()
             # Ingeniería
@@ -65,26 +66,27 @@ class AI_Predictor:
             macd = ta.macd(data['close']); data['macd'] = macd['MACD_12_26_9']; data['macd_sig'] = macd['MACDs_12_26_9']
             ema = ta.ema(data['close'], length=50); data['dist_ema'] = (data['close'] - ema) / ema
             data['funding'] = data.get('funding_rate', 0.0)
-            
+
             data.replace([np.inf, -np.inf], np.nan, inplace=True); data.dropna(inplace=True)
-            if len(data) < self.lookback: return 'NEUTRAL', 0.0
+            if len(data) < self.lookback: return 0.0, 0.0
 
             feats = data[['return', 'log_vol', 'rsi', 'macd', 'macd_sig', 'atr_rel', 'dist_ema', 'funding']].values
             self.scaler.fit(feats)
             scaled = self.scaler.transform(feats[-self.lookback:])
-            
+
             tensor = torch.tensor(scaled, dtype=torch.float32).unsqueeze(0).to(self.device)
             with torch.no_grad(): pred = self.model(tensor).item()
-            
+
             pct = (np.exp(pred) - 1) * 100
             icon = "↗️" if pct > 0 else "↘️"
             logger.info(f"🔮 IA: {icon} {pct:.4f}%")
-            
-            if pct > 0.02: return 'BUY', 0.9
-            elif pct < -0.02: return 'SELL', 0.9
-            return 'NEUTRAL', 0.0
-        except: return 'NEUTRAL', 0.0
+
+            confidence = min(abs(pct) / 0.1, 0.9)
+            return pct, confidence
+        except: return 0.0, 0.0
 
     def get_signal(self, df, threshold=0.65):
-        s, c = self.predict(df)
-        return s
+        pct, confidence = self.predict(df)
+        if pct > 0.02 and confidence >= threshold: return 'BUY'
+        elif pct < -0.02 and confidence >= threshold: return 'SELL'
+        return 'NEUTRAL'
