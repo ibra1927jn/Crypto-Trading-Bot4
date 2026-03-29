@@ -86,53 +86,53 @@ class TestGetExchangeConfig:
 
 
 class TestValidateConfig:
-    def test_validate_no_credentials(self, capsys):
+    def test_validate_no_credentials(self, caplog):
         original_key = Config.API_KEY
         original_secret = Config.API_SECRET
         Config.API_KEY = ""
         Config.API_SECRET = ""
-        result = Config.validate_config()
+        with caplog.at_level("WARNING", logger="config"):
+            result = Config.validate_config()
         assert result is False
-        output = capsys.readouterr().out
-        assert "WARNING" in output
+        assert "credentials" in caplog.text.lower()
         Config.API_KEY = original_key
         Config.API_SECRET = original_secret
 
-    def test_validate_with_credentials_testnet(self, capsys):
+    def test_validate_with_credentials_testnet(self, caplog):
         original_key = Config.API_KEY
         original_secret = Config.API_SECRET
         original_testnet = Config.TESTNET
         Config.API_KEY = "test_key"
         Config.API_SECRET = "test_secret"
         Config.TESTNET = True
-        result = Config.validate_config()
+        with caplog.at_level("INFO", logger="config"):
+            result = Config.validate_config()
         assert result is True
-        output = capsys.readouterr().out
-        assert "TESTNET" in output
+        assert "TESTNET" in caplog.text
         Config.API_KEY = original_key
         Config.API_SECRET = original_secret
         Config.TESTNET = original_testnet
 
-    def test_validate_production_mode(self, capsys):
+    def test_validate_production_mode(self, caplog):
         original_key = Config.API_KEY
         original_secret = Config.API_SECRET
         original_testnet = Config.TESTNET
         Config.API_KEY = "test_key"
         Config.API_SECRET = "test_secret"
         Config.TESTNET = False
-        result = Config.validate_config()
+        with caplog.at_level("WARNING", logger="config"):
+            result = Config.validate_config()
         assert result is True
-        output = capsys.readouterr().out
-        assert "PRODUCTION" in output
+        assert "PRODUCTION" in caplog.text
         Config.API_KEY = original_key
         Config.API_SECRET = original_secret
         Config.TESTNET = original_testnet
 
 
 class TestPrintConfig:
-    def test_print_config_output(self, capsys):
-        Config.print_config()
-        output = capsys.readouterr().out
-        assert "CRYPTO TRADING BOT" in output
-        assert Config.EXCHANGE in output
-        assert Config.SYMBOL in output
+    def test_print_config_output(self, caplog):
+        with caplog.at_level("INFO", logger="config"):
+            Config.print_config()
+        assert "CRYPTO TRADING BOT" in caplog.text
+        assert Config.EXCHANGE in caplog.text
+        assert Config.SYMBOL in caplog.text
