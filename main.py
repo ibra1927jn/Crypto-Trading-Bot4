@@ -14,7 +14,7 @@ load_dotenv(dotenv_path=os.path.join(BASE_DIR, '.env'), override=True)
 
 SYMBOLS = [s.strip() for s in os.getenv('TRADING_SYMBOLS', 'BTC/USDT').split(',')]
 API_KEY = os.getenv('BINANCE_API_KEY')
-SECRET_KEY = os.getenv('BINANCE_SECRET_KEY')
+SECRET_KEY = os.getenv('BINANCE_API_SECRET')
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 from modules.ai_predictor import AI_Predictor  # noqa: E402
