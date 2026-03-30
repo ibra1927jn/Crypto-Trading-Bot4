@@ -20,6 +20,7 @@ NUM_LAYERS = 4
 DROPOUT = 0.0
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 # Arquitectura
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
@@ -30,7 +31,10 @@ class PositionalEncoding(nn.Module):
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe.unsqueeze(0))
-    def forward(self, x): return x + self.pe[:, :x.size(1)]
+
+    def forward(self, x):
+        return x + self.pe[:, :x.size(1)]
+
 
 class CryptoTransformer(nn.Module):
     def __init__(self):
@@ -40,12 +44,14 @@ class CryptoTransformer(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(d_model=D_MODEL, nhead=NHEAD, dropout=DROPOUT, batch_first=True)
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=NUM_LAYERS)
         self.decoder = nn.Linear(D_MODEL, 1)
+
     def forward(self, x):
         x = self.embedding(x)
         x = self.pos_encoder(x)
         x = self.transformer(x)
         x = x.mean(dim=1)
         return self.decoder(x)
+
 
 if __name__ == "__main__":
     # Carga
@@ -81,8 +87,8 @@ if __name__ == "__main__":
 
     # Test
     start_idx = random.randint(0, len(scaled) - TEST_BARS - LOOKBACK)
-    test_data = scaled[start_idx : start_idx + TEST_BARS + LOOKBACK]
-    real_ret = df['return'].values[start_idx + LOOKBACK : start_idx + TEST_BARS + LOOKBACK]
+    test_data = scaled[start_idx:start_idx + TEST_BARS + LOOKBACK]
+    real_ret = df['return'].values[start_idx + LOOKBACK:start_idx + TEST_BARS + LOOKBACK]
 
     hits = 0
     total = 0

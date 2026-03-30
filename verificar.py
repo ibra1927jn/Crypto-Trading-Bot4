@@ -2,9 +2,9 @@ import torch
 import ccxt
 import pandas_ta as ta
 
-print("\n" + "="*50)
+print("\n" + "=" * 50)
 print("🚀 DIAGNÓSTICO FINAL DEL SISTEMA")
-print("="*50)
+print("=" * 50)
 
 # 1. Verificación de GPU (RTX 5080)
 print("\n🧠 MOTOR DE IA (PyTorch):")
@@ -27,4 +27,4 @@ if ccxt.__version__:
 else:
     print("   ❌ CCXT: ERROR")
 
-print("\n" + "="*50 + "\n")
+print("\n" + "=" * 50 + "\n")

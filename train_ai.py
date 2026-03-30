@@ -57,7 +57,7 @@ class LazyCryptoDataset(Dataset):
         return len(self.features) - self.lookback
 
     def __getitem__(self, idx):
-        x = self.features[idx : idx + self.lookback]
+        x = self.features[idx:idx + self.lookback]
         y = self.targets[idx + self.lookback]
         return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
 
@@ -71,8 +71,8 @@ class PositionalEncoding(nn.Module):
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe.unsqueeze(0))
-    
-    def forward(self, x): 
+
+    def forward(self, x):
         return x + self.pe[:, :x.size(1)]
 
 
@@ -82,16 +82,16 @@ class CryptoTransformer(nn.Module):
         self.embedding = nn.Linear(8, config['d_model'])
         self.pos_encoder = PositionalEncoding(config['d_model'])
         encoder_layer = nn.TransformerEncoderLayer(
-            d_model=config['d_model'], 
-            nhead=config['nhead'], 
-            dropout=config['dropout'], 
+            d_model=config['d_model'],
+            nhead=config['nhead'],
+            dropout=config['dropout'],
             batch_first=True,
             norm_first=True
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=config['num_layers'])
         self.decoder = nn.Linear(config['d_model'], 1)
         self._init_weights()
-    
+
     def _init_weights(self):
         for module in self.modules():
             if isinstance(module, nn.Linear):
@@ -101,7 +101,7 @@ class CryptoTransformer(nn.Module):
             elif isinstance(module, nn.LayerNorm):
                 nn.init.ones_(module.weight)
                 nn.init.zeros_(module.bias)
-    
+
     def forward(self, x):
         x = self.embedding(x)
         x = self.pos_encoder(x)
@@ -118,7 +118,7 @@ class EarlyStopping:
         self.counter = 0
         self.best_loss = None
         self.should_stop = False
-    
+
     def __call__(self, val_loss):
         if self.best_loss is None:
             self.best_loss = val_loss
@@ -135,9 +135,9 @@ class EarlyStopping:
 def load_and_prepare_data(data_folder, config):
     """Carga datos (versión silenciosa para sweeps)"""
     csv_files = glob.glob(f"{data_folder}/*_HD.csv")
-    
+
     all_features, all_targets = [], []
-    
+
     for file in csv_files:
         try:
             df = pd.read_csv(file)
@@ -151,11 +151,13 @@ def load_and_prepare_data(data_folder, config):
             ema = ta.ema(df['close'], length=50)
             df['dist_ema'] = (df['close'] - ema) / ema
             df['funding'] = df.get('funding_rate', 0.0)
-            
+
             df.replace([np.inf, -np.inf], np.nan, inplace=True)
             df.dropna(inplace=True)
 
-            feats = df[['return', 'vol_change', 'rsi', 'macd', 'macd_sig', 'atr_rel', 'dist_ema', 'funding']].values.astype(np.float32)
+            feats = df[
+                ['return', 'vol_change', 'rsi', 'macd', 'macd_sig', 'atr_rel', 'dist_ema', 'funding']
+            ].values.astype(np.float32)
             targs = df['return'].values.astype(np.float32)
             all_features.append(feats)
             all_targets.append(targs)
@@ -164,15 +166,15 @@ def load_and_prepare_data(data_folder, config):
 
     X_raw = np.concatenate(all_features)
     y_raw = np.concatenate(all_targets)
-    
+
     scaler = RobustScaler()
     X_scaled = scaler.fit_transform(X_raw)
-    
+
     split = int(len(X_scaled) * config['data_split'])
-    
+
     train_dataset = LazyCryptoDataset(X_scaled[:split], y_raw[:split], config['lookback'])
     val_dataset = LazyCryptoDataset(X_scaled[split:], y_raw[split:], config['lookback'])
-    
+
     return train_dataset, val_dataset, scaler
 
 
@@ -180,26 +182,26 @@ def train_epoch(model, train_loader, criterion, optimizer, scaler_amp, scheduler
     """Entrena una época"""
     model.train()
     total_loss = 0
-    
+
     for bx, by in train_loader:
         bx, by = bx.to(device, non_blocking=True), by.to(device, non_blocking=True)
-        
+
         optimizer.zero_grad(set_to_none=True)
-        
+
         with torch.amp.autocast('cuda'):
             out = model(bx)
             loss = criterion(out, by)
-        
+
         scaler_amp.scale(loss).backward()
         scaler_amp.unscale_(optimizer)
         torch.nn.utils.clip_grad_norm_(model.parameters(), config['gradient_clip'])
-        
+
         scaler_amp.step(optimizer)
         scaler_amp.update()
         scheduler.step()
-        
+
         total_loss += loss.item()
-    
+
     return total_loss / len(train_loader)
 
 
@@ -209,7 +211,7 @@ def validate(model, val_loader, criterion, device):
     total_loss = 0
     predictions = []
     targets = []
-    
+
     with torch.no_grad():
         for bx, by in val_loader:
             bx, by = bx.to(device, non_blocking=True), by.to(device, non_blocking=True)
@@ -219,60 +221,60 @@ def validate(model, val_loader, criterion, device):
             total_loss += loss.item()
             predictions.extend(val_out.cpu().numpy())
             targets.extend(by.cpu().numpy())
-    
+
     predictions = np.array(predictions)
     targets = np.array(targets)
     mae = np.mean(np.abs(predictions - targets))
     correlation = np.corrcoef(predictions, targets)[0, 1] if len(predictions) > 1 else 0
-    
+
     return total_loss / len(val_loader), mae, correlation
 
 
 def train():
     """Función principal de entrenamiento (compatible con sweeps)"""
-    
+
     # Configuración hardware
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+
     # 🎯 WANDB INIT (sweep inyecta config automáticamente)
     wandb.init(config=DEFAULT_CONFIG)
     config = wandb.config
-    
+
     # Cargar datos
     train_dataset, val_dataset, scaler = load_and_prepare_data(DATA_FOLDER, config)
-    
+
     train_loader = DataLoader(
-        train_dataset, 
-        batch_size=config.batch_size, 
-        shuffle=True, 
-        num_workers=NUM_WORKERS, 
+        train_dataset,
+        batch_size=config.batch_size,
+        shuffle=True,
+        num_workers=NUM_WORKERS,
         pin_memory=PIN_MEMORY,
         persistent_workers=False
     )
     val_loader = DataLoader(
-        val_dataset, 
+        val_dataset,
         batch_size=config.batch_size * 2,
-        shuffle=False, 
-        num_workers=NUM_WORKERS, 
+        shuffle=False,
+        num_workers=NUM_WORKERS,
         pin_memory=PIN_MEMORY,
         persistent_workers=False
     )
-    
+
     # Modelo
     model = CryptoTransformer(config).to(device)
     criterion = nn.MSELoss()
     scaler_amp = torch.amp.GradScaler('cuda')
-    
+
     optimizer = torch.optim.AdamW(
-        model.parameters(), 
-        lr=config.learning_rate, 
+        model.parameters(),
+        lr=config.learning_rate,
         weight_decay=config.weight_decay,
         betas=(0.9, 0.999)
     )
-    
+
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer,
         max_lr=config.learning_rate,
@@ -283,19 +285,19 @@ def train():
         div_factor=25.0,
         final_div_factor=1e4
     )
-    
+
     early_stop = EarlyStopping(patience=config.early_stop_patience)
     best_val_loss = float('inf')
-    
+
     # Training loop
     for epoch in range(config.epochs):
         avg_train_loss = train_epoch(
-            model, train_loader, criterion, optimizer, 
+            model, train_loader, criterion, optimizer,
             scaler_amp, scheduler, device, config
         )
-        
+
         avg_val_loss, val_mae, val_corr = validate(model, val_loader, criterion, device)
-        
+
         # Log a WandB (lo que el sweep optimiza)
         wandb.log({
             "epoch": epoch + 1,
@@ -305,17 +307,17 @@ def train():
             "val/correlation": val_corr,
             "train/learning_rate": optimizer.param_groups[0]['lr']
         })
-        
+
         # Guardar mejor modelo
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             # No guardamos en sweep (demasiados modelos)
-        
+
         # Early stopping
         if early_stop(avg_val_loss):
             wandb.log({"early_stopped": True, "stopped_epoch": epoch + 1})
             break
-    
+
     # Métricas finales
     wandb.log({
         "final/best_val_loss": best_val_loss,

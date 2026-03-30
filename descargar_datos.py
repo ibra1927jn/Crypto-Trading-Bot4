@@ -28,33 +28,33 @@ logger.info("=" * 70)
 
 for symbol in SYMBOLS:
     logger.info("Procesando %s...", symbol)
-    
+
     # -------------------------------------------
     # 1. DESCARGA DE PRECIOS (OHLCV 1m)
     # -------------------------------------------
     now = exchange.milliseconds()
     since = now - (YEARS * 365 * 24 * 60 * 60 * 1000)
-    
+
     all_ohlcv = []
     logger.info("Descargando Velas de 1 minuto...")
-    
+
     start_time = time.time()
     temp_since = since
-    
+
     while temp_since < now:
         try:
             dt_str = datetime.fromtimestamp(temp_since/1000).strftime('%Y-%m-%d')
             logger.info("Fecha: %s | Velas: %s", dt_str, f"{len(all_ohlcv):,}")
-            
+
             ohlcv = exchange.fetch_ohlcv(symbol, TIMEFRAME, temp_since, limit=1000)
-            
+
             if len(ohlcv) == 0:
                 break
-                
+
             all_ohlcv += ohlcv
-            temp_since = ohlcv[-1][0] + 60000 # Sumar 1 minuto
-            time.sleep(0.1) # Pequeña pausa para cuidar la API
-            
+            temp_since = ohlcv[-1][0] + 60000  # Sumar 1 minuto
+            time.sleep(0.1)  # Pequeña pausa para cuidar la API
+
         except Exception as e:
             logger.error("Error (Velas): %s", e)
             time.sleep(5)
@@ -65,22 +65,22 @@ for symbol in SYMBOLS:
     logger.info("Descargando Funding Rates (Contexto de mercado)...")
     all_funding = []
     temp_since = since
-    
+
     # El Funding Rate suele ser cada 8 horas, bajamos bloques grandes
     while temp_since < now:
         try:
             # Binance suele dar 1000 registros de funding
             funding = exchange.fetch_funding_rate_history(symbol, temp_since, limit=1000)
-            
+
             if len(funding) == 0:
                 break
-                
+
             for f in funding:
                 all_funding.append([f['timestamp'], f['fundingRate']])
-                
+
             temp_since = funding[-1]['timestamp'] + 1
             time.sleep(0.1)
-            
+
         except Exception:
             # Si falla (algunas monedas no tienen tanto historial de funding), seguimos
             break
@@ -93,20 +93,20 @@ for symbol in SYMBOLS:
         df_price = pd.DataFrame(all_ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         df_price['timestamp'] = pd.to_datetime(df_price['timestamp'], unit='ms')
         df_price.set_index('timestamp', inplace=True)
-        
+
         # Crear DataFrame de Funding
         if len(all_funding) > 0:
             df_funding = pd.DataFrame(all_funding, columns=['timestamp', 'funding_rate'])
             df_funding['timestamp'] = pd.to_datetime(df_funding['timestamp'], unit='ms')
             df_funding.set_index('timestamp', inplace=True)
-            
+
             # Re-muestrear Funding para que coincida con los minutos (rellenar huecos)
             # El funding cambia cada 8h, así que repetimos el valor para cada minuto intermedio
             df_funding = df_funding.resample('1min').ffill()
-            
+
             # Unir todo
             df_final = df_price.join(df_funding)
-            df_final['funding_rate'] = df_final['funding_rate'].fillna(0) # Rellenar nulos iniciales
+            df_final['funding_rate'] = df_final['funding_rate'].fillna(0)  # Rellenar nulos iniciales
         else:
             df_final = df_price
             df_final['funding_rate'] = 0.0
@@ -115,7 +115,7 @@ for symbol in SYMBOLS:
         clean_name = symbol.replace('/', '_')
         filename = f"{OUTPUT_FOLDER}/{clean_name}_1m_HD.csv"
         df_final.reset_index().to_csv(filename, index=False)
-        
+
         duration = time.time() - start_time
         logger.info("COMPLETADO: %s", symbol)
         logger.info("Archivo: %s", filename)
