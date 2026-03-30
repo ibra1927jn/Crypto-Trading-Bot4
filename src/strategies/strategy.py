@@ -34,6 +34,18 @@ class Signal(Enum):
     NEUTRAL = "NEUTRAL"
 
 
+# Umbrales de confianza mínima por estrategia
+SCALPING_MIN_CONFIDENCE = 0.55
+SWING_MIN_CONFIDENCE = 0.65
+
+# Pesos para señal combinada (swing)
+AI_WEIGHT = 0.7
+INDICATORS_WEIGHT = 0.3
+
+# Umbral de señal combinada para decidir BUY/SELL
+SIGNAL_THRESHOLD = 0.3
+
+
 class HybridStrategy:
     """
     Estrategia híbrida que combina:
@@ -219,8 +231,8 @@ class HybridStrategy:
 
             # Combinar ambas señales
             # La IA tiene mayor peso en condiciones de baja volatilidad
-            ai_weight = 0.7
-            indicators_weight = 0.3
+            ai_weight = AI_WEIGHT
+            indicators_weight = INDICATORS_WEIGHT
 
             # Convertir señales a valores numéricos
             signal_values = {"BUY": 1, "NEUTRAL": 0, "SELL": -1}
@@ -240,9 +252,9 @@ class HybridStrategy:
             )
 
             # Determinar señal final
-            if combined_value > 0.3:
+            if combined_value > SIGNAL_THRESHOLD:
                 signal = Signal.BUY
-            elif combined_value < -0.3:
+            elif combined_value < -SIGNAL_THRESHOLD:
                 signal = Signal.SELL
             else:
                 signal = Signal.NEUTRAL
@@ -312,10 +324,10 @@ class HybridStrategy:
             # Umbral mínimo de confianza según la estrategia
             if self.current_condition == MarketCondition.HIGH_VOLATILITY:
                 # Scalping: umbral más bajo pero respuestas rápidas
-                min_confidence = 0.55
+                min_confidence = SCALPING_MIN_CONFIDENCE
             else:
                 # Swing: umbral más alto para mayor seguridad
-                min_confidence = 0.65
+                min_confidence = SWING_MIN_CONFIDENCE
 
             if confidence < min_confidence:
                 logger.debug(
