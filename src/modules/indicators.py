@@ -6,6 +6,10 @@ import pandas_ta as ta
 logger = logging.getLogger(__name__)
 
 COMBINED_SIGNAL_CONFIDENCE = 0.7
+MACD_CROSSOVER_CONFIDENCE = 0.8
+BOLLINGER_BREAK_CONFIDENCE = 0.9
+RSI_OVERSOLD = 30
+RSI_OVERBOUGHT = 70
 
 
 class TechnicalIndicators:
@@ -50,9 +54,9 @@ class TechnicalIndicators:
             prev_macd, prev_sig = df[macd_col].iloc[-2], df[signal_col].iloc[-2]
 
             if prev_macd < prev_sig and curr_macd > curr_sig:
-                return "BUY", 0.8
+                return "BUY", MACD_CROSSOVER_CONFIDENCE
             elif prev_macd > prev_sig and curr_macd < curr_sig:
-                return "SELL", 0.8
+                return "SELL", MACD_CROSSOVER_CONFIDENCE
             return "NEUTRAL", 0.0
         except Exception as e:
             logger.error("❌ Error en MACD signal: %s", e)
@@ -68,9 +72,9 @@ class TechnicalIndicators:
             bbu = [c for c in df.columns if c.startswith("BBU")]
 
             if bbl and close < latest[bbl[0]]:
-                return "BUY", 0.9
+                return "BUY", BOLLINGER_BREAK_CONFIDENCE
             if bbu and close > latest[bbu[0]]:
-                return "SELL", 0.9
+                return "SELL", BOLLINGER_BREAK_CONFIDENCE
             return "NEUTRAL", 0.0
         except Exception as e:
             logger.error("❌ Error en Bollinger signal: %s", e)
@@ -82,9 +86,9 @@ class TechnicalIndicators:
         try:
             signals = []
             rsi = df["rsi"].iloc[-1]
-            if rsi < 30:
+            if rsi < RSI_OVERSOLD:
                 signals.append("BUY")
-            elif rsi > 70:
+            elif rsi > RSI_OVERBOUGHT:
                 signals.append("SELL")
 
             bol_sig, _ = self.get_bollinger_signal(df)
