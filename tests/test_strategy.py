@@ -123,7 +123,7 @@ class TestSwingStrategy:
 
 class TestSwingStrategyLogging:
     def test_swing_does_not_crash_on_log(self, dummy_df):
-        """Regression: predict() returning string caused f-string .2f crash in logger."""
+        """predict() returning string must not crash logger."""
         import logging
         s = make_strategy(volatility=1.0, ind_signal='BUY', ind_conf=0.7,
                           ai_conf=0.9, ai_pred=0.5)
@@ -283,11 +283,11 @@ class TestErrorBranches:
         assert 'error' in details
 
     def test_get_signal_unknown_condition_no_error(self, dummy_df):
-        """UNKNOWN condition branch (line 137-139): analyze fails but volatility works."""
+        """UNKNOWN condition: analyze fails but volatility works."""
         call_count = 0
 
         class FailOnceDataManager:
-            """First calculate_volatility call (in analyze) raises; second (in details) succeeds."""
+            """First call raises; second succeeds."""
             def calculate_volatility(self):
                 nonlocal call_count
                 call_count += 1

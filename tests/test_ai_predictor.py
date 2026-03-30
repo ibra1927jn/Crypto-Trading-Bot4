@@ -174,7 +174,7 @@ class TestAIPredictorPostDropna:
         })
 
     def test_insufficient_data_after_dropna(self):
-        """Data that passes initial check but becomes too short after dropna (covers line 92)."""
+        """Data passes initial check but is too short after dropna."""
         predictor = AI_Predictor({})
         predictor.model = CryptoTransformer().to(predictor.device)
         predictor.model.eval()

@@ -186,7 +186,7 @@ class TestCalculateAllError:
 
 class TestMACDSignalError:
     def test_macd_signal_no_macd_columns(self, indicators):
-        """Error branch: df without MACD columns triggers IndexError → exception handler."""
+        """df without MACD columns triggers exception handler."""
         df = pd.DataFrame({'close': [100, 101, 102], 'rsi': [50, 55, 60]})
         signal, conf = indicators.get_macd_signal(df)
         assert signal == 'NEUTRAL'
