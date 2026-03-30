@@ -13,7 +13,7 @@ class DataManager:
         self.limit = historical_bars
         self.data = None
 
-    async def update_data(self):
+    async def update_data(self) -> None:
         try:
             if self.exchange.has['fetchOHLCV']:
                 ohlcv = await self.exchange.fetch_ohlcv(self.symbol, self.timeframe, limit=self.limit)
@@ -36,7 +36,7 @@ class DataManager:
         except Exception as e:
             logger.error(f"Error datos: {e}")
 
-    def get_latest_data(self):
+    def get_latest_data(self) -> pd.DataFrame | None:
         return self.data
 
     BARS_PER_YEAR = {
@@ -48,7 +48,7 @@ class DataManager:
         '1d': 365,
     }
 
-    def calculate_volatility(self, window=20):
+    def calculate_volatility(self, window: int = 20) -> float:
         if self.data is None or len(self.data) < 2:
             return 0.0
         returns = np.log(self.data['close'] / self.data['close'].shift(1))

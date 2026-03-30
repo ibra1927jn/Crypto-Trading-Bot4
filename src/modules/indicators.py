@@ -1,3 +1,4 @@
+import pandas as pd
 import pandas_ta as ta
 import logging
 
@@ -14,7 +15,7 @@ class TechnicalIndicators:
         self.bollinger_period = self.config.get('BOLLINGER', {}).get('period', 20)
         self.bollinger_std = self.config.get('BOLLINGER', {}).get('std_dev', 2.0)
 
-    def calculate_all(self, df):
+    def calculate_all(self, df: pd.DataFrame) -> pd.DataFrame:
         if df is None or df.empty:
             return df
         try:
@@ -29,7 +30,7 @@ class TechnicalIndicators:
             logger.error(f"❌ Error calculando indicadores: {e}")
         return df
 
-    def get_macd_signal(self, df):
+    def get_macd_signal(self, df: pd.DataFrame) -> tuple[str, float]:
         if df is None or df.empty:
             return 'NEUTRAL', 0.0
         try:
@@ -47,7 +48,7 @@ class TechnicalIndicators:
             logger.error(f"❌ Error en MACD signal: {e}")
             return 'NEUTRAL', 0.0
 
-    def get_bollinger_signal(self, df):
+    def get_bollinger_signal(self, df: pd.DataFrame) -> tuple[str, float]:
         if df is None or df.empty:
             return 'NEUTRAL', 0.0
         try:
@@ -65,7 +66,7 @@ class TechnicalIndicators:
             logger.error(f"❌ Error en Bollinger signal: {e}")
             return 'NEUTRAL', 0.0
 
-    def get_combined_signal(self, df):
+    def get_combined_signal(self, df: pd.DataFrame) -> tuple[str, float]:
         if df is None or df.empty:
             return 'NEUTRAL', 0.0
         try:
@@ -95,7 +96,7 @@ class TechnicalIndicators:
             logger.error(f"❌ Error en combined signal: {e}")
             return 'NEUTRAL', 0.0
 
-    def get_indicators_summary(self, df):
+    def get_indicators_summary(self, df: pd.DataFrame) -> dict:
         if df is None or df.empty:
             return {}
         try:
