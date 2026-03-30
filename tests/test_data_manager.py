@@ -2,7 +2,7 @@
 import pytest
 import pandas as pd
 import numpy as np
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from modules.data_manager import DataManager
 
