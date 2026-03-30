@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import os
 import sys
-from dotenv import load_dotenv
 import asyncio
 import logging
-import colorlog
 from datetime import datetime
+
+from dotenv import load_dotenv
+import colorlog
 import ccxt.async_support as ccxt
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,13 +17,18 @@ API_KEY = os.getenv('BINANCE_API_KEY')
 SECRET_KEY = os.getenv('BINANCE_SECRET_KEY')
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
-from modules.data_manager import DataManager
-from modules.indicators import TechnicalIndicators
-from modules.ai_predictor import AI_Predictor
-from strategies.strategy import HybridStrategy
+from modules.data_manager import DataManager  # noqa: E402
+from modules.indicators import TechnicalIndicators  # noqa: E402
+from modules.ai_predictor import AI_Predictor  # noqa: E402
+from strategies.strategy import HybridStrategy  # noqa: E402
+
 
 def setup_logging():
-    formatter = colorlog.ColoredFormatter("%(log_color)s%(asctime)s %(levelname)s: %(message)s", datefmt='%H:%M:%S', log_colors={'INFO': 'green', 'WARNING': 'yellow', 'ERROR': 'red'})
+    formatter = colorlog.ColoredFormatter(
+        "%(log_color)s%(asctime)s %(levelname)s: %(message)s",
+        datefmt='%H:%M:%S',
+        log_colors={'INFO': 'green', 'WARNING': 'yellow', 'ERROR': 'red'},
+    )
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
     logger = logging.getLogger()
@@ -30,10 +36,12 @@ def setup_logging():
     logger.setLevel(logging.INFO)
     return logger
 
+
 logger = setup_logging()
 logger.info("=" * 50)
 logger.info("RADAR IA ACTIVADO")
 logger.info("=" * 50)
+
 
 class CryptoRadar:
     def __init__(self):
@@ -47,15 +55,22 @@ class CryptoRadar:
         })
         # Parche URLs
         base = 'https://testnet.binancefuture.com'
-        self.exchange.urls['api'] = {k: f'{base}/fapi/v1' for k in ['fapiPublic','fapiPrivate','public','private']}
-        self.exchange.urls['api'].update({'sapi': f'{base}/sapi/v1', 'dapiPublic': f'{base}/dapi/v1', 'dapiPrivate': f'{base}/dapi/v1'})
-        
+        self.exchange.urls['api'] = {
+            k: f'{base}/fapi/v1'
+            for k in ['fapiPublic', 'fapiPrivate', 'public', 'private']
+        }
+        self.exchange.urls['api'].update({
+            'sapi': f'{base}/sapi/v1',
+            'dapiPublic': f'{base}/dapi/v1',
+            'dapiPrivate': f'{base}/dapi/v1',
+        })
+
         await self.exchange.load_markets()
         logger.info("✅ CONEXIÓN EXITOSA")
-        
+
         self.indicators = TechnicalIndicators({})
         self.ai_predictor = AI_Predictor({})
-        
+
         self.strategies = {}
         for sym in SYMBOLS:
             mgr = DataManager(self.exchange, sym, self.timeframe, historical_bars=300)
@@ -81,22 +96,26 @@ class CryptoRadar:
                 mgr = self.managers[symbol]
                 await mgr.update_data()
                 df = mgr.get_latest_data()
-                if df is None or len(df) < 200: continue
+                if df is None or len(df) < 200:
+                    continue
 
                 df = self.indicators.calculate_all(df)
                 price = df['close'].iloc[-1]
 
                 signal, _, _ = self.strategies[symbol].get_signal(df)
-                
+
                 icon = "🟢" if signal.value == "BUY" else "🔴" if signal.value == "SELL" else "⚪"
                 logger.info(f"{icon} {symbol:<10} ${price:<10.2f} | Señal: {signal.value}")
             except Exception as e:
                 logger.error(f"Error {symbol}: {e}")
+
 
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     radar = CryptoRadar()
     if loop.run_until_complete(radar.initialize()):
-        try: loop.run_until_complete(radar.run())
-        except KeyboardInterrupt: pass
+        try:
+            loop.run_until_complete(radar.run())
+        except KeyboardInterrupt:
+            pass
