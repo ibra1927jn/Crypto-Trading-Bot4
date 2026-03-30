@@ -97,7 +97,7 @@ for symbol in SYMBOLS:
         cols = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
         df_price = pd.DataFrame(all_ohlcv, columns=cols)
         df_price['timestamp'] = pd.to_datetime(df_price['timestamp'], unit='ms')
-        df_price.set_index('timestamp', inplace=True)
+        df_price = df_price.set_index('timestamp')
 
         # Crear DataFrame de Funding
         if len(all_funding) > 0:
@@ -105,7 +105,7 @@ for symbol in SYMBOLS:
                 all_funding, columns=['timestamp', 'funding_rate']
             )
             df_funding['timestamp'] = pd.to_datetime(df_funding['timestamp'], unit='ms')
-            df_funding.set_index('timestamp', inplace=True)
+            df_funding = df_funding.set_index('timestamp')
 
             # Re-muestrear Funding para que coincida con los minutos
             # (rellenar huecos: funding cambia cada 8h)

@@ -161,8 +161,8 @@ def load_and_prepare_data(data_folder, config):
             df['dist_ema'] = (df['close'] - ema) / ema
             df['funding'] = df.get('funding_rate', 0.0)
 
-            df.replace([np.inf, -np.inf], np.nan, inplace=True)
-            df.dropna(inplace=True)
+            df = df.replace([np.inf, -np.inf], np.nan)
+            df = df.dropna()
 
             feat_cols = [
                 'return', 'vol_change', 'rsi', 'macd',
