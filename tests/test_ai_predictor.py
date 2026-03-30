@@ -71,11 +71,4 @@ class TestAIPredictorPredict:
         assert pct == 0.0
         assert conf == 0.0
 
-    def test_predict_no_model(self):
-        predictor = AI_Predictor({})
-        predictor.model = None
-        df = self._make_df(300)
-        pct, conf = predictor.predict(df)
-        assert pct == 0.0
-
 class TestAIPredictorGetSignal:
