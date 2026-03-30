@@ -27,7 +27,10 @@ class PositionalEncoding(nn.Module):
         super().__init__()
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        div_term = torch.exp(
+            torch.arange(0, d_model, 2).float()
+            * (-math.log(10000.0) / d_model)
+        )
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe.unsqueeze(0))
@@ -41,7 +44,10 @@ class CryptoTransformer(nn.Module):
         super().__init__()
         self.embedding = nn.Linear(8, D_MODEL)
         self.pos_encoder = PositionalEncoding(D_MODEL)
-        encoder_layer = nn.TransformerEncoderLayer(d_model=D_MODEL, nhead=NHEAD, dropout=DROPOUT, batch_first=True)
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=D_MODEL, nhead=NHEAD,
+            dropout=DROPOUT, batch_first=True,
+        )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=NUM_LAYERS)
         self.decoder = nn.Linear(D_MODEL, 1)
 
@@ -74,7 +80,11 @@ if __name__ == "__main__":
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df.dropna(inplace=True)
 
-    features = df[['return', 'vol_change', 'rsi', 'macd', 'macd_sig', 'atr_rel', 'dist_ema', 'funding']].values
+    feat_cols = [
+        'return', 'vol_change', 'rsi', 'macd',
+        'macd_sig', 'atr_rel', 'dist_ema', 'funding',
+    ]
+    features = df[feat_cols].values
     scaler = RobustScaler()
     scaled = scaler.fit_transform(features)
 
@@ -88,14 +98,16 @@ if __name__ == "__main__":
     # Test
     start_idx = random.randint(0, len(scaled) - TEST_BARS - LOOKBACK)
     test_data = scaled[start_idx:start_idx + TEST_BARS + LOOKBACK]
-    real_ret = df['return'].values[start_idx + LOOKBACK:start_idx + TEST_BARS + LOOKBACK]
+    end_idx = start_idx + TEST_BARS + LOOKBACK
+    real_ret = df['return'].values[start_idx + LOOKBACK:end_idx]
 
     hits = 0
     total = 0
     simulated = [100]
 
     for i in range(TEST_BARS):
-        x = torch.tensor(test_data[i:i+LOOKBACK], dtype=torch.float32).unsqueeze(0).to(device)
+        seq = test_data[i:i+LOOKBACK]
+        x = torch.tensor(seq, dtype=torch.float32).unsqueeze(0).to(device)
         with torch.no_grad():
             pred = model(x).item()
         actual = real_ret[i]
