@@ -100,8 +100,8 @@ class AI_Predictor:
             data["dist_ema"] = (data["close"] - ema) / ema.clip(lower=1e-8)
             data["funding"] = data.get("funding_rate", 0.0)
 
-            data.replace([np.inf, -np.inf], np.nan, inplace=True)
-            data.dropna(inplace=True)
+            data = data.replace([np.inf, -np.inf], np.nan)
+            data = data.dropna()
             if len(data) < self.lookback:
                 return 0.0, 0.0
 
