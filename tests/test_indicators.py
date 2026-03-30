@@ -159,6 +159,66 @@ class TestCombinedSignal:
         assert sig == 'SELL'
 
 
+class TestCalculateAllError:
+    def test_calculate_all_with_bad_data(self, indicators):
+        """Error branch: df missing 'close' column triggers exception."""
+        df = pd.DataFrame({'not_close': [1, 2, 3]})
+        result = indicators.calculate_all(df)
+        # Should return df without crashing (error is logged)
+        assert result is not None
+
+    def test_macd_signal_empty_df(self, indicators):
+        result = indicators.get_macd_signal(pd.DataFrame())
+        assert result == ('NEUTRAL', 0.0)
+
+    def test_bollinger_signal_empty_df(self, indicators):
+        result = indicators.get_bollinger_signal(pd.DataFrame())
+        assert result == ('NEUTRAL', 0.0)
+
+    def test_combined_signal_empty_df(self, indicators):
+        result = indicators.get_combined_signal(pd.DataFrame())
+        assert result == ('NEUTRAL', 0.0)
+
+    def test_indicators_summary_empty_df(self, indicators):
+        result = indicators.get_indicators_summary(pd.DataFrame())
+        assert result == {}
+
+
+class TestMACDSignalError:
+    def test_macd_signal_no_macd_columns(self, indicators):
+        """Error branch: df without MACD columns triggers IndexError → exception handler."""
+        df = pd.DataFrame({'close': [100, 101, 102], 'rsi': [50, 55, 60]})
+        signal, conf = indicators.get_macd_signal(df)
+        assert signal == 'NEUTRAL'
+        assert conf == 0.0
+
+
+class TestBollingerSignalError:
+    def test_bollinger_signal_no_bb_columns(self, indicators):
+        """Error branch: df without BB columns returns NEUTRAL (no BBL/BBU found)."""
+        df = pd.DataFrame({'close': [100, 101, 102], 'rsi': [50, 55, 60]})
+        signal, conf = indicators.get_bollinger_signal(df)
+        assert signal == 'NEUTRAL'
+        assert conf == 0.0
+
+
+class TestCombinedSignalError:
+    def test_combined_signal_no_rsi_column(self, indicators):
+        """Error branch: df without 'rsi' column triggers exception handler."""
+        df = pd.DataFrame({'close': [100, 101, 102]})
+        signal, conf = indicators.get_combined_signal(df)
+        assert signal == 'NEUTRAL'
+        assert conf == 0.0
+
+
+class TestIndicatorsSummaryError:
+    def test_summary_no_rsi_column(self, indicators):
+        """Error branch: df without 'rsi' column triggers exception handler."""
+        df = pd.DataFrame({'close': [100, 101, 102]})
+        result = indicators.get_indicators_summary(df)
+        assert result == {}
+
+
 class TestGetIndicatorsSummary:
     def test_returns_dict_with_rsi(self, indicators, df_with_indicators):
         result = indicators.get_indicators_summary(df_with_indicators)

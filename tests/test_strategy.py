@@ -250,6 +250,100 @@ class TestScalpingSignals:
         assert signal == Signal.NEUTRAL
 
 
+class TestErrorBranches:
+    def test_analyze_market_condition_error(self):
+        """Error branch: data_manager.calculate_volatility() raises → UNKNOWN."""
+        dm = MockDataManager(volatility=1.0)
+        dm.calculate_volatility = lambda: (_ for _ in ()).throw(RuntimeError("fail"))
+        ind = MockIndicators()
+        ai = MockAIPredictor()
+        config = {
+            'VOLATILITY_THRESHOLD': 2.0,
+            'SCALPING_CONFIG': {'check_interval': 5},
+            'SWING_CONFIG': {'check_interval': 60, 'ai_confidence_threshold': 0.65},
+        }
+        s = HybridStrategy(dm, ind, ai, config)
+        cond = s.analyze_market_condition()
+        assert cond == MarketCondition.UNKNOWN
+
+    def test_get_signal_unknown_condition(self, dummy_df):
+        """When condition is UNKNOWN, get_signal catches the propagated error."""
+        dm = MockDataManager(volatility=1.0)
+        dm.calculate_volatility = lambda: (_ for _ in ()).throw(RuntimeError("fail"))
+        ind = MockIndicators()
+        ai = MockAIPredictor()
+        config = {
+            'VOLATILITY_THRESHOLD': 2.0,
+            'SCALPING_CONFIG': {'check_interval': 5},
+            'SWING_CONFIG': {'check_interval': 60, 'ai_confidence_threshold': 0.65},
+        }
+        s = HybridStrategy(dm, ind, ai, config)
+        signal, conf, details = s.get_signal(dummy_df)
+        assert signal == Signal.NEUTRAL
+        assert 'error' in details
+
+    def test_scalping_strategy_error(self, dummy_df):
+        """Error branch: indicator raises in scalping → NEUTRAL with error."""
+        dm = MockDataManager(volatility=3.0)
+        ind = MockIndicators()
+        ind.get_combined_signal = lambda df: (_ for _ in ()).throw(RuntimeError("bad"))
+        ai = MockAIPredictor()
+        config = {
+            'VOLATILITY_THRESHOLD': 2.0,
+            'SCALPING_CONFIG': {'check_interval': 5},
+            'SWING_CONFIG': {'check_interval': 60, 'ai_confidence_threshold': 0.65},
+        }
+        s = HybridStrategy(dm, ind, ai, config)
+        signal, conf, details = s.get_signal(dummy_df)
+        # scalping error returns NEUTRAL, then get_signal wraps it
+        assert signal == Signal.NEUTRAL
+
+    def test_swing_strategy_error(self, dummy_df):
+        """Error branch: AI predictor raises in swing → NEUTRAL with error."""
+        dm = MockDataManager(volatility=1.0)
+        ind = MockIndicators()
+        ai = MockAIPredictor()
+        ai.predict = lambda df: (_ for _ in ()).throw(RuntimeError("ai fail"))
+        config = {
+            'VOLATILITY_THRESHOLD': 2.0,
+            'SCALPING_CONFIG': {'check_interval': 5},
+            'SWING_CONFIG': {'check_interval': 60, 'ai_confidence_threshold': 0.65},
+        }
+        s = HybridStrategy(dm, ind, ai, config)
+        signal, conf, details = s.get_signal(dummy_df)
+        assert signal == Signal.NEUTRAL
+
+    def test_should_open_position_error(self):
+        """Error branch: exception in should_open_position → False."""
+        s = make_strategy()
+        # Force an error by making confidence non-numeric
+        result = s.should_open_position(Signal.BUY, "not_a_number", 0, 3)
+        assert result is False
+
+    def test_calculate_position_size_error(self):
+        """Error branch: division by zero in position size → 0.0."""
+        s = make_strategy()
+        # ZeroDivisionError
+        qty = s.calculate_position_size(10000, 0.01, 0)
+        assert qty == 0.0
+
+    def test_calculate_sl_tp_error(self):
+        """Error branch: bad entry_price type → returns entry, entry."""
+        s = make_strategy()
+        sl, tp = s.calculate_stop_loss_take_profit("not_a_number", Signal.BUY, 2.0, 4.0)
+        assert sl == "not_a_number"
+        assert tp == "not_a_number"
+
+
+class TestSwingNeutralSignal:
+    def test_swing_neutral_when_combined_near_zero(self, dummy_df):
+        """Swing strategy: weak signals combine to NEUTRAL (|combined_value| < 0.3)."""
+        s = make_strategy(volatility=1.0, ind_signal='NEUTRAL', ind_conf=0.0,
+                          ai_conf=0.5, ai_pred=0.01)  # pred < 0.02 → AI returns NEUTRAL
+        signal, conf, details = s.get_signal(dummy_df)
+        assert signal == Signal.NEUTRAL
+
+
 class TestSwingSellSignal:
     def test_ai_sell_dominates(self, dummy_df):
         s = make_strategy(volatility=1.0, ind_signal='NEUTRAL', ind_conf=0.0,
