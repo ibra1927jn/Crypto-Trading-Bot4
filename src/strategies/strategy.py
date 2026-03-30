@@ -226,7 +226,7 @@ class HybridStrategy:
             # Obtener predicción de IA
             ai_prediction, ai_confidence = self.ai_predictor.predict(df)
             ai_signal = self.ai_predictor.get_signal(
-                df, threshold=self.swing_config.get("ai_confidence_threshold", 0.65)
+                df, threshold=self.swing_config.get("ai_confidence_threshold", SWING_MIN_CONFIDENCE)
             )
 
             # Combinar ambas señales
