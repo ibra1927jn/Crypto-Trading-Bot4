@@ -20,6 +20,8 @@ DROPOUT = 0.0
 # PREDICCIÓN
 MAX_CONFIDENCE = 0.95
 DEFAULT_SIGNAL_THRESHOLD = 0.65
+LOOKBACK_PERIOD = 180
+SIGNAL_PCT_THRESHOLD = 0.02
 
 
 class PositionalEncoding(nn.Module):
@@ -60,7 +62,7 @@ class CryptoTransformer(nn.Module):
 class AI_Predictor:
     def __init__(self, config):
         self.model_path = "models/trading_model.pth"
-        self.lookback = 180
+        self.lookback = LOOKBACK_PERIOD
         self.scaler = RobustScaler()
         self.model = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -136,8 +138,8 @@ class AI_Predictor:
 
     def get_signal(self, df: pd.DataFrame, threshold: float = DEFAULT_SIGNAL_THRESHOLD) -> str:
         pct, confidence = self.predict(df)
-        if pct > 0.02 and confidence >= threshold:
+        if pct > SIGNAL_PCT_THRESHOLD and confidence >= threshold:
             return "BUY"
-        elif pct < -0.02 and confidence >= threshold:
+        elif pct < -SIGNAL_PCT_THRESHOLD and confidence >= threshold:
             return "SELL"
         return "NEUTRAL"
