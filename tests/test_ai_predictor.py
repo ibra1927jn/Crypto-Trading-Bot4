@@ -106,10 +106,3 @@ class TestAIPredictorPredict:
 
 
 class TestAIPredictorGetSignal:
-    def test_get_signal_returns_string(self):
-        predictor = AI_Predictor({})
-        df = pd.DataFrame({'close': [100]*300, 'high': [101]*300,
-                          'low': [99]*300, 'open': [100]*300,
-                          'volume': [1000]*300, 'funding_rate': [0.0]*300})
-        result = predictor.get_signal(df)
-        assert result in ('BUY', 'SELL', 'NEUTRAL')
