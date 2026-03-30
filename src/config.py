@@ -123,7 +123,6 @@ class Config:
 
         # Si es testnet, agregar configuración específica
         if cls.TESTNET:
-            config['options']['defaultType'] = 'future'
             # Binance Testnet URLs
             if cls.EXCHANGE == 'binance':
                 config['urls'] = {
