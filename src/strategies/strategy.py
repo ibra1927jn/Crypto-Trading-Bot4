@@ -227,12 +227,16 @@ class HybridStrategy:
             ai_value = signal_values.get(ai_signal, 0)
 
             # Calcular señal combinada
-            combined_value = (ai_value * ai_weight * ai_confidence +
-                            indicators_value * indicators_weight * indicators_confidence)
+            combined_value = (
+                ai_value * ai_weight * ai_confidence +
+                indicators_value * indicators_weight * indicators_confidence
+            )
 
             # Calcular confianza combinada
-            combined_confidence = (ai_confidence * ai_weight +
-                                 indicators_confidence * indicators_weight)
+            combined_confidence = (
+                ai_confidence * ai_weight +
+                indicators_confidence * indicators_weight
+            )
 
             # Determinar señal final
             if combined_value > 0.3:

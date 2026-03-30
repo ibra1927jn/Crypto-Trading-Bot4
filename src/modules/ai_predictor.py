@@ -15,6 +15,7 @@ NHEAD = 4
 NUM_LAYERS = 4
 DROPOUT = 0.0
 
+
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
         super().__init__()
@@ -24,8 +25,10 @@ class PositionalEncoding(nn.Module):
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe.unsqueeze(0))
+
     def forward(self, x):
         return x + self.pe[:, :x.size(1)]
+
 
 class CryptoTransformer(nn.Module):
     def __init__(self):
@@ -35,12 +38,14 @@ class CryptoTransformer(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(d_model=D_MODEL, nhead=NHEAD, dropout=DROPOUT, batch_first=True)
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=NUM_LAYERS)
         self.decoder = nn.Linear(D_MODEL, 1)
+
     def forward(self, x):
         x = self.embedding(x)
         x = self.pos_encoder(x)
         x = self.transformer(x)
         x = x.mean(dim=1)
         return self.decoder(x)
+
 
 class AI_Predictor:
     def __init__(self, config):
@@ -72,7 +77,8 @@ class AI_Predictor:
             data['return'] = np.log(data['close'] / data['close'].shift(1))
             data['log_vol'] = np.log(data['volume'] + 1).pct_change()
             data['rsi'] = ta.rsi(data['close'], length=14) / 100.0
-            data['atr_rel'] = ta.atr(data['high'], data['low'], data['close'], length=14) / data['close'].clip(lower=1e-8)
+            atr = ta.atr(data['high'], data['low'], data['close'], length=14)
+            data['atr_rel'] = atr / data['close'].clip(lower=1e-8)
             macd = ta.macd(data['close'])
             data['macd'] = macd['MACD_12_26_9']
             data['macd_sig'] = macd['MACDs_12_26_9']

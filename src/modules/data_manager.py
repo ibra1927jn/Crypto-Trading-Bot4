@@ -4,6 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class DataManager:
     def __init__(self, exchange, symbol, timeframe, historical_bars=300):
         self.exchange = exchange
@@ -22,7 +23,7 @@ class DataManager:
             if ohlcv:
                 df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
                 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-                
+
                 # Intentar bajar funding
                 try:
                     funding = await self.exchange.fetch_funding_rate(self.symbol)
@@ -30,14 +31,14 @@ class DataManager:
                 except Exception as e:
                     logger.warning(f"⚠️ Funding rate no disponible: {e}")
                     df['funding_rate'] = 0.0
-                    
+
                 self.data = df
         except Exception as e:
             logger.error(f"Error datos: {e}")
 
     def get_latest_data(self):
         return self.data
-    
+
     BARS_PER_YEAR = {
         '1m': 365 * 24 * 60,
         '5m': 365 * 24 * 12,
