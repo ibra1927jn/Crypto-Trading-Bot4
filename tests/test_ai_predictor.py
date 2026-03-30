@@ -1,5 +1,4 @@
 """Tests para AI_Predictor - tensor shapes y lógica de predicción."""
-import pytest
 import torch
 import numpy as np
 import pandas as pd
@@ -72,3 +71,4 @@ class TestAIPredictorPredict:
         assert conf == 0.0
 
 class TestAIPredictorGetSignal:
+    pass
