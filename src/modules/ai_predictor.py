@@ -112,7 +112,7 @@ class AI_Predictor:
                 ]
             ].values
             self.scaler.fit(feats)
-            scaled = self.scaler.transform(feats[-self.lookback :])
+            scaled = self.scaler.transform(feats[-self.lookback:])
 
             tensor = (
                 torch.tensor(scaled, dtype=torch.float32).unsqueeze(0).to(self.device)
