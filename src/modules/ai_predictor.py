@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import torch
 import torch.nn as nn
 import numpy as np
+import pandas as pd
 import pandas_ta as ta
 from sklearn.preprocessing import RobustScaler
 import logging
@@ -26,7 +29,7 @@ class PositionalEncoding(nn.Module):
         pe[:, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe.unsqueeze(0))
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x + self.pe[:, :x.size(1)]
 
 
@@ -39,7 +42,7 @@ class CryptoTransformer(nn.Module):
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=NUM_LAYERS)
         self.decoder = nn.Linear(D_MODEL, 1)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.embedding(x)
         x = self.pos_encoder(x)
         x = self.transformer(x)
@@ -56,7 +59,7 @@ class AI_Predictor:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self._load_model()
 
-    def _load_model(self):
+    def _load_model(self) -> None:
         if not os.path.exists(self.model_path):
             return
         try:
@@ -67,7 +70,7 @@ class AI_Predictor:
         except Exception as e:
             logger.error(f"❌ Error: {e}")
 
-    def predict(self, df):
+    def predict(self, df: pd.DataFrame) -> tuple[float, float]:
         """Returns (pct_prediction, confidence) as floats."""
         if self.model is None or len(df) < self.lookback + 20:
             return 0.0, 0.0
@@ -109,7 +112,7 @@ class AI_Predictor:
             logger.error(f"❌ Error en predict: {e}")
             return 0.0, 0.0
 
-    def get_signal(self, df, threshold=0.65):
+    def get_signal(self, df: pd.DataFrame, threshold: float = 0.65) -> str:
         pct, confidence = self.predict(df)
         if pct > 0.02 and confidence >= threshold:
             return 'BUY'
