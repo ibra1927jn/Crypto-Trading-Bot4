@@ -5,6 +5,8 @@ import pandas_ta as ta
 
 logger = logging.getLogger(__name__)
 
+COMBINED_SIGNAL_CONFIDENCE = 0.7
+
 
 class TechnicalIndicators:
     def __init__(self, config):
@@ -96,9 +98,9 @@ class TechnicalIndicators:
             sell = signals.count("SELL")
 
             if buy > sell:
-                return "BUY", 0.7
+                return "BUY", COMBINED_SIGNAL_CONFIDENCE
             elif sell > buy:
-                return "SELL", 0.7
+                return "SELL", COMBINED_SIGNAL_CONFIDENCE
             return "NEUTRAL", 0.0
         except Exception as e:
             logger.error("❌ Error en combined signal: %s", e)
