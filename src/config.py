@@ -9,8 +9,11 @@ Este módulo gestiona todas las configuraciones del bot, incluyendo:
 """
 
 import os
+import logging
 from dotenv import load_dotenv
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # Cargar variables de entorno
 load_dotenv()
@@ -136,34 +139,30 @@ class Config:
     def validate_config(cls) -> bool:
         """Valida que la configuración sea correcta"""
         if not cls.API_KEY or not cls.API_SECRET:
-            print("⚠️  WARNING: API credentials not found!")
-            print("    Set BINANCE_API_KEY and BINANCE_API_SECRET in .env file")
+            logger.warning("API credentials not found! Set BINANCE_API_KEY and BINANCE_API_SECRET in .env file")
             return False
 
         if cls.TESTNET:
-            print("📊 Running in TESTNET mode")
+            logger.info("Running in TESTNET mode")
         else:
-            print("🔴 Running in PRODUCTION mode - Real money at risk!")
+            logger.warning("Running in PRODUCTION mode - Real money at risk!")
 
         return True
 
     @classmethod
     def print_config(cls):
         """Imprime la configuración actual (sin mostrar credenciales)"""
-        print("\n" + "="*60)
-        print("🤖 CRYPTO TRADING BOT - CONFIGURATION")
-        print("="*60)
-        print(f"Exchange:          {cls.EXCHANGE}")
-        print(f"Mode:              {'TESTNET' if cls.TESTNET else 'PRODUCTION'}")
-        print(f"Symbol:            {cls.SYMBOL}")
-        print(f"Timeframe:         {cls.TIMEFRAME}")
-        print(f"Position Size:     {cls.POSITION_SIZE * 100}%")
-        print(f"Stop Loss:         {cls.STOP_LOSS_PERCENT}%")
-        print(f"Take Profit:       {cls.TAKE_PROFIT_PERCENT}%")
-        print(f"Volatility Threshold: {cls.VOLATILITY_THRESHOLD}")
-        print(f"AI Device:         {cls.AI_CONFIG['device']}")
-        print(f"AI Model Type:     {cls.AI_CONFIG['model_type']}")
-        print("="*60 + "\n")
+        logger.info("CRYPTO TRADING BOT - CONFIGURATION")
+        logger.info(f"Exchange:          {cls.EXCHANGE}")
+        logger.info(f"Mode:              {'TESTNET' if cls.TESTNET else 'PRODUCTION'}")
+        logger.info(f"Symbol:            {cls.SYMBOL}")
+        logger.info(f"Timeframe:         {cls.TIMEFRAME}")
+        logger.info(f"Position Size:     {cls.POSITION_SIZE * 100}%")
+        logger.info(f"Stop Loss:         {cls.STOP_LOSS_PERCENT}%")
+        logger.info(f"Take Profit:       {cls.TAKE_PROFIT_PERCENT}%")
+        logger.info(f"Volatility Threshold: {cls.VOLATILITY_THRESHOLD}")
+        logger.info(f"AI Device:         {cls.AI_CONFIG['device']}")
+        logger.info(f"AI Model Type:     {cls.AI_CONFIG['model_type']}")
 
 
 if __name__ == "__main__":
