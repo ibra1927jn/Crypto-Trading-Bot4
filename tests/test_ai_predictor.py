@@ -2,6 +2,7 @@
 import torch
 import numpy as np
 import pandas as pd
+from unittest.mock import patch, MagicMock
 
 from modules.ai_predictor import CryptoTransformer, PositionalEncoding, AI_Predictor
 
@@ -70,5 +71,78 @@ class TestAIPredictorPredict:
         assert pct == 0.0
         assert conf == 0.0
 
+    def test_predict_with_model_loaded(self):
+        """Test predict path when model is available."""
+        predictor = AI_Predictor({})
+        predictor.model = CryptoTransformer().to(predictor.device)
+        predictor.model.eval()
+        df = self._make_df(300)
+        pct, conf = predictor.predict(df)
+        assert isinstance(pct, float)
+        assert isinstance(conf, float)
+        assert 0.0 <= conf <= 0.95
+
+    def test_predict_error_returns_zero(self):
+        """Test that predict returns (0.0, 0.0) on internal error."""
+        predictor = AI_Predictor({})
+        predictor.model = MagicMock()
+        predictor.model.side_effect = RuntimeError("test error")
+        df = self._make_df(300)
+        pct, conf = predictor.predict(df)
+        assert pct == 0.0
+        assert conf == 0.0
+
+
 class TestAIPredictorGetSignal:
-    pass
+    def test_get_signal_neutral_no_model(self):
+        predictor = AI_Predictor({})
+        df = pd.DataFrame({'close': [100.0] * 300})
+        signal = predictor.get_signal(df)
+        assert signal == 'NEUTRAL'
+
+    def test_get_signal_buy(self):
+        predictor = AI_Predictor({})
+        with patch.object(predictor, 'predict', return_value=(0.05, 0.8)):
+            signal = predictor.get_signal(pd.DataFrame())
+            assert signal == 'BUY'
+
+    def test_get_signal_sell(self):
+        predictor = AI_Predictor({})
+        with patch.object(predictor, 'predict', return_value=(-0.05, 0.8)):
+            signal = predictor.get_signal(pd.DataFrame())
+            assert signal == 'SELL'
+
+    def test_get_signal_neutral_low_confidence(self):
+        predictor = AI_Predictor({})
+        with patch.object(predictor, 'predict', return_value=(0.05, 0.3)):
+            signal = predictor.get_signal(pd.DataFrame())
+            assert signal == 'NEUTRAL'
+
+    def test_get_signal_neutral_small_pct(self):
+        predictor = AI_Predictor({})
+        with patch.object(predictor, 'predict', return_value=(0.01, 0.9)):
+            signal = predictor.get_signal(pd.DataFrame())
+            assert signal == 'NEUTRAL'
+
+    def test_get_signal_custom_threshold(self):
+        predictor = AI_Predictor({})
+        with patch.object(predictor, 'predict', return_value=(0.05, 0.5)):
+            signal = predictor.get_signal(pd.DataFrame(), threshold=0.4)
+            assert signal == 'BUY'
+
+
+class TestAIPredictorLoadModel:
+    def test_load_model_no_file(self):
+        """Model stays None when file doesn't exist."""
+        predictor = AI_Predictor({})
+        assert predictor.model is None
+
+    def test_load_model_bad_file(self, tmp_path):
+        """Model is instantiated even if state_dict load fails (logs error)."""
+        bad_model = tmp_path / "bad_model.pth"
+        bad_model.write_text("not a model")
+        predictor = AI_Predictor({})
+        predictor.model_path = str(bad_model)
+        predictor._load_model()
+        # Model object is created before load_state_dict, so it persists
+        assert predictor.model is not None
