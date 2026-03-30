@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-03-30 — Heartbeat Maintenance Cycle (pass 25)
+
+### Assessment
+- 123/123 tests passing, 99% coverage, 0 build errors
+- Found remaining magic numbers in ai_predictor.py and indicators.py
+
+### Changes
+- **refactor(ai_predictor)**: Extracted `180` → `LOOKBACK_PERIOD`, `0.02` → `SIGNAL_PCT_THRESHOLD`
+- **refactor(indicators)**: Extracted `0.8` → `MACD_CROSSOVER_CONFIDENCE`, `0.9` → `BOLLINGER_BREAK_CONFIDENCE`, `30` → `RSI_OVERSOLD`, `70` → `RSI_OVERBOUGHT`
+
+### Results
+- **Tests**: 123/123 passing (was 123/123)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 errors)
+
 ## 2026-03-30 — Heartbeat Maintenance Cycle (pass 24)
 
 ### Assessment
