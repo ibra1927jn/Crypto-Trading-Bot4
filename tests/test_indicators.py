@@ -260,3 +260,45 @@ class TestCombinedSignalNeutral:
         sig, conf = indicators.get_combined_signal(df)
         assert sig == 'NEUTRAL'
         assert conf == 0.0
+
+
+class TestCombinedSignalBollingerContribution:
+    def test_bollinger_buy_adds_to_signals(self, indicators):
+        """Bollinger BUY signal contributes to combined result (covers line 81)."""
+        df = make_ohlcv(200)
+        df = indicators.calculate_all(df)
+        # RSI neutral (between 30-70)
+        df.iloc[-1, df.columns.get_loc('rsi')] = 50.0
+        # Push close below lower Bollinger band to trigger BUY
+        bbl_col = [c for c in df.columns if c.startswith('BBL')][0]
+        df.iloc[-1, df.columns.get_loc('close')] = df[bbl_col].iloc[-1] - 5
+        sig, conf = indicators.get_combined_signal(df)
+        assert sig == 'BUY'
+        assert conf == 0.7
+
+    def test_bollinger_sell_adds_to_signals(self, indicators):
+        """Bollinger SELL signal contributes to combined result (covers line 81)."""
+        df = make_ohlcv(200)
+        df = indicators.calculate_all(df)
+        # RSI neutral (between 30-70)
+        df.iloc[-1, df.columns.get_loc('rsi')] = 50.0
+        # Push close above upper Bollinger band to trigger SELL
+        bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
+        df.iloc[-1, df.columns.get_loc('close')] = df[bbu_col].iloc[-1] + 5
+        sig, conf = indicators.get_combined_signal(df)
+        assert sig == 'SELL'
+        assert conf == 0.7
+
+    def test_tied_signals_give_neutral(self, indicators):
+        """When BUY and SELL signals are tied, result is NEUTRAL (covers line 93)."""
+        df = make_ohlcv(200)
+        df = indicators.calculate_all(df)
+        # RSI oversold => BUY signal
+        df.iloc[-1, df.columns.get_loc('rsi')] = 20.0
+        # Close above upper band => SELL signal from Bollinger
+        bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
+        df.iloc[-1, df.columns.get_loc('close')] = df[bbu_col].iloc[-1] + 5
+        sig, conf = indicators.get_combined_signal(df)
+        # 1 BUY (RSI) + 1 SELL (Bollinger) = tied = NEUTRAL
+        assert sig == 'NEUTRAL'
+        assert conf == 0.0
