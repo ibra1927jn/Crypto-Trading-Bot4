@@ -156,16 +156,17 @@ class Config:
     def print_config(cls) -> None:
         """Imprime la configuración actual (sin mostrar credenciales)"""
         logger.info("CRYPTO TRADING BOT - CONFIGURATION")
-        logger.info(f"Exchange:          {cls.EXCHANGE}")
-        logger.info(f"Mode:              {'TESTNET' if cls.TESTNET else 'PRODUCTION'}")
-        logger.info(f"Symbol:            {cls.SYMBOL}")
-        logger.info(f"Timeframe:         {cls.TIMEFRAME}")
-        logger.info(f"Position Size:     {cls.POSITION_SIZE * 100}%")
-        logger.info(f"Stop Loss:         {cls.STOP_LOSS_PERCENT}%")
-        logger.info(f"Take Profit:       {cls.TAKE_PROFIT_PERCENT}%")
-        logger.info(f"Volatility Threshold: {cls.VOLATILITY_THRESHOLD}")
-        logger.info(f"AI Device:         {cls.AI_CONFIG['device']}")
-        logger.info(f"AI Model Type:     {cls.AI_CONFIG['model_type']}")
+        logger.info("Exchange:          %s", cls.EXCHANGE)
+        mode = "TESTNET" if cls.TESTNET else "PRODUCTION"
+        logger.info("Mode:              %s", mode)
+        logger.info("Symbol:            %s", cls.SYMBOL)
+        logger.info("Timeframe:         %s", cls.TIMEFRAME)
+        logger.info("Position Size:     %s%%", cls.POSITION_SIZE * 100)
+        logger.info("Stop Loss:         %s%%", cls.STOP_LOSS_PERCENT)
+        logger.info("Take Profit:       %s%%", cls.TAKE_PROFIT_PERCENT)
+        logger.info("Volatility Threshold: %s", cls.VOLATILITY_THRESHOLD)
+        logger.info("AI Device:         %s", cls.AI_CONFIG["device"])
+        logger.info("AI Model Type:     %s", cls.AI_CONFIG["model_type"])
 
 
 if __name__ == "__main__":
