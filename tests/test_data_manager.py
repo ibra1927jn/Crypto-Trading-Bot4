@@ -1,8 +1,9 @@
 """Tests para DataManager."""
-import pytest
-import pandas as pd
-import numpy as np
 from unittest.mock import AsyncMock
+
+import numpy as np
+import pandas as pd
+import pytest
 
 from modules.data_manager import DataManager
 

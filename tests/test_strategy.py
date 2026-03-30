@@ -1,9 +1,9 @@
 """Tests para HybridStrategy"""
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
 
-from strategies.strategy import HybridStrategy, Signal, MarketCondition
+from strategies.strategy import HybridStrategy, MarketCondition, Signal
 
 
 class MockDataManager:

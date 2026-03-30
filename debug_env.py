@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 
 # 1. Intentar cargar el archivo

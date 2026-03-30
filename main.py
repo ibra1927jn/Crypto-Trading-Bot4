@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-import os
-import sys
 import asyncio
 import logging
+import os
+import sys
 from datetime import datetime
 
-from dotenv import load_dotenv
-import colorlog
 import ccxt.async_support as ccxt
+import colorlog
+from dotenv import load_dotenv
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(dotenv_path=os.path.join(BASE_DIR, '.env'), override=True)
@@ -17,9 +17,9 @@ API_KEY = os.getenv('BINANCE_API_KEY')
 SECRET_KEY = os.getenv('BINANCE_SECRET_KEY')
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+from modules.ai_predictor import AI_Predictor  # noqa: E402
 from modules.data_manager import DataManager  # noqa: E402
 from modules.indicators import TechnicalIndicators  # noqa: E402
-from modules.ai_predictor import AI_Predictor  # noqa: E402
 from strategies.strategy import HybridStrategy  # noqa: E402
 
 

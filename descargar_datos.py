@@ -1,9 +1,10 @@
-import ccxt
 import logging
-import pandas as pd
-import time
 import os
+import time
 from datetime import datetime
+
+import ccxt
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")

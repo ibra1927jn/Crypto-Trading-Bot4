@@ -1,10 +1,11 @@
 """Tests para AI_Predictor - tensor shapes y lógica de predicción."""
-import torch
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pandas as pd
-from unittest.mock import patch, MagicMock
+import torch
 
-from modules.ai_predictor import CryptoTransformer, PositionalEncoding, AI_Predictor
+from modules.ai_predictor import AI_Predictor, CryptoTransformer, PositionalEncoding
 
 
 class TestCryptoTransformer:
