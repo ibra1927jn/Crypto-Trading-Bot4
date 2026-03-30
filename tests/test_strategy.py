@@ -282,6 +282,32 @@ class TestErrorBranches:
         assert signal == Signal.NEUTRAL
         assert 'error' in details
 
+    def test_get_signal_unknown_condition_no_error(self, dummy_df):
+        """UNKNOWN condition branch (line 137-139): analyze fails but volatility works."""
+        call_count = 0
+
+        class FailOnceDataManager:
+            """First calculate_volatility call (in analyze) raises; second (in details) succeeds."""
+            def calculate_volatility(self):
+                nonlocal call_count
+                call_count += 1
+                if call_count == 1:
+                    raise RuntimeError("fail")
+                return 1.5
+
+        dm = FailOnceDataManager()
+        ind = MockIndicators()
+        ai = MockAIPredictor()
+        config = {
+            'VOLATILITY_THRESHOLD': 2.0,
+            'SCALPING_CONFIG': {'check_interval': 5},
+            'SWING_CONFIG': {'check_interval': 60, 'ai_confidence_threshold': 0.65},
+        }
+        s = HybridStrategy(dm, ind, ai, config)
+        signal, conf, details = s.get_signal(dummy_df)
+        assert signal == Signal.NEUTRAL
+        assert details['strategy_used'] == 'NONE'
+
     def test_scalping_strategy_error(self, dummy_df):
         """Error branch: indicator raises in scalping → NEUTRAL with error."""
         dm = MockDataManager(volatility=3.0)
