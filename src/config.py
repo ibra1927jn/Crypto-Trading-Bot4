@@ -139,7 +139,10 @@ class Config:
     def validate_config(cls) -> bool:
         """Valida que la configuración sea correcta"""
         if not cls.API_KEY or not cls.API_SECRET:
-            logger.warning("API credentials not found! Set BINANCE_API_KEY and BINANCE_API_SECRET in .env file")
+            logger.warning(
+                "API credentials not found! "
+                "Set BINANCE_API_KEY and BINANCE_API_SECRET in .env file"
+            )
             return False
 
         if cls.TESTNET:
@@ -150,7 +153,7 @@ class Config:
         return True
 
     @classmethod
-    def print_config(cls):
+    def print_config(cls) -> None:
         """Imprime la configuración actual (sin mostrar credenciales)"""
         logger.info("CRYPTO TRADING BOT - CONFIGURATION")
         logger.info(f"Exchange:          {cls.EXCHANGE}")
