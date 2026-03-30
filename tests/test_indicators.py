@@ -71,7 +71,7 @@ class TestMACDSignal:
         assert 0.0 <= conf <= 1.0
 
     def test_none_input(self, indicators):
-        signal, conf = indicators.get_macd_signal(None)
+        signal, _conf = indicators.get_macd_signal(None)
         assert signal == 'NEUTRAL'
 
     def test_crossover_buy(self, indicators):
@@ -144,7 +144,7 @@ class TestCombinedSignal:
         bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
         mid = (df[bbl_col].iloc[-1] + df[bbu_col].iloc[-1]) / 2
         df.iloc[-1, df.columns.get_loc('close')] = mid
-        sig, conf = indicators.get_combined_signal(df)
+        sig, _conf = indicators.get_combined_signal(df)
         assert sig == 'BUY'
 
     def test_overbought_rsi_gives_sell(self, indicators):
@@ -155,7 +155,7 @@ class TestCombinedSignal:
         bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
         mid = (df[bbl_col].iloc[-1] + df[bbu_col].iloc[-1]) / 2
         df.iloc[-1, df.columns.get_loc('close')] = mid
-        sig, conf = indicators.get_combined_signal(df)
+        sig, _conf = indicators.get_combined_signal(df)
         assert sig == 'SELL'
 
 

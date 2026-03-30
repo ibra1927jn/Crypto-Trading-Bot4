@@ -89,18 +89,18 @@ class TestMarketCondition:
 class TestGetSignal:
     def test_high_vol_uses_scalping(self, dummy_df):
         s = make_strategy(volatility=3.0, ind_signal='BUY', ind_conf=0.7)
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, details = s.get_signal(dummy_df)
         assert details['strategy_used'] == 'SCALPING'
         assert signal == Signal.BUY
 
     def test_low_vol_uses_swing(self, dummy_df):
         s = make_strategy(volatility=1.0, ai_conf=0.9, ai_pred=0.5)
-        signal, conf, details = s.get_signal(dummy_df)
+        _signal, _conf, details = s.get_signal(dummy_df)
         assert details['strategy_used'] == 'SWING'
 
     def test_neutral_on_no_signals(self, dummy_df):
         s = make_strategy(volatility=3.0)
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, _details = s.get_signal(dummy_df)
         assert signal == Signal.NEUTRAL
 
 
@@ -109,14 +109,14 @@ class TestSwingStrategy:
         """AI con señal BUY fuerte debe dominar sobre indicadores neutrales."""
         s = make_strategy(volatility=1.0, ind_signal='NEUTRAL', ind_conf=0.0,
                           ai_conf=0.9, ai_pred=0.5)
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, _details = s.get_signal(dummy_df)
         assert signal == Signal.BUY
 
     def test_conflicting_signals(self, dummy_df):
         """Indicadores SELL + AI BUY: AI (70%) debe ganar."""
         s = make_strategy(volatility=1.0, ind_signal='SELL', ind_conf=0.7,
                           ai_conf=0.9, ai_pred=0.5)
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, _details = s.get_signal(dummy_df)
         # combined = 1*0.7*0.9 + (-1)*0.3*0.7 = 0.63 - 0.21 = 0.42 > 0.3
         assert signal == Signal.BUY
 
@@ -128,7 +128,7 @@ class TestSwingStrategyLogging:
         s = make_strategy(volatility=1.0, ind_signal='BUY', ind_conf=0.7,
                           ai_conf=0.9, ai_pred=0.5)
         logging.basicConfig(level=logging.DEBUG)
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, details = s.get_signal(dummy_df)
         # Must not silently fall to NEUTRAL due to exception
         assert signal == Signal.BUY
         assert 'error' not in details
@@ -240,13 +240,13 @@ class TestGetStrategySummary:
 class TestScalpingSignals:
     def test_scalping_sell(self, dummy_df):
         s = make_strategy(volatility=3.0, ind_signal='SELL', ind_conf=0.8)
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, details = s.get_signal(dummy_df)
         assert signal == Signal.SELL
         assert details['strategy_used'] == 'SCALPING'
 
     def test_scalping_neutral(self, dummy_df):
         s = make_strategy(volatility=3.0, ind_signal='NEUTRAL', ind_conf=0.0)
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, _details = s.get_signal(dummy_df)
         assert signal == Signal.NEUTRAL
 
 
@@ -278,7 +278,7 @@ class TestErrorBranches:
             'SWING_CONFIG': {'check_interval': 60, 'ai_confidence_threshold': 0.65},
         }
         s = HybridStrategy(dm, ind, ai, config)
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, details = s.get_signal(dummy_df)
         assert signal == Signal.NEUTRAL
         assert 'error' in details
 
@@ -304,7 +304,7 @@ class TestErrorBranches:
             'SWING_CONFIG': {'check_interval': 60, 'ai_confidence_threshold': 0.65},
         }
         s = HybridStrategy(dm, ind, ai, config)
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, details = s.get_signal(dummy_df)
         assert signal == Signal.NEUTRAL
         assert details['strategy_used'] == 'NONE'
 
@@ -320,7 +320,7 @@ class TestErrorBranches:
             'SWING_CONFIG': {'check_interval': 60, 'ai_confidence_threshold': 0.65},
         }
         s = HybridStrategy(dm, ind, ai, config)
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, _details = s.get_signal(dummy_df)
         # scalping error returns NEUTRAL, then get_signal wraps it
         assert signal == Signal.NEUTRAL
 
@@ -336,7 +336,7 @@ class TestErrorBranches:
             'SWING_CONFIG': {'check_interval': 60, 'ai_confidence_threshold': 0.65},
         }
         s = HybridStrategy(dm, ind, ai, config)
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, _details = s.get_signal(dummy_df)
         assert signal == Signal.NEUTRAL
 
     def test_should_open_position_error(self):
@@ -366,7 +366,7 @@ class TestSwingNeutralSignal:
         """Swing strategy: weak signals combine to NEUTRAL (|combined_value| < 0.3)."""
         s = make_strategy(volatility=1.0, ind_signal='NEUTRAL', ind_conf=0.0,
                           ai_conf=0.5, ai_pred=0.01)  # pred < 0.02 → AI returns NEUTRAL
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, _details = s.get_signal(dummy_df)
         assert signal == Signal.NEUTRAL
 
 
@@ -374,5 +374,5 @@ class TestSwingSellSignal:
     def test_ai_sell_dominates(self, dummy_df):
         s = make_strategy(volatility=1.0, ind_signal='NEUTRAL', ind_conf=0.0,
                           ai_conf=0.9, ai_pred=-0.5)
-        signal, conf, details = s.get_signal(dummy_df)
+        signal, _conf, _details = s.get_signal(dummy_df)
         assert signal == Signal.SELL

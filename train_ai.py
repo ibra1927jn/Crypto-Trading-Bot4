@@ -263,7 +263,7 @@ def train():
     config = wandb.config
 
     # Cargar datos
-    train_dataset, val_dataset, scaler = load_and_prepare_data(DATA_FOLDER, config)
+    train_dataset, val_dataset, _scaler = load_and_prepare_data(DATA_FOLDER, config)
 
     train_loader = DataLoader(
         train_dataset,
