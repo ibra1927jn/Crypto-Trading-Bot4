@@ -59,7 +59,9 @@ class LazyCryptoDataset(Dataset):
     def __getitem__(self, idx):
         x = self.features[idx:idx + self.lookback]
         y = self.targets[idx + self.lookback]
-        return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
+        x_t = torch.tensor(x, dtype=torch.float32)
+        y_t = torch.tensor(y, dtype=torch.float32)
+        return x_t, y_t
 
 
 class PositionalEncoding(nn.Module):
@@ -67,7 +69,10 @@ class PositionalEncoding(nn.Module):
         super().__init__()
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        div_term = torch.exp(
+            torch.arange(0, d_model, 2).float()
+            * (-math.log(10000.0) / d_model)
+        )
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe.unsqueeze(0))
@@ -88,7 +93,9 @@ class CryptoTransformer(nn.Module):
             batch_first=True,
             norm_first=True
         )
-        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=config['num_layers'])
+        self.transformer = nn.TransformerEncoder(
+            encoder_layer, num_layers=config['num_layers']
+        )
         self.decoder = nn.Linear(config['d_model'], 1)
         self._init_weights()
 
@@ -147,7 +154,8 @@ def load_and_prepare_data(data_folder, config):
             macd = ta.macd(df['close'])
             df['macd'] = macd['MACD_12_26_9']
             df['macd_sig'] = macd['MACDs_12_26_9']
-            df['atr_rel'] = ta.atr(df['high'], df['low'], df['close'], length=14) / df['close']
+            atr = ta.atr(df['high'], df['low'], df['close'], length=14)
+            df['atr_rel'] = atr / df['close']
             ema = ta.ema(df['close'], length=50)
             df['dist_ema'] = (df['close'] - ema) / ema
             df['funding'] = df.get('funding_rate', 0.0)
@@ -155,9 +163,11 @@ def load_and_prepare_data(data_folder, config):
             df.replace([np.inf, -np.inf], np.nan, inplace=True)
             df.dropna(inplace=True)
 
-            feats = df[
-                ['return', 'vol_change', 'rsi', 'macd', 'macd_sig', 'atr_rel', 'dist_ema', 'funding']
-            ].values.astype(np.float32)
+            feat_cols = [
+                'return', 'vol_change', 'rsi', 'macd',
+                'macd_sig', 'atr_rel', 'dist_ema', 'funding',
+            ]
+            feats = df[feat_cols].values.astype(np.float32)
             targs = df['return'].values.astype(np.float32)
             all_features.append(feats)
             all_targets.append(targs)
@@ -172,13 +182,21 @@ def load_and_prepare_data(data_folder, config):
 
     split = int(len(X_scaled) * config['data_split'])
 
-    train_dataset = LazyCryptoDataset(X_scaled[:split], y_raw[:split], config['lookback'])
-    val_dataset = LazyCryptoDataset(X_scaled[split:], y_raw[split:], config['lookback'])
+    lookback = config['lookback']
+    train_dataset = LazyCryptoDataset(
+        X_scaled[:split], y_raw[:split], lookback
+    )
+    val_dataset = LazyCryptoDataset(
+        X_scaled[split:], y_raw[split:], lookback
+    )
 
     return train_dataset, val_dataset, scaler
 
 
-def train_epoch(model, train_loader, criterion, optimizer, scaler_amp, scheduler, device, config):
+def train_epoch(
+    model, train_loader, criterion, optimizer,
+    scaler_amp, scheduler, device, config,
+):
     """Entrena una época"""
     model.train()
     total_loss = 0
