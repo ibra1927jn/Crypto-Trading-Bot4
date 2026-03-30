@@ -70,7 +70,9 @@ for symbol in SYMBOLS:
     while temp_since < now:
         try:
             # Binance suele dar 1000 registros de funding
-            funding = exchange.fetch_funding_rate_history(symbol, temp_since, limit=1000)
+            funding = exchange.fetch_funding_rate_history(
+                symbol, temp_since, limit=1000
+            )
 
             if len(funding) == 0:
                 break
@@ -91,23 +93,27 @@ for symbol in SYMBOLS:
     # -------------------------------------------
     if len(all_ohlcv) > 0:
         # Crear DataFrame de Precios
-        df_price = pd.DataFrame(all_ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        cols = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+        df_price = pd.DataFrame(all_ohlcv, columns=cols)
         df_price['timestamp'] = pd.to_datetime(df_price['timestamp'], unit='ms')
         df_price.set_index('timestamp', inplace=True)
 
         # Crear DataFrame de Funding
         if len(all_funding) > 0:
-            df_funding = pd.DataFrame(all_funding, columns=['timestamp', 'funding_rate'])
+            df_funding = pd.DataFrame(
+                all_funding, columns=['timestamp', 'funding_rate']
+            )
             df_funding['timestamp'] = pd.to_datetime(df_funding['timestamp'], unit='ms')
             df_funding.set_index('timestamp', inplace=True)
 
-            # Re-muestrear Funding para que coincida con los minutos (rellenar huecos)
-            # El funding cambia cada 8h, así que repetimos el valor para cada minuto intermedio
+            # Re-muestrear Funding para que coincida con los minutos
+            # (rellenar huecos: funding cambia cada 8h)
             df_funding = df_funding.resample('1min').ffill()
 
             # Unir todo
             df_final = df_price.join(df_funding)
-            df_final['funding_rate'] = df_final['funding_rate'].fillna(0)  # Rellenar nulos iniciales
+            # Rellenar nulos iniciales
+            df_final['funding_rate'] = df_final['funding_rate'].fillna(0)
         else:
             df_final = df_price
             df_final['funding_rate'] = 0.0
@@ -120,7 +126,10 @@ for symbol in SYMBOLS:
         duration = time.time() - start_time
         logger.info("COMPLETADO: %s", symbol)
         logger.info("Archivo: %s", filename)
-        logger.info("Datos Totales: %s filas (Tiempo: %.1fs)", f"{len(df_final):,}", duration)
+        logger.info(
+            "Datos Totales: %s filas (Tiempo: %.1fs)",
+            f"{len(df_final):,}", duration,
+        )
     else:
         logger.warning("No se encontraron datos para %s", symbol)
 
