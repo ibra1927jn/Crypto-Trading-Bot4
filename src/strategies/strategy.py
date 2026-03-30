@@ -330,7 +330,7 @@ class HybridStrategy:
             return True
 
         except Exception as e:
-            logger.error(f"❌ Error determining if should open position: {e}")
+            logger.error("❌ Error determining if should open position: %s", e)
             return False
 
     def calculate_position_size(
@@ -355,13 +355,13 @@ class HybridStrategy:
             quantity = amount_usdt / price
 
             logger.debug(
-                f"💰 Position size: {quantity:.8f} (${amount_usdt:.2f} @ ${price:.2f})"
+                "💰 Position size: %.8f ($%.2f @ $%.2f)", quantity, amount_usdt, price
             )
 
             return quantity
 
         except Exception as e:
-            logger.error(f"❌ Error calculating position size: {e}")
+            logger.error("❌ Error calculating position size: %s", e)
             return 0.0
 
     def calculate_stop_loss_take_profit(
@@ -396,14 +396,14 @@ class HybridStrategy:
                 stop_loss = entry_price
                 take_profit = entry_price
 
-            logger.debug(f"🎯 Entry: ${entry_price:.2f}")
-            logger.debug(f"   SL: ${stop_loss:.2f} (-{stop_loss_percent}%)")
-            logger.debug(f"   TP: ${take_profit:.2f} (+{take_profit_percent}%)")
+            logger.debug("🎯 Entry: $%.2f", entry_price)
+            logger.debug("   SL: $%.2f (-%s%%)", stop_loss, stop_loss_percent)
+            logger.debug("   TP: $%.2f (+%s%%)", take_profit, take_profit_percent)
 
             return stop_loss, take_profit
 
         except Exception as e:
-            logger.error(f"❌ Error calculating SL/TP: {e}")
+            logger.error("❌ Error calculating SL/TP: %s", e)
             return entry_price, entry_price
 
     def get_check_interval(self) -> int:

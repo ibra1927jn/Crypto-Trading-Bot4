@@ -73,7 +73,7 @@ class AI_Predictor:
             self.model.eval()
             logger.info("✅ CEREBRO TRANSFORMER CONECTADO")
         except Exception as e:
-            logger.error(f"❌ Error: {e}")
+            logger.error("❌ Error: %s", e)
 
     def predict(self, df: pd.DataFrame) -> tuple[float, float]:
         """Returns (pct_prediction, confidence) as floats."""
@@ -122,12 +122,12 @@ class AI_Predictor:
 
             pct = (np.exp(pred) - 1) * 100
             icon = "↗️" if pct > 0 else "↘️"
-            logger.info(f"🔮 IA: {icon} {pct:.4f}%")
+            logger.info("🔮 IA: %s %.4f%%", icon, pct)
 
             confidence = min(abs(pct) / 1.0, 0.95)
             return pct, confidence
         except Exception as e:
-            logger.error(f"❌ Error en predict: {e}")
+            logger.error("❌ Error en predict: %s", e)
             return 0.0, 0.0
 
     def get_signal(self, df: pd.DataFrame, threshold: float = 0.65) -> str:
