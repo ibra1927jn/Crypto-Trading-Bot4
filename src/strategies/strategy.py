@@ -70,7 +70,7 @@ class HybridStrategy:
         self.last_signal = Signal.NEUTRAL
 
         logger.info("🎯 HybridStrategy initialized")
-        logger.info(f"   Volatility Threshold: {self.volatility_threshold}")
+        logger.info("   Volatility Threshold: %s", self.volatility_threshold)
 
     def analyze_market_condition(self) -> MarketCondition:
         """
@@ -85,15 +85,15 @@ class HybridStrategy:
 
             if volatility > self.volatility_threshold:
                 self.current_condition = MarketCondition.HIGH_VOLATILITY
-                logger.info(f"📊 Market Condition: HIGH VOLATILITY ({volatility:.2f}%)")
+                logger.info("📊 Market Condition: HIGH VOLATILITY (%.2f%%)", volatility)
             else:
                 self.current_condition = MarketCondition.LOW_VOLATILITY
-                logger.info(f"📊 Market Condition: LOW VOLATILITY ({volatility:.2f}%)")
+                logger.info("📊 Market Condition: LOW VOLATILITY (%.2f%%)", volatility)
 
             return self.current_condition
 
         except Exception as e:
-            logger.error(f"❌ Error analyzing market condition: {e}")
+            logger.error("❌ Error analyzing market condition: %s", e)
             return MarketCondition.UNKNOWN
 
     def get_signal(self, df: pd.DataFrame) -> tuple[Signal, float, dict[str, Any]]:
@@ -140,7 +140,7 @@ class HybridStrategy:
             return signal, confidence, details
 
         except Exception as e:
-            logger.error(f"❌ Error getting signal: {e}")
+            logger.error("❌ Error getting signal: %s", e)
             return Signal.NEUTRAL, 0.0, {"error": str(e)}
 
     def _scalping_strategy(
@@ -181,13 +181,13 @@ class HybridStrategy:
             }
 
             logger.info(
-                f"⚡ SCALPING Signal: {signal.value} (confidence: {confidence:.2f})"
+                "⚡ SCALPING Signal: %s (confidence: %.2f)", signal.value, confidence
             )
 
             return signal, confidence, details
 
         except Exception as e:
-            logger.error(f"❌ Error in scalping strategy: {e}")
+            logger.error("❌ Error in scalping strategy: %s", e)
             return Signal.NEUTRAL, 0.0, {"error": str(e)}
 
     def _swing_strategy(self, df: pd.DataFrame) -> tuple[Signal, float, dict[str, Any]]:
@@ -260,19 +260,22 @@ class HybridStrategy:
             }
 
             logger.info(
-                f"🎯 SWING Signal: {signal.value} (confidence: {combined_confidence:.2f})"
+                "🎯 SWING Signal: %s (confidence: %.2f)",
+                signal.value, combined_confidence,
             )
             logger.info(
-                f"   Indicators: {indicators_signal} ({indicators_confidence:.2f})"
+                "   Indicators: %s (%.2f)",
+                indicators_signal, indicators_confidence,
             )
             logger.info(
-                f"   AI: {ai_signal} (pred: {ai_prediction:.2f}, conf: {ai_confidence:.2f})"
+                "   AI: %s (pred: %.2f, conf: %.2f)",
+                ai_signal, ai_prediction, ai_confidence,
             )
 
             return signal, combined_confidence, details
 
         except Exception as e:
-            logger.error(f"❌ Error in swing strategy: {e}")
+            logger.error("❌ Error in swing strategy: %s", e)
             return Signal.NEUTRAL, 0.0, {"error": str(e)}
 
     def should_open_position(
@@ -302,7 +305,7 @@ class HybridStrategy:
             # No abrir si ya se alcanzó el máximo de posiciones
             if current_positions >= max_positions:
                 logger.warning(
-                    f"⚠️  Max positions reached ({current_positions}/{max_positions})"
+                    "⚠️  Max positions reached (%s/%s)", current_positions, max_positions
                 )
                 return False
 
@@ -316,7 +319,7 @@ class HybridStrategy:
 
             if confidence < min_confidence:
                 logger.debug(
-                    f"⚠️  Confidence too low ({confidence:.2f} < {min_confidence})"
+                    "⚠️  Confidence too low (%.2f < %s)", confidence, min_confidence
                 )
                 return False
 

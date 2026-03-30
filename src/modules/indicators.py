@@ -35,7 +35,7 @@ class TechnicalIndicators:
             if bb is not None:
                 df = df.join(bb)
         except Exception as e:
-            logger.error(f"❌ Error calculando indicadores: {e}")
+            logger.error("❌ Error calculando indicadores: %s", e)
         return df
 
     def get_macd_signal(self, df: pd.DataFrame) -> tuple[str, float]:
@@ -53,7 +53,7 @@ class TechnicalIndicators:
                 return "SELL", 0.8
             return "NEUTRAL", 0.0
         except Exception as e:
-            logger.error(f"❌ Error en MACD signal: {e}")
+            logger.error("❌ Error en MACD signal: %s", e)
             return "NEUTRAL", 0.0
 
     def get_bollinger_signal(self, df: pd.DataFrame) -> tuple[str, float]:
@@ -71,7 +71,7 @@ class TechnicalIndicators:
                 return "SELL", 0.9
             return "NEUTRAL", 0.0
         except Exception as e:
-            logger.error(f"❌ Error en Bollinger signal: {e}")
+            logger.error("❌ Error en Bollinger signal: %s", e)
             return "NEUTRAL", 0.0
 
     def get_combined_signal(self, df: pd.DataFrame) -> tuple[str, float]:
@@ -101,7 +101,7 @@ class TechnicalIndicators:
                 return "SELL", 0.7
             return "NEUTRAL", 0.0
         except Exception as e:
-            logger.error(f"❌ Error en combined signal: {e}")
+            logger.error("❌ Error en combined signal: %s", e)
             return "NEUTRAL", 0.0
 
     def get_indicators_summary(self, df: pd.DataFrame) -> dict:
@@ -110,5 +110,5 @@ class TechnicalIndicators:
         try:
             return {"rsi": df["rsi"].iloc[-1]}
         except Exception as e:
-            logger.error(f"❌ Error en indicators summary: {e}")
+            logger.error("❌ Error en indicators summary: %s", e)
             return {}

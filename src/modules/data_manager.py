@@ -35,12 +35,12 @@ class DataManager:
                     funding = await self.exchange.fetch_funding_rate(self.symbol)
                     df["funding_rate"] = funding["fundingRate"]
                 except Exception as e:
-                    logger.warning(f"⚠️ Funding rate no disponible: {e}")
+                    logger.warning("⚠️ Funding rate no disponible: %s", e)
                     df["funding_rate"] = 0.0
 
                 self.data = df
         except Exception as e:
-            logger.error(f"Error datos: {e}")
+            logger.error("Error datos: %s", e)
 
     def get_latest_data(self) -> pd.DataFrame | None:
         return self.data
