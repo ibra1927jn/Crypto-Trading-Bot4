@@ -83,7 +83,7 @@ for symbol in SYMBOLS:
 
         except Exception as e:
             # Si falla (algunas monedas no tienen tanto historial de funding), seguimos
-            logger.warning(f"Error obteniendo funding rate: {e}")
+            logger.warning("Error obteniendo funding rate: %s", e)
             break
 
     # -------------------------------------------
