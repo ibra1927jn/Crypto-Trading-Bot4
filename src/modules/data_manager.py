@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import logging
-import ccxt.async_support as ccxt
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +16,8 @@ class DataManager:
         try:
             if self.exchange.has['fetchOHLCV']:
                 ohlcv = await self.exchange.fetch_ohlcv(self.symbol, self.timeframe, limit=self.limit)
-            else: return
+            else:
+                return
 
             if ohlcv:
                 df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
@@ -32,9 +32,11 @@ class DataManager:
                     df['funding_rate'] = 0.0
                     
                 self.data = df
-        except Exception as e: logger.error(f"Error datos: {e}")
+        except Exception as e:
+            logger.error(f"Error datos: {e}")
 
-    def get_latest_data(self): return self.data
+    def get_latest_data(self):
+        return self.data
     
     BARS_PER_YEAR = {
         '1m': 365 * 24 * 60,
@@ -46,7 +48,8 @@ class DataManager:
     }
 
     def calculate_volatility(self, window=20):
-        if self.data is None or len(self.data) < 2: return 0.0
+        if self.data is None or len(self.data) < 2:
+            return 0.0
         returns = np.log(self.data['close'] / self.data['close'].shift(1))
         bars_per_year = self.BARS_PER_YEAR.get(self.timeframe, 365 * 24 * 60)
         vol = returns.tail(window).std() * np.sqrt(bars_per_year) * 100

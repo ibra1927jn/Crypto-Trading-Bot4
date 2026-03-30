@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import numpy as np
-import pandas as pd
 import pandas_ta as ta
 from sklearn.preprocessing import RobustScaler
 import logging
@@ -25,7 +24,8 @@ class PositionalEncoding(nn.Module):
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe.unsqueeze(0))
-    def forward(self, x): return x + self.pe[:, :x.size(1)]
+    def forward(self, x):
+        return x + self.pe[:, :x.size(1)]
 
 class CryptoTransformer(nn.Module):
     def __init__(self):
@@ -52,17 +52,20 @@ class AI_Predictor:
         self._load_model()
 
     def _load_model(self):
-        if not os.path.exists(self.model_path): return
+        if not os.path.exists(self.model_path):
+            return
         try:
             self.model = CryptoTransformer().to(self.device)
             self.model.load_state_dict(torch.load(self.model_path, map_location=self.device))
             self.model.eval()
             logger.info("✅ CEREBRO TRANSFORMER CONECTADO")
-        except Exception as e: logger.error(f"❌ Error: {e}")
+        except Exception as e:
+            logger.error(f"❌ Error: {e}")
 
     def predict(self, df):
         """Returns (pct_prediction, confidence) as floats."""
-        if self.model is None or len(df) < self.lookback + 20: return 0.0, 0.0
+        if self.model is None or len(df) < self.lookback + 20:
+            return 0.0, 0.0
         try:
             data = df.copy()
             # Ingeniería
@@ -79,14 +82,16 @@ class AI_Predictor:
 
             data.replace([np.inf, -np.inf], np.nan, inplace=True)
             data.dropna(inplace=True)
-            if len(data) < self.lookback: return 0.0, 0.0
+            if len(data) < self.lookback:
+                return 0.0, 0.0
 
             feats = data[['return', 'log_vol', 'rsi', 'macd', 'macd_sig', 'atr_rel', 'dist_ema', 'funding']].values
             self.scaler.fit(feats)
             scaled = self.scaler.transform(feats[-self.lookback:])
 
             tensor = torch.tensor(scaled, dtype=torch.float32).unsqueeze(0).to(self.device)
-            with torch.no_grad(): pred = self.model(tensor).item()
+            with torch.no_grad():
+                pred = self.model(tensor).item()
 
             pct = (np.exp(pred) - 1) * 100
             icon = "↗️" if pct > 0 else "↘️"
@@ -100,6 +105,8 @@ class AI_Predictor:
 
     def get_signal(self, df, threshold=0.65):
         pct, confidence = self.predict(df)
-        if pct > 0.02 and confidence >= threshold: return 'BUY'
-        elif pct < -0.02 and confidence >= threshold: return 'SELL'
+        if pct > 0.02 and confidence >= threshold:
+            return 'BUY'
+        elif pct < -0.02 and confidence >= threshold:
+            return 'SELL'
         return 'NEUTRAL'
