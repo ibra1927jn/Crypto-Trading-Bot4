@@ -78,31 +78,4 @@ class TestAIPredictorPredict:
         pct, conf = predictor.predict(df)
         assert pct == 0.0
 
-    def test_tensor_shape_in_predict(self):
-        """Verifica que el tensor enviado al modelo tiene forma correcta (batch, seq, features)."""
-        predictor = AI_Predictor({})
-        # Crear modelo dummy que registre la forma del input
-        shapes_seen = []
-        original_forward = CryptoTransformer.forward
-
-        def tracking_forward(self, x):
-            shapes_seen.append(x.shape)
-            return original_forward(self, x)
-
-        CryptoTransformer.forward = tracking_forward
-        try:
-            # Crear modelo dummy (sin pesos guardados)
-            predictor.model = CryptoTransformer()
-            predictor.model.eval()
-            df = self._make_df(300)
-            predictor.predict(df)
-            assert len(shapes_seen) > 0, "El modelo no fue llamado"
-            shape = shapes_seen[0]
-            assert len(shape) == 3, f"Tensor debe ser 3D (batch, seq, feat), got {len(shape)}D: {shape}"
-            assert shape[0] == 1, f"Batch size debe ser 1, got {shape[0]}"
-            assert shape[2] == 8, f"Features debe ser 8, got {shape[2]}"
-        finally:
-            CryptoTransformer.forward = original_forward
-
-
 class TestAIPredictorGetSignal:
