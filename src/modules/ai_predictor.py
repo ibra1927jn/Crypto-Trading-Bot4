@@ -17,6 +17,10 @@ NHEAD = 4
 NUM_LAYERS = 4
 DROPOUT = 0.0
 
+# PREDICCIÓN
+MAX_CONFIDENCE = 0.95
+DEFAULT_SIGNAL_THRESHOLD = 0.65
+
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
@@ -124,13 +128,13 @@ class AI_Predictor:
             icon = "↗️" if pct > 0 else "↘️"
             logger.info("🔮 IA: %s %.4f%%", icon, pct)
 
-            confidence = min(abs(pct) / 1.0, 0.95)
+            confidence = min(abs(pct) / 1.0, MAX_CONFIDENCE)
             return pct, confidence
         except Exception as e:
             logger.error("❌ Error en predict: %s", e)
             return 0.0, 0.0
 
-    def get_signal(self, df: pd.DataFrame, threshold: float = 0.65) -> str:
+    def get_signal(self, df: pd.DataFrame, threshold: float = DEFAULT_SIGNAL_THRESHOLD) -> str:
         pct, confidence = self.predict(df)
         if pct > 0.02 and confidence >= threshold:
             return "BUY"
