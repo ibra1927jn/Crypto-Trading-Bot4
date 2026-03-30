@@ -1,5 +1,21 @@
 # Progress Log
 
+## 2026-03-30 — Heartbeat Maintenance Cycle (pass 5)
+
+### Refactor
+- Added return type annotations to all public methods in `ai_predictor.py` (predict, get_signal, forward, _load_model) — aligns with existing annotations in `strategy.py`
+- Added `from __future__ import annotations` and `pandas` import to `ai_predictor.py` for proper type support
+
+### Assessment
+- All source modules fully annotated with return types (indicators.py and data_manager.py were already done in pass 4)
+- No remaining TODO/FIXME/HACK, no bare excepts, no unused imports, no dead code
+- config.py `print_config` annotation still blocked by pre-commit hook false positive
+
+### Results
+- **Tests**: 123/123 passing
+- **Coverage**: 99%
+- **Build**: clean
+
 ## 2026-03-30 — Heartbeat Maintenance Cycle (pass 4)
 
 ### Cleanup
