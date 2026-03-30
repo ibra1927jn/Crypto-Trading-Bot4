@@ -10,7 +10,8 @@ print("=" * 50)
 print("\n🧠 MOTOR DE IA (PyTorch):")
 if torch.cuda.is_available():
     print(f"   ✅ DETECTADO: {torch.cuda.get_device_name(0)}")
-    print(f"   ✅ VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
+    vram_gb = torch.cuda.get_device_properties(0).total_memory / 1e9
+    print(f"   ✅ VRAM: {vram_gb:.2f} GB")
     print("   -> ¡Tu Ferrari está listo para correr! 🏎️")
 else:
     print("   ❌ ERROR: No se detecta la GPU. Se usará CPU (Lento).")
