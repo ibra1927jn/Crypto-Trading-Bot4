@@ -1,5 +1,22 @@
 # Progress Log
 
+## 2026-03-30 — Heartbeat Maintenance Cycle (pass 28)
+
+### Assessment
+- 123/123 tests passing, 99% coverage, 0 build errors
+- Found deprecated `inplace=True` pandas patterns in 4 files
+- Found deprecated `asyncio.new_event_loop()` pattern in main.py
+
+### Changes
+- **refactor(ai_predictor)**: Replace deprecated `inplace=True` with reassignment on `replace()` and `dropna()`
+- **refactor(scripts)**: Same fix in `train_ai.py`, `test_ai.py`, `descargar_datos.py` (also `set_index`)
+- **refactor(main)**: Replace manual event loop with modern `asyncio.run()`
+
+### Results
+- **Tests**: 123/123 passing (was 123/123)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 errors)
+
 ## 2026-03-30 — Heartbeat Maintenance Cycle (pass 27)
 
 ### Assessment
