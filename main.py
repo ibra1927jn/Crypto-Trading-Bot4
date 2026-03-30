@@ -75,22 +75,24 @@ class CryptoRadar:
         for sym in SYMBOLS:
             mgr = DataManager(self.exchange, sym, self.timeframe, historical_bars=300)
             self.managers[sym] = mgr
-            self.strategies[sym] = HybridStrategy(mgr, self.indicators, self.ai_predictor, {})
+            self.strategies[sym] = HybridStrategy(
+                mgr, self.indicators, self.ai_predictor, {}
+            )
         return True
 
     async def run(self):
-        logger.info(f"🟢 RADAR GIRANDO ({len(SYMBOLS)} Pares)...")
+        logger.info("🟢 RADAR GIRANDO (%s Pares)...", len(SYMBOLS))
         while True:
             try:
                 await self._scan()
                 logger.info("⏳ Esperando 60s...")
                 await asyncio.sleep(60)
             except Exception as e:
-                logger.error(f"Error: {e}")
+                logger.error("Error: %s", e)
                 await asyncio.sleep(5)
 
     async def _scan(self):
-        logger.info(f"\n📡 --- {datetime.now().strftime('%H:%M:%S')} ---")
+        logger.info("\n📡 --- %s ---", datetime.now().strftime("%H:%M:%S"))
         for symbol in SYMBOLS:
             try:
                 mgr = self.managers[symbol]
@@ -104,10 +106,18 @@ class CryptoRadar:
 
                 signal, _, _ = self.strategies[symbol].get_signal(df)
 
-                icon = "🟢" if signal.value == "BUY" else "🔴" if signal.value == "SELL" else "⚪"
-                logger.info(f"{icon} {symbol:<10} ${price:<10.2f} | Señal: {signal.value}")
+                if signal.value == "BUY":
+                    icon = "🟢"
+                elif signal.value == "SELL":
+                    icon = "🔴"
+                else:
+                    icon = "⚪"
+                logger.info(
+                    "%s %-10s $%-10.2f | Señal: %s",
+                    icon, symbol, price, signal.value,
+                )
             except Exception as e:
-                logger.error(f"Error {symbol}: {e}")
+                logger.error("Error %s: %s", symbol, e)
 
 
 if __name__ == "__main__":
