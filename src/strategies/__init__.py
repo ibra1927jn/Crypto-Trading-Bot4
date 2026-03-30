@@ -1,5 +1,5 @@
 """Estrategias de trading"""
 
-from .strategy import HybridStrategy, Signal, MarketCondition
+from .strategy import HybridStrategy, MarketCondition, Signal
 
-__all__ = ['HybridStrategy', 'Signal', 'MarketCondition']
+__all__ = ['HybridStrategy', 'MarketCondition', 'Signal']

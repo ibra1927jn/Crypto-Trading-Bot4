@@ -1,12 +1,13 @@
-import torch
-import torch.nn as nn
+import logging
+import math
+import os
+
 import numpy as np
 import pandas as pd
 import pandas_ta as ta
+import torch
+import torch.nn as nn
 from sklearn.preprocessing import RobustScaler
-import logging
-import os
-import math
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +23,15 @@ class PositionalEncoding(nn.Module):
         super().__init__()
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        div_term = torch.exp(
+            torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)
+        )
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
-        self.register_buffer('pe', pe.unsqueeze(0))
+        self.register_buffer("pe", pe.unsqueeze(0))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x + self.pe[:, :x.size(1)]
+        return x + self.pe[:, : x.size(1)]
 
 
 class CryptoTransformer(nn.Module):
@@ -36,7 +39,9 @@ class CryptoTransformer(nn.Module):
         super().__init__()
         self.embedding = nn.Linear(8, D_MODEL)
         self.pos_encoder = PositionalEncoding(D_MODEL)
-        encoder_layer = nn.TransformerEncoderLayer(d_model=D_MODEL, nhead=NHEAD, dropout=DROPOUT, batch_first=True)
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=D_MODEL, nhead=NHEAD, dropout=DROPOUT, batch_first=True
+        )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=NUM_LAYERS)
         self.decoder = nn.Linear(D_MODEL, 1)
 
@@ -50,7 +55,7 @@ class CryptoTransformer(nn.Module):
 
 class AI_Predictor:
     def __init__(self, config):
-        self.model_path = 'models/trading_model.pth'
+        self.model_path = "models/trading_model.pth"
         self.lookback = 180
         self.scaler = RobustScaler()
         self.model = None
@@ -62,7 +67,9 @@ class AI_Predictor:
             return
         try:
             self.model = CryptoTransformer().to(self.device)
-            self.model.load_state_dict(torch.load(self.model_path, map_location=self.device))
+            self.model.load_state_dict(
+                torch.load(self.model_path, map_location=self.device)
+            )
             self.model.eval()
             logger.info("✅ CEREBRO TRANSFORMER CONECTADO")
         except Exception as e:
@@ -75,28 +82,41 @@ class AI_Predictor:
         try:
             data = df.copy()
             # Ingeniería
-            data['return'] = np.log(data['close'] / data['close'].shift(1))
-            data['log_vol'] = np.log(data['volume'] + 1).pct_change()
-            data['rsi'] = ta.rsi(data['close'], length=14) / 100.0
-            atr = ta.atr(data['high'], data['low'], data['close'], length=14)
-            data['atr_rel'] = atr / data['close'].clip(lower=1e-8)
-            macd = ta.macd(data['close'])
-            data['macd'] = macd['MACD_12_26_9']
-            data['macd_sig'] = macd['MACDs_12_26_9']
-            ema = ta.ema(data['close'], length=50)
-            data['dist_ema'] = (data['close'] - ema) / ema.clip(lower=1e-8)
-            data['funding'] = data.get('funding_rate', 0.0)
+            data["return"] = np.log(data["close"] / data["close"].shift(1))
+            data["log_vol"] = np.log(data["volume"] + 1).pct_change()
+            data["rsi"] = ta.rsi(data["close"], length=14) / 100.0
+            atr = ta.atr(data["high"], data["low"], data["close"], length=14)
+            data["atr_rel"] = atr / data["close"].clip(lower=1e-8)
+            macd = ta.macd(data["close"])
+            data["macd"] = macd["MACD_12_26_9"]
+            data["macd_sig"] = macd["MACDs_12_26_9"]
+            ema = ta.ema(data["close"], length=50)
+            data["dist_ema"] = (data["close"] - ema) / ema.clip(lower=1e-8)
+            data["funding"] = data.get("funding_rate", 0.0)
 
             data.replace([np.inf, -np.inf], np.nan, inplace=True)
             data.dropna(inplace=True)
             if len(data) < self.lookback:
                 return 0.0, 0.0
 
-            feats = data[['return', 'log_vol', 'rsi', 'macd', 'macd_sig', 'atr_rel', 'dist_ema', 'funding']].values
+            feats = data[
+                [
+                    "return",
+                    "log_vol",
+                    "rsi",
+                    "macd",
+                    "macd_sig",
+                    "atr_rel",
+                    "dist_ema",
+                    "funding",
+                ]
+            ].values
             self.scaler.fit(feats)
-            scaled = self.scaler.transform(feats[-self.lookback:])
+            scaled = self.scaler.transform(feats[-self.lookback :])
 
-            tensor = torch.tensor(scaled, dtype=torch.float32).unsqueeze(0).to(self.device)
+            tensor = (
+                torch.tensor(scaled, dtype=torch.float32).unsqueeze(0).to(self.device)
+            )
             with torch.no_grad():
                 pred = self.model(tensor).item()
 
@@ -113,7 +133,7 @@ class AI_Predictor:
     def get_signal(self, df: pd.DataFrame, threshold: float = 0.65) -> str:
         pct, confidence = self.predict(df)
         if pct > 0.02 and confidence >= threshold:
-            return 'BUY'
+            return "BUY"
         elif pct < -0.02 and confidence >= threshold:
-            return 'SELL'
-        return 'NEUTRAL'
+            return "SELL"
+        return "NEUTRAL"

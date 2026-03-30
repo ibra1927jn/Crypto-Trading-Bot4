@@ -9,16 +9,18 @@ Implementa estrategias híbridas que se adaptan a las condiciones del mercado:
 Esta arquitectura modular permite añadir nuevas estrategias fácilmente.
 """
 
-import pandas as pd
-from typing import Any
 import logging
 from enum import Enum
+from typing import Any
+
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 
 class MarketCondition(Enum):
     """Condiciones del mercado"""
+
     HIGH_VOLATILITY = "HIGH_VOLATILITY"
     LOW_VOLATILITY = "LOW_VOLATILITY"
     UNKNOWN = "UNKNOWN"
@@ -26,6 +28,7 @@ class MarketCondition(Enum):
 
 class Signal(Enum):
     """Señales de trading"""
+
     BUY = "BUY"
     SELL = "SELL"
     NEUTRAL = "NEUTRAL"
@@ -40,13 +43,7 @@ class HybridStrategy:
     La estrategia se adapta automáticamente según las condiciones del mercado.
     """
 
-    def __init__(
-        self,
-        data_manager,
-        indicators,
-        ai_predictor,
-        config: dict[str, Any]
-    ):
+    def __init__(self, data_manager, indicators, ai_predictor, config: dict[str, Any]):
         """
         Inicializa la estrategia híbrida
 
@@ -62,11 +59,11 @@ class HybridStrategy:
         self.config = config
 
         # Configuración de volatilidad
-        self.volatility_threshold = config.get('VOLATILITY_THRESHOLD', 2.0)
+        self.volatility_threshold = config.get("VOLATILITY_THRESHOLD", 2.0)
 
         # Configuración de estrategias
-        self.scalping_config = config.get('SCALPING_CONFIG', {})
-        self.swing_config = config.get('SWING_CONFIG', {})
+        self.scalping_config = config.get("SCALPING_CONFIG", {})
+        self.swing_config = config.get("SWING_CONFIG", {})
 
         # Estado actual
         self.current_condition = MarketCondition.UNKNOWN
@@ -117,26 +114,26 @@ class HybridStrategy:
             condition = self.analyze_market_condition()
 
             details = {
-                'market_condition': condition.value,
-                'volatility': self.data_manager.calculate_volatility(),
-                'strategy_used': None
+                "market_condition": condition.value,
+                "volatility": self.data_manager.calculate_volatility(),
+                "strategy_used": None,
             }
 
             # Elegir estrategia según volatilidad
             if condition == MarketCondition.HIGH_VOLATILITY:
                 signal, confidence, strategy_details = self._scalping_strategy(df)
-                details['strategy_used'] = 'SCALPING'
+                details["strategy_used"] = "SCALPING"
                 details.update(strategy_details)
 
             elif condition == MarketCondition.LOW_VOLATILITY:
                 signal, confidence, strategy_details = self._swing_strategy(df)
-                details['strategy_used'] = 'SWING'
+                details["strategy_used"] = "SWING"
                 details.update(strategy_details)
 
             else:
                 signal = Signal.NEUTRAL
                 confidence = 0.0
-                details['strategy_used'] = 'NONE'
+                details["strategy_used"] = "NONE"
 
             self.last_signal = signal
 
@@ -144,9 +141,11 @@ class HybridStrategy:
 
         except Exception as e:
             logger.error(f"❌ Error getting signal: {e}")
-            return Signal.NEUTRAL, 0.0, {'error': str(e)}
+            return Signal.NEUTRAL, 0.0, {"error": str(e)}
 
-    def _scalping_strategy(self, df: pd.DataFrame) -> tuple[Signal, float, dict[str, Any]]:
+    def _scalping_strategy(
+        self, df: pd.DataFrame
+    ) -> tuple[Signal, float, dict[str, Any]]:
         """
         Estrategia de SCALPING para alta volatilidad
 
@@ -166,28 +165,30 @@ class HybridStrategy:
             combined_signal, confidence = self.indicators.get_combined_signal(df)
 
             # Convertir a enum Signal
-            if combined_signal == 'BUY':
+            if combined_signal == "BUY":
                 signal = Signal.BUY
-            elif combined_signal == 'SELL':
+            elif combined_signal == "SELL":
                 signal = Signal.SELL
             else:
                 signal = Signal.NEUTRAL
 
             # Detalles de la señal
             details = {
-                'rsi': df['rsi'].iloc[-1] if 'rsi' in df.columns else None,
-                'macd_signal': self.indicators.get_macd_signal(df),
-                'bollinger_signal': self.indicators.get_bollinger_signal(df),
-                'price': df['close'].iloc[-1] if 'close' in df.columns else None
+                "rsi": df["rsi"].iloc[-1] if "rsi" in df.columns else None,
+                "macd_signal": self.indicators.get_macd_signal(df),
+                "bollinger_signal": self.indicators.get_bollinger_signal(df),
+                "price": df["close"].iloc[-1] if "close" in df.columns else None,
             }
 
-            logger.info(f"⚡ SCALPING Signal: {signal.value} (confidence: {confidence:.2f})")
+            logger.info(
+                f"⚡ SCALPING Signal: {signal.value} (confidence: {confidence:.2f})"
+            )
 
             return signal, confidence, details
 
         except Exception as e:
             logger.error(f"❌ Error in scalping strategy: {e}")
-            return Signal.NEUTRAL, 0.0, {'error': str(e)}
+            return Signal.NEUTRAL, 0.0, {"error": str(e)}
 
     def _swing_strategy(self, df: pd.DataFrame) -> tuple[Signal, float, dict[str, Any]]:
         """
@@ -206,13 +207,14 @@ class HybridStrategy:
             logger.debug("🎯 Using SWING strategy (Low Volatility)")
 
             # Obtener señal de indicadores técnicos
-            indicators_signal, indicators_confidence = self.indicators.get_combined_signal(df)
+            indicators_signal, indicators_confidence = (
+                self.indicators.get_combined_signal(df)
+            )
 
             # Obtener predicción de IA
             ai_prediction, ai_confidence = self.ai_predictor.predict(df)
             ai_signal = self.ai_predictor.get_signal(
-                df,
-                threshold=self.swing_config.get('ai_confidence_threshold', 0.65)
+                df, threshold=self.swing_config.get("ai_confidence_threshold", 0.65)
             )
 
             # Combinar ambas señales
@@ -221,21 +223,20 @@ class HybridStrategy:
             indicators_weight = 0.3
 
             # Convertir señales a valores numéricos
-            signal_values = {'BUY': 1, 'NEUTRAL': 0, 'SELL': -1}
+            signal_values = {"BUY": 1, "NEUTRAL": 0, "SELL": -1}
 
             indicators_value = signal_values.get(indicators_signal, 0)
             ai_value = signal_values.get(ai_signal, 0)
 
             # Calcular señal combinada
             combined_value = (
-                ai_value * ai_weight * ai_confidence +
-                indicators_value * indicators_weight * indicators_confidence
+                ai_value * ai_weight * ai_confidence
+                + indicators_value * indicators_weight * indicators_confidence
             )
 
             # Calcular confianza combinada
             combined_confidence = (
-                ai_confidence * ai_weight +
-                indicators_confidence * indicators_weight
+                ai_confidence * ai_weight + indicators_confidence * indicators_weight
             )
 
             # Determinar señal final
@@ -248,32 +249,38 @@ class HybridStrategy:
 
             # Detalles de la señal
             details = {
-                'indicators_signal': indicators_signal,
-                'indicators_confidence': indicators_confidence,
-                'ai_signal': ai_signal,
-                'ai_prediction': ai_prediction,
-                'ai_confidence': ai_confidence,
-                'combined_value': combined_value,
-                'price': df['close'].iloc[-1] if 'close' in df.columns else None,
-                'rsi': df['rsi'].iloc[-1] if 'rsi' in df.columns else None
+                "indicators_signal": indicators_signal,
+                "indicators_confidence": indicators_confidence,
+                "ai_signal": ai_signal,
+                "ai_prediction": ai_prediction,
+                "ai_confidence": ai_confidence,
+                "combined_value": combined_value,
+                "price": df["close"].iloc[-1] if "close" in df.columns else None,
+                "rsi": df["rsi"].iloc[-1] if "rsi" in df.columns else None,
             }
 
-            logger.info(f"🎯 SWING Signal: {signal.value} (confidence: {combined_confidence:.2f})")
-            logger.info(f"   Indicators: {indicators_signal} ({indicators_confidence:.2f})")
-            logger.info(f"   AI: {ai_signal} (pred: {ai_prediction:.2f}, conf: {ai_confidence:.2f})")
+            logger.info(
+                f"🎯 SWING Signal: {signal.value} (confidence: {combined_confidence:.2f})"
+            )
+            logger.info(
+                f"   Indicators: {indicators_signal} ({indicators_confidence:.2f})"
+            )
+            logger.info(
+                f"   AI: {ai_signal} (pred: {ai_prediction:.2f}, conf: {ai_confidence:.2f})"
+            )
 
             return signal, combined_confidence, details
 
         except Exception as e:
             logger.error(f"❌ Error in swing strategy: {e}")
-            return Signal.NEUTRAL, 0.0, {'error': str(e)}
+            return Signal.NEUTRAL, 0.0, {"error": str(e)}
 
     def should_open_position(
         self,
         signal: Signal,
         confidence: float,
         current_positions: int,
-        max_positions: int
+        max_positions: int,
     ) -> bool:
         """
         Determina si se debe abrir una nueva posición
@@ -294,7 +301,9 @@ class HybridStrategy:
 
             # No abrir si ya se alcanzó el máximo de posiciones
             if current_positions >= max_positions:
-                logger.warning(f"⚠️  Max positions reached ({current_positions}/{max_positions})")
+                logger.warning(
+                    f"⚠️  Max positions reached ({current_positions}/{max_positions})"
+                )
                 return False
 
             # Umbral mínimo de confianza según la estrategia
@@ -306,10 +315,14 @@ class HybridStrategy:
                 min_confidence = 0.65
 
             if confidence < min_confidence:
-                logger.debug(f"⚠️  Confidence too low ({confidence:.2f} < {min_confidence})")
+                logger.debug(
+                    f"⚠️  Confidence too low ({confidence:.2f} < {min_confidence})"
+                )
                 return False
 
-            logger.info(f"✅ Should open {signal.value} position (confidence: {confidence:.2f})")
+            logger.info(
+                f"✅ Should open {signal.value} position (confidence: {confidence:.2f})"
+            )
             return True
 
         except Exception as e:
@@ -317,10 +330,7 @@ class HybridStrategy:
             return False
 
     def calculate_position_size(
-        self,
-        balance: float,
-        position_size_percent: float,
-        price: float
+        self, balance: float, position_size_percent: float, price: float
     ) -> float:
         """
         Calcula el tamaño de la posición
@@ -340,7 +350,9 @@ class HybridStrategy:
             # Calcular cantidad de activo
             quantity = amount_usdt / price
 
-            logger.debug(f"💰 Position size: {quantity:.8f} (${amount_usdt:.2f} @ ${price:.2f})")
+            logger.debug(
+                f"💰 Position size: {quantity:.8f} (${amount_usdt:.2f} @ ${price:.2f})"
+            )
 
             return quantity
 
@@ -353,7 +365,7 @@ class HybridStrategy:
         entry_price: float,
         signal: Signal,
         stop_loss_percent: float,
-        take_profit_percent: float
+        take_profit_percent: float,
     ) -> tuple[float, float]:
         """
         Calcula niveles de Stop Loss y Take Profit
@@ -399,10 +411,10 @@ class HybridStrategy:
         """
         if self.current_condition == MarketCondition.HIGH_VOLATILITY:
             # Scalping: chequear más frecuentemente
-            return self.scalping_config.get('check_interval', 5)
+            return self.scalping_config.get("check_interval", 5)
         else:
             # Swing: chequear menos frecuentemente
-            return self.swing_config.get('check_interval', 60)
+            return self.swing_config.get("check_interval", 60)
 
     def get_strategy_summary(self) -> dict[str, Any]:
         """
@@ -412,11 +424,13 @@ class HybridStrategy:
             Diccionario con información de la estrategia
         """
         return {
-            'current_condition': self.current_condition.value,
-            'volatility_threshold': self.volatility_threshold,
-            'current_volatility': self.data_manager.calculate_volatility(),
-            'last_signal': self.last_signal.value,
-            'check_interval': self.get_check_interval(),
-            'strategy_active': 'SCALPING' if self.current_condition == MarketCondition.HIGH_VOLATILITY else 'SWING',
-            'ai_enabled': self.current_condition == MarketCondition.LOW_VOLATILITY
+            "current_condition": self.current_condition.value,
+            "volatility_threshold": self.volatility_threshold,
+            "current_volatility": self.data_manager.calculate_volatility(),
+            "last_signal": self.last_signal.value,
+            "check_interval": self.get_check_interval(),
+            "strategy_active": "SCALPING"
+            if self.current_condition == MarketCondition.HIGH_VOLATILITY
+            else "SWING",
+            "ai_enabled": self.current_condition == MarketCondition.LOW_VOLATILITY,
         }
