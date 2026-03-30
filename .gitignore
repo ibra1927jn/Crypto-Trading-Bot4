@@ -131,3 +131,6 @@ tmp/
 # Archivos de configuración específicos del usuario
 config_local.py
 settings_local.py
+
+# Temporary test artifacts
+_del_*
