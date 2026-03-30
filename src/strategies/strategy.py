@@ -324,7 +324,8 @@ class HybridStrategy:
                 return False
 
             logger.info(
-                f"✅ Should open {signal.value} position (confidence: {confidence:.2f})"
+                "✅ Should open %s position (confidence: %.2f)",
+                signal.value, confidence,
             )
             return True
 
