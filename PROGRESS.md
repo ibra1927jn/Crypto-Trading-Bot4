@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-03-30 — Heartbeat Maintenance Cycle (pass 3)
+
+### Fixes
+- Captured exception variables in bare `except Exception:` handlers in `descargar_datos.py` and `test_ai.py` — errors are now logged/displayed instead of silently swallowed
+
+### Assessment
+- Full pyflakes scan: zero issues across all source and script files
+- All modules compile cleanly, no lint errors
+- No new TODO/FIXME/HACK, no unused imports, no dead code found
+
+### Results
+- **Tests**: 123/123 passing
+- **Coverage**: 99%
+- **Build**: clean
+
 ## 2026-03-30 — Heartbeat Maintenance Cycle (pass 2)
 
 ### Assessment
