@@ -120,12 +120,14 @@ class CryptoRadar:
                 logger.error("Error %s: %s", symbol, e)
 
 
-if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+async def _main():
     radar = CryptoRadar()
-    if loop.run_until_complete(radar.initialize()):
-        try:
-            loop.run_until_complete(radar.run())
-        except KeyboardInterrupt:
-            pass
+    if await radar.initialize():
+        await radar.run()
+
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(_main())
+    except KeyboardInterrupt:
+        pass
