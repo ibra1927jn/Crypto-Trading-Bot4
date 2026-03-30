@@ -1,5 +1,19 @@
 # Progress Log
 
+## 2026-03-30 — Heartbeat Maintenance Cycle (pass 35)
+
+### Assessment
+- 123/123 tests passing, 99% coverage, 0 build errors
+- Found env var naming inconsistency: `main.py` read `BINANCE_SECRET_KEY` while `config.py` uses `BINANCE_API_SECRET`, causing silent mismatch
+
+### Changes
+- **fix(main)**: aligned env var `BINANCE_SECRET_KEY` → `BINANCE_API_SECRET` in `main.py:17` to match `config.py:31` (commit e8199e9)
+
+### Results
+- **Tests**: 123/123 passing (unchanged)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 errors)
+
 ## 2026-03-30 — Heartbeat Maintenance Cycle (pass 34)
 
 ### Assessment
