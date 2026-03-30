@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-03-30 — Heartbeat Maintenance Cycle (pass 26)
+
+### Assessment
+- 123/123 tests passing, 99% coverage, 0 build errors
+- Found last remaining magic number fallbacks in strategy.py and data_manager.py
+
+### Changes
+- **refactor(strategy)**: Replace literal `0.65` fallback with `SWING_MIN_CONFIDENCE` constant
+- **refactor(data_manager)**: Replace duplicated `365*24*60` fallback with `BARS_PER_YEAR["1m"]` reference
+
+### Results
+- **Tests**: 123/123 passing (was 123/123)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 errors)
+
 ## 2026-03-30 — Heartbeat Maintenance Cycle (pass 25)
 
 ### Assessment
