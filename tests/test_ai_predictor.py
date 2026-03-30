@@ -146,3 +146,44 @@ class TestAIPredictorLoadModel:
         predictor._load_model()
         # Model object is created before load_state_dict, so it persists
         assert predictor.model is not None
+
+    def test_load_model_success(self, tmp_path):
+        """Successful model load sets model to eval mode (covers lines 65-66)."""
+        model = CryptoTransformer()
+        model_path = tmp_path / "good_model.pth"
+        torch.save(model.state_dict(), str(model_path))
+        predictor = AI_Predictor({})
+        predictor.model_path = str(model_path)
+        predictor._load_model()
+        assert predictor.model is not None
+        assert not predictor.model.training  # eval() sets training=False
+
+
+class TestAIPredictorPostDropna:
+    def _make_df(self, n=300):
+        np.random.seed(42)
+        close = 100 + np.cumsum(np.random.randn(n) * 0.1)
+        close = np.maximum(close, 1.0)
+        return pd.DataFrame({
+            'open': close + np.random.randn(n) * 0.01,
+            'high': close + abs(np.random.randn(n) * 0.05),
+            'low': close - abs(np.random.randn(n) * 0.05),
+            'close': close,
+            'volume': np.random.randint(100, 10000, n).astype(float),
+            'funding_rate': np.random.uniform(-0.001, 0.001, n),
+        })
+
+    def test_insufficient_data_after_dropna(self):
+        """Data that passes initial check but becomes too short after dropna (covers line 92)."""
+        predictor = AI_Predictor({})
+        predictor.model = CryptoTransformer().to(predictor.device)
+        predictor.model.eval()
+        # 210 rows pass the initial check (>= lookback+20=200) but inject NaNs
+        # so that after dropna, fewer than lookback (180) rows remain
+        df = self._make_df(210)
+        # Set most volume to 0 so log(volume+1).pct_change() produces NaN/inf
+        df.loc[:100, 'volume'] = 0.0
+        df.loc[:100, 'close'] = np.nan
+        pct, conf = predictor.predict(df)
+        assert pct == 0.0
+        assert conf == 0.0

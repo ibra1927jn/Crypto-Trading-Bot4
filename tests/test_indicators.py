@@ -201,6 +201,13 @@ class TestBollingerSignalError:
         assert signal == 'NEUTRAL'
         assert conf == 0.0
 
+    def test_bollinger_signal_no_close_column(self, indicators):
+        """Exception handler: df without 'close' triggers except branch."""
+        df = pd.DataFrame({'not_close': [100, 101, 102]})
+        signal, conf = indicators.get_bollinger_signal(df)
+        assert signal == 'NEUTRAL'
+        assert conf == 0.0
+
 
 class TestCombinedSignalError:
     def test_combined_signal_no_rsi_column(self, indicators):
