@@ -81,8 +81,9 @@ for symbol in SYMBOLS:
             temp_since = funding[-1]['timestamp'] + 1
             time.sleep(0.1)
 
-        except Exception:
+        except Exception as e:
             # Si falla (algunas monedas no tienen tanto historial de funding), seguimos
+            logger.warning(f"Error obteniendo funding rate: {e}")
             break
 
     # -------------------------------------------

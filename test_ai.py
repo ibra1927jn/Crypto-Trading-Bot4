@@ -82,8 +82,8 @@ if __name__ == "__main__":
     try:
         model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
         model.eval()
-    except Exception:
-        exit("❌ Error: Modelo no compatible.")
+    except Exception as e:
+        exit(f"❌ Error: Modelo no compatible: {e}")
 
     # Test
     start_idx = random.randint(0, len(scaled) - TEST_BARS - LOOKBACK)
