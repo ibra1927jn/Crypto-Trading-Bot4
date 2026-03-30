@@ -1,5 +1,21 @@
 # Progress Log
 
+## 2026-03-30 — Heartbeat Maintenance Cycle (pass 23)
+
+### Assessment
+- 123/123 tests passing, 99% coverage, 0 build errors
+- No security issues, no failing tests
+
+### Changes
+- **refactor(ai_predictor)**: Extracted magic numbers 0.95 and 0.65 to `MAX_CONFIDENCE` and `DEFAULT_SIGNAL_THRESHOLD` constants
+- **refactor(indicators)**: Extracted magic number 0.7 to `COMBINED_SIGNAL_CONFIDENCE` constant
+- **refactor(strategy)**: Extracted 5 magic numbers to module-level constants: `SCALPING_MIN_CONFIDENCE`, `SWING_MIN_CONFIDENCE`, `AI_WEIGHT`, `INDICATORS_WEIGHT`, `SIGNAL_THRESHOLD`
+
+### Results
+- **Tests**: 123/123 passing (was 123/123)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 errors)
+
 ## 2026-03-30 — Heartbeat Maintenance Cycle (pass 22)
 
 ### Assessment
