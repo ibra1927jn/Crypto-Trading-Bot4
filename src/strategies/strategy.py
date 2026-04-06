@@ -360,6 +360,10 @@ class HybridStrategy:
             Cantidad de activo a comprar/vender
         """
         try:
+            if price <= 0:
+                logger.warning("⚠️ Invalid price %.8f, cannot calculate position size", price)
+                return 0.0
+
             # Calcular monto en USDT
             amount_usdt = balance * position_size_percent
 
