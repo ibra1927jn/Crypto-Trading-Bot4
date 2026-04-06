@@ -26,13 +26,18 @@ class DataManager:
             if ohlcv:
                 df = pd.DataFrame(
                     ohlcv,
-                    columns=["timestamp", "open", "high", "low", "close", "volume"],
+                    columns=[
+                        "timestamp", "open", "high",
+                        "low", "close", "volume",
+                    ],
                 )
                 df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
 
                 # Intentar bajar funding
                 try:
-                    funding = await self.exchange.fetch_funding_rate(self.symbol)
+                    funding = await self.exchange.fetch_funding_rate(
+                        self.symbol
+                    )
                     df["funding_rate"] = funding["fundingRate"]
                 except Exception as e:
                     logger.warning("⚠️ Funding rate no disponible: %s", e)
@@ -57,7 +62,11 @@ class DataManager:
     def calculate_volatility(self, window: int = 20) -> float:
         if self.data is None or len(self.data) < 2:
             return 0.0
-        returns = np.log(self.data["close"] / self.data["close"].shift(1))
-        bars_per_year = self.BARS_PER_YEAR.get(self.timeframe, self.BARS_PER_YEAR["1m"])
+        returns = np.log(
+            self.data["close"] / self.data["close"].shift(1)
+        )
+        bars_per_year = self.BARS_PER_YEAR.get(
+            self.timeframe, self.BARS_PER_YEAR["1m"]
+        )
         vol = returns.tail(window).std() * np.sqrt(bars_per_year) * 100
         return 0.0 if np.isnan(vol) else float(vol)

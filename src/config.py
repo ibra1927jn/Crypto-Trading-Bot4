@@ -38,7 +38,8 @@ class Config:
     TIMEFRAME = os.getenv("TIMEFRAME", "5m")  # 1m, 5m, 15m, 1h, 4h, 1d
 
     # Gestión de riesgo
-    POSITION_SIZE = float(os.getenv("POSITION_SIZE", "0.01"))  # Porcentaje del balance
+    # Porcentaje del balance
+    POSITION_SIZE = float(os.getenv("POSITION_SIZE", "0.01"))
     MAX_POSITIONS = int(os.getenv("MAX_POSITIONS", "3"))
     STOP_LOSS_PERCENT = float(os.getenv("STOP_LOSS", "2.0"))  # 2%
     TAKE_PROFIT_PERCENT = float(os.getenv("TAKE_PROFIT", "4.0"))  # 4%
@@ -87,9 +88,16 @@ class Config:
     # CONFIGURACIÓN DE IA/ML
     # ===========================
     AI_CONFIG = {
-        "model_type": os.getenv("AI_MODEL_TYPE", "pytorch"),  # pytorch o tensorflow
-        "model_path": os.getenv("AI_MODEL_PATH", "./models/trading_model.pth"),
-        "device": "cuda" if os.getenv("USE_GPU", "True").lower() == "true" else "cpu",
+        # pytorch o tensorflow
+        "model_type": os.getenv("AI_MODEL_TYPE", "pytorch"),
+        "model_path": os.getenv(
+            "AI_MODEL_PATH", "./models/trading_model.pth"
+        ),
+        "device": (
+            "cuda"
+            if os.getenv("USE_GPU", "True").lower() == "true"
+            else "cpu"
+        ),
         "input_features": 50,  # Número de características de entrada
         "sequence_length": 60,  # Ventana de datos históricos
         "batch_size": 32

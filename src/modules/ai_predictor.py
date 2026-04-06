@@ -30,7 +30,8 @@ class PositionalEncoding(nn.Module):
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(
-            torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)
+            torch.arange(0, d_model, 2).float()
+            * (-math.log(10000.0) / d_model)
         )
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
@@ -48,7 +49,9 @@ class CryptoTransformer(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=D_MODEL, nhead=NHEAD, dropout=DROPOUT, batch_first=True
         )
-        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=NUM_LAYERS)
+        self.transformer = nn.TransformerEncoder(
+            encoder_layer, num_layers=NUM_LAYERS
+        )
         self.decoder = nn.Linear(D_MODEL, 1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -62,11 +65,17 @@ class CryptoTransformer(nn.Module):
 class AI_Predictor:
     def __init__(self, config):
         default_path = "models/trading_model.pth"
-        self.model_path = config.get("model_path", default_path) if config else default_path
+        self.model_path = (
+            config.get("model_path", default_path)
+            if config
+            else default_path
+        )
         self.lookback = LOOKBACK_PERIOD
         self.scaler = RobustScaler()
         self.model = None
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
         self._load_model()
 
     def _load_model(self) -> None:
@@ -75,9 +84,12 @@ class AI_Predictor:
             return
         try:
             self.model = CryptoTransformer().to(self.device)
-            self.model.load_state_dict(
-                torch.load(self.model_path, map_location=self.device, weights_only=True)
+            state = torch.load(
+                self.model_path,
+                map_location=self.device,
+                weights_only=True,
             )
+            self.model.load_state_dict(state)
             self.model.eval()
             logger.info("✅ CEREBRO TRANSFORMER CONECTADO")
         except Exception as e:
@@ -122,9 +134,9 @@ class AI_Predictor:
             self.scaler.fit(feats)
             scaled = self.scaler.transform(feats[-self.lookback:])
 
-            tensor = (
-                torch.tensor(scaled, dtype=torch.float32).unsqueeze(0).to(self.device)
-            )
+            tensor = torch.tensor(
+                scaled, dtype=torch.float32
+            ).unsqueeze(0).to(self.device)
             with torch.no_grad():
                 pred = self.model(tensor).item()
 
@@ -138,7 +150,10 @@ class AI_Predictor:
             logger.error("❌ Error en predict: %s", e)
             return 0.0, 0.0
 
-    def get_signal(self, df: pd.DataFrame, threshold: float = DEFAULT_SIGNAL_THRESHOLD) -> str:
+    def get_signal(
+        self, df: pd.DataFrame,
+        threshold: float = DEFAULT_SIGNAL_THRESHOLD,
+    ) -> str:
         pct, confidence = self.predict(df)
         if pct > SIGNAL_PCT_THRESHOLD and confidence >= threshold:
             return "BUY"

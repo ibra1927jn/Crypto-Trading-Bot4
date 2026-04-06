@@ -19,8 +19,12 @@ class TechnicalIndicators:
         self.macd_fast = self.config.get("MACD", {}).get("fast_period", 12)
         self.macd_slow = self.config.get("MACD", {}).get("slow_period", 26)
         self.macd_signal = self.config.get("MACD", {}).get("signal_period", 9)
-        self.bollinger_period = self.config.get("BOLLINGER", {}).get("period", 20)
-        self.bollinger_std = self.config.get("BOLLINGER", {}).get("std_dev", 2.0)
+        self.bollinger_period = self.config.get(
+            "BOLLINGER", {}
+        ).get("period", 20)
+        self.bollinger_std = self.config.get(
+            "BOLLINGER", {}
+        ).get("std_dev", 2.0)
 
     def calculate_all(self, df: pd.DataFrame) -> pd.DataFrame:
         if df is None or df.empty:
@@ -36,7 +40,9 @@ class TechnicalIndicators:
             if macd is not None:
                 df = df.join(macd)
             bb = ta.bbands(
-                df["close"], length=self.bollinger_period, std=self.bollinger_std
+                df["close"],
+                length=self.bollinger_period,
+                std=self.bollinger_std,
             )
             if bb is not None:
                 df = df.join(bb)
@@ -48,10 +54,16 @@ class TechnicalIndicators:
         if df is None or df.empty:
             return "NEUTRAL", 0.0
         try:
-            macd_col = [c for c in df.columns if c.startswith("MACD_")][0]
-            signal_col = [c for c in df.columns if c.startswith("MACDs_")][0]
-            curr_macd, curr_sig = df[macd_col].iloc[-1], df[signal_col].iloc[-1]
-            prev_macd, prev_sig = df[macd_col].iloc[-2], df[signal_col].iloc[-2]
+            macd_col = [
+                c for c in df.columns if c.startswith("MACD_")
+            ][0]
+            signal_col = [
+                c for c in df.columns if c.startswith("MACDs_")
+            ][0]
+            curr_macd = df[macd_col].iloc[-1]
+            curr_sig = df[signal_col].iloc[-1]
+            prev_macd = df[macd_col].iloc[-2]
+            prev_sig = df[signal_col].iloc[-2]
 
             if prev_macd < prev_sig and curr_macd > curr_sig:
                 return "BUY", MACD_CROSSOVER_CONFIDENCE
