@@ -61,7 +61,8 @@ class CryptoTransformer(nn.Module):
 
 class AI_Predictor:
     def __init__(self, config):
-        self.model_path = config.get("model_path", "models/trading_model.pth") if config else "models/trading_model.pth"
+        default_path = "models/trading_model.pth"
+        self.model_path = config.get("model_path", default_path) if config else default_path
         self.lookback = LOOKBACK_PERIOD
         self.scaler = RobustScaler()
         self.model = None
