@@ -1,5 +1,19 @@
 # Progress Log
 
+## 2026-04-06 — Heartbeat Maintenance Cycle (pass 81)
+
+### Assessment
+- Full scan: 123/123 tests passing, 98% coverage, 0 lint errors, no TODOs/FIXMEs, no hardcoded secrets, no dead imports in src/
+- `strategy.py:431-433` (`calculate_position_size` except block) was untested — existing test used `price=0` which hit early return, not the exception path
+
+### Changes
+- **test(strategy)**: Cover `calculate_position_size` exception handler with non-numeric input test (14b41e5)
+
+### Results
+- **Tests**: 124/124 passing (was 123/123)
+- **Coverage**: 99% — `strategy.py` now at 100%; remaining misses are `__version__`/`__author__` constants and `if __name__` guards
+- **Build**: clean (0 lint errors)
+
 ## 2026-04-06 — Heartbeat Maintenance Cycle (pass 80)
 
 ### Assessment
