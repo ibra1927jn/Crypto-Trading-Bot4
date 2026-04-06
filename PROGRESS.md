@@ -1,5 +1,21 @@
 # Progress Log
 
+## 2026-04-06 — Heartbeat Maintenance Cycle (pass 76)
+
+### Assessment
+- 123/123 tests passing, 98% coverage, 0 build errors
+- Found: `AI_Predictor.__init__` accepted `config` param but ignored it, hardcoding model path
+- Found: `_load_model` silently returned when model file missing (no log warning)
+
+### Changes
+- **fix(ai_predictor)**: Use `config` dict to read `model_path` instead of hardcoding it (5e9e341)
+- **fix(ai_predictor)**: Add warning log when model file is not found
+
+### Results
+- **Tests**: 123/123 passing (unchanged)
+- **Coverage**: 98% (unchanged)
+- **Build**: clean (0 errors)
+
 ## 2026-04-06 — Heartbeat Maintenance Cycle (pass 75)
 
 ### Assessment
