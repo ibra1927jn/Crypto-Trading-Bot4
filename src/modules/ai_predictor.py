@@ -61,7 +61,7 @@ class CryptoTransformer(nn.Module):
 
 class AI_Predictor:
     def __init__(self, config):
-        self.model_path = "models/trading_model.pth"
+        self.model_path = config.get("model_path", "models/trading_model.pth") if config else "models/trading_model.pth"
         self.lookback = LOOKBACK_PERIOD
         self.scaler = RobustScaler()
         self.model = None
@@ -70,6 +70,7 @@ class AI_Predictor:
 
     def _load_model(self) -> None:
         if not os.path.exists(self.model_path):
+            logger.warning("Modelo no encontrado en %s", self.model_path)
             return
         try:
             self.model = CryptoTransformer().to(self.device)
