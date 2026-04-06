@@ -389,6 +389,12 @@ class TestErrorBranches:
         qty = s.calculate_position_size(10000, 0.01, 0)
         assert qty == 0.0
 
+    def test_calculate_position_size_exception(self):
+        """Error branch: non-numeric balance triggers except → 0.0."""
+        s = make_strategy()
+        qty = s.calculate_position_size("bad", 0.01, 50000)
+        assert qty == 0.0
+
     def test_calculate_sl_tp_error(self):
         """Error branch: bad entry_price type → returns entry, entry."""
         s = make_strategy()
