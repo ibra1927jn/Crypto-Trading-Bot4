@@ -5,7 +5,9 @@ import numpy as np
 import pandas as pd
 import torch
 
-from modules.ai_predictor import AI_Predictor, CryptoTransformer, PositionalEncoding
+from modules.ai_predictor import (
+    AI_Predictor, CryptoTransformer, PositionalEncoding,
+)
 
 
 class TestCryptoTransformer:
@@ -149,7 +151,7 @@ class TestAIPredictorLoadModel:
         assert predictor.model is not None
 
     def test_load_model_success(self, tmp_path):
-        """Successful model load sets model to eval mode (covers lines 65-66)."""
+        """Successful load sets model to eval mode."""
         model = CryptoTransformer()
         model_path = tmp_path / "good_model.pth"
         torch.save(model.state_dict(), str(model_path))

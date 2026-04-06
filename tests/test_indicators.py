@@ -195,7 +195,7 @@ class TestMACDSignalError:
 
 class TestBollingerSignalError:
     def test_bollinger_signal_no_bb_columns(self, indicators):
-        """Error branch: df without BB columns returns NEUTRAL (no BBL/BBU found)."""
+        """No BB columns returns NEUTRAL."""
         df = pd.DataFrame({'close': [100, 101, 102], 'rsi': [50, 55, 60]})
         signal, conf = indicators.get_bollinger_signal(df)
         assert signal == 'NEUTRAL'
@@ -271,7 +271,7 @@ class TestCombinedSignalNeutral:
 
 class TestCombinedSignalBollingerContribution:
     def test_bollinger_buy_adds_to_signals(self, indicators):
-        """Bollinger BUY signal contributes to combined result (covers line 81)."""
+        """Bollinger BUY contributes to combined result."""
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
         # RSI neutral (between 30-70)
@@ -284,7 +284,7 @@ class TestCombinedSignalBollingerContribution:
         assert conf == 0.7
 
     def test_bollinger_sell_adds_to_signals(self, indicators):
-        """Bollinger SELL signal contributes to combined result (covers line 81)."""
+        """Bollinger SELL contributes to combined result."""
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
         # RSI neutral (between 30-70)
@@ -297,7 +297,7 @@ class TestCombinedSignalBollingerContribution:
         assert conf == 0.7
 
     def test_tied_signals_give_neutral(self, indicators):
-        """When BUY and SELL signals are tied, result is NEUTRAL (covers line 93)."""
+        """Tied BUY/SELL signals give NEUTRAL."""
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
         # RSI oversold => BUY signal

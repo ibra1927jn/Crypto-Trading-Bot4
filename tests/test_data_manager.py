@@ -39,8 +39,7 @@ class TestCalculateVolatility:
         assert vol == 0.0 or np.isnan(vol)
 
     def test_annualization_factor_depends_on_timeframe(self):
-        """La volatilidad debe usar factor de anualización correcto según timeframe.
-        Si el timeframe es 1h, el factor sqrt(365*24) != sqrt(365*24*60)."""
+        """Volatility uses correct annualization factor."""
         np.random.seed(42)
         prices = 100 + np.cumsum(np.random.randn(50) * 0.5)
 
@@ -54,8 +53,9 @@ class TestCalculateVolatility:
         # The ratio should be sqrt(60) ≈ 7.75 difference
         if abs(vol_1m - vol_1h) < 0.001:
             pytest.fail(
-                f"Volatility is identical for 1m ({vol_1m:.4f}) and 1h ({vol_1h:.4f}). "
-                "Annualization factor is hardcoded and does not account for timeframe."
+                f"Volatility identical for 1m "
+                f"({vol_1m:.4f}) and 1h "
+                f"({vol_1h:.4f})."
             )
 
     def test_get_latest_data_none_by_default(self):
@@ -83,13 +83,17 @@ class TestCalculateVolatility:
 
 
 class TestUpdateData:
-    def _make_exchange(self, ohlcv_data=None, funding_rate=0.001, has_ohlcv=True,
-                       funding_raises=False):
+    def _make_exchange(
+        self, ohlcv_data=None, funding_rate=0.001,
+        has_ohlcv=True, funding_raises=False,
+    ):
         exchange = AsyncMock()
         exchange.has = {'fetchOHLCV': has_ohlcv}
         exchange.fetch_ohlcv = AsyncMock(return_value=ohlcv_data)
         if funding_raises:
-            exchange.fetch_funding_rate = AsyncMock(side_effect=Exception("no funding"))
+            exchange.fetch_funding_rate = AsyncMock(
+                side_effect=Exception("no funding")
+            )
         else:
             exchange.fetch_funding_rate = AsyncMock(
                 return_value={'fundingRate': funding_rate}
@@ -144,7 +148,9 @@ class TestUpdateData:
         """If fetch_ohlcv raises, data stays None (no crash)."""
         exchange = AsyncMock()
         exchange.has = {'fetchOHLCV': True}
-        exchange.fetch_ohlcv = AsyncMock(side_effect=Exception("network error"))
+        exchange.fetch_ohlcv = AsyncMock(
+            side_effect=Exception("network error")
+        )
         dm = DataManager(exchange, 'BTC/USDT', '1m')
         await dm.update_data()
         assert dm.get_latest_data() is None
