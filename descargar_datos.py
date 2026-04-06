@@ -7,14 +7,17 @@ import ccxt
 import pandas as pd
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s: %(message)s",
+)
 
 # ==========================================
 # ⚙️ CONFIGURACIÓN "HIGH DEFINITION"
 # ==========================================
 SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'BNB/USDT', 'DOGE/USDT']
-TIMEFRAME = '1m'     # <--- CAMBIO CLAVE: Bajamos a 1 minuto (Máxima precisión)
-YEARS = 4            # 4 años de 1m son 2 millones de velas (Suficiente para RAM)
+TIMEFRAME = '1m'     # Bajamos a 1 minuto
+YEARS = 4            # 4 años de 1m = ~2M velas
 OUTPUT_FOLDER = 'data'
 
 # Crear carpeta
@@ -24,7 +27,10 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 exchange = ccxt.binance({'options': {'defaultType': 'future'}})
 
 logger.info("INICIANDO RECOLECCION HD (Alta Definicion)")
-logger.info("Objetivo: %d años de datos minuto a minuto + Funding Rates", YEARS)
+logger.info(
+    "Objetivo: %d años de datos minuto a minuto + Funding Rates",
+    YEARS,
+)
 logger.info("=" * 70)
 
 for symbol in SYMBOLS:
@@ -44,10 +50,17 @@ for symbol in SYMBOLS:
 
     while temp_since < now:
         try:
-            dt_str = datetime.fromtimestamp(temp_since/1000).strftime('%Y-%m-%d')
-            logger.info("Fecha: %s | Velas: %s", dt_str, f"{len(all_ohlcv):,}")
+            dt_str = datetime.fromtimestamp(
+                temp_since / 1000,
+            ).strftime('%Y-%m-%d')
+            logger.info(
+                "Fecha: %s | Velas: %s",
+                dt_str, f"{len(all_ohlcv):,}",
+            )
 
-            ohlcv = exchange.fetch_ohlcv(symbol, TIMEFRAME, temp_since, limit=1000)
+            ohlcv = exchange.fetch_ohlcv(
+                symbol, TIMEFRAME, temp_since, limit=1000,
+            )
 
             if len(ohlcv) == 0:
                 break
@@ -85,8 +98,10 @@ for symbol in SYMBOLS:
             time.sleep(0.1)
 
         except Exception as e:
-            # Si falla (algunas monedas no tienen tanto historial de funding), seguimos
-            logger.warning("Error obteniendo funding rate: %s", e)
+            # Si falla (monedas sin historial de funding)
+            logger.warning(
+                "Error obteniendo funding rate: %s", e,
+            )
             break
 
     # -------------------------------------------
@@ -96,7 +111,9 @@ for symbol in SYMBOLS:
         # Crear DataFrame de Precios
         cols = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
         df_price = pd.DataFrame(all_ohlcv, columns=cols)
-        df_price['timestamp'] = pd.to_datetime(df_price['timestamp'], unit='ms')
+        df_price['timestamp'] = pd.to_datetime(
+            df_price['timestamp'], unit='ms',
+        )
         df_price = df_price.set_index('timestamp')
 
         # Crear DataFrame de Funding
@@ -104,7 +121,9 @@ for symbol in SYMBOLS:
             df_funding = pd.DataFrame(
                 all_funding, columns=['timestamp', 'funding_rate']
             )
-            df_funding['timestamp'] = pd.to_datetime(df_funding['timestamp'], unit='ms')
+            df_funding['timestamp'] = pd.to_datetime(
+                df_funding['timestamp'], unit='ms',
+            )
             df_funding = df_funding.set_index('timestamp')
 
             # Re-muestrear Funding para que coincida con los minutos

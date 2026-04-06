@@ -12,7 +12,10 @@ from dotenv import load_dotenv
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(dotenv_path=os.path.join(BASE_DIR, '.env'), override=True)
 
-SYMBOLS = [s.strip() for s in os.getenv('TRADING_SYMBOLS', 'BTC/USDT').split(',')]
+SYMBOLS = [
+    s.strip()
+    for s in os.getenv('TRADING_SYMBOLS', 'BTC/USDT').split(',')
+]
 API_KEY = os.getenv('BINANCE_API_KEY')
 SECRET_KEY = os.getenv('BINANCE_API_SECRET')
 
@@ -73,7 +76,10 @@ class CryptoRadar:
 
         self.strategies = {}
         for sym in SYMBOLS:
-            mgr = DataManager(self.exchange, sym, self.timeframe, historical_bars=300)
+            mgr = DataManager(
+                self.exchange, sym, self.timeframe,
+                historical_bars=300,
+            )
             self.managers[sym] = mgr
             self.strategies[sym] = HybridStrategy(
                 mgr, self.indicators, self.ai_predictor, {}

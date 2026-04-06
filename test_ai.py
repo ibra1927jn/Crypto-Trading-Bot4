@@ -49,7 +49,9 @@ class CryptoTransformer(nn.Module):
             d_model=D_MODEL, nhead=NHEAD,
             dropout=DROPOUT, batch_first=True,
         )
-        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=NUM_LAYERS)
+        self.transformer = nn.TransformerEncoder(
+            encoder_layer, num_layers=NUM_LAYERS,
+        )
         self.decoder = nn.Linear(D_MODEL, 1)
 
     def forward(self, x):
@@ -71,7 +73,10 @@ if __name__ == "__main__":
     df['return'] = np.log(df['close'] / df['close'].shift(1))
     df['vol_change'] = np.log(df['volume'] + 1).pct_change()
     df['rsi'] = ta.rsi(df['close'], length=14) / 100.0
-    df['atr_rel'] = ta.atr(df['high'], df['low'], df['close'], length=14) / df['close']
+    df['atr_rel'] = (
+        ta.atr(df['high'], df['low'], df['close'], length=14)
+        / df['close']
+    )
     macd = ta.macd(df['close'])
     df['macd'] = macd['MACD_12_26_9']
     df['macd_sig'] = macd['MACDs_12_26_9']
@@ -91,7 +96,9 @@ if __name__ == "__main__":
 
     model = CryptoTransformer().to(device)
     try:
-        model.load_state_dict(torch.load(MODEL_PATH, map_location=device, weights_only=True))
+        model.load_state_dict(torch.load(
+            MODEL_PATH, map_location=device, weights_only=True,
+        ))
         model.eval()
     except Exception as e:
         exit(f"❌ Error: Modelo no compatible: {e}")

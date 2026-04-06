@@ -203,7 +203,8 @@ def train_epoch(
     total_loss = 0
 
     for bx, by in train_loader:
-        bx, by = bx.to(device, non_blocking=True), by.to(device, non_blocking=True)
+        bx = bx.to(device, non_blocking=True)
+        by = by.to(device, non_blocking=True)
 
         optimizer.zero_grad(set_to_none=True)
 
@@ -213,7 +214,9 @@ def train_epoch(
 
         scaler_amp.scale(loss).backward()
         scaler_amp.unscale_(optimizer)
-        torch.nn.utils.clip_grad_norm_(model.parameters(), config['gradient_clip'])
+        torch.nn.utils.clip_grad_norm_(
+            model.parameters(), config['gradient_clip'],
+        )
 
         scaler_amp.step(optimizer)
         scaler_amp.update()
@@ -233,7 +236,8 @@ def validate(model, val_loader, criterion, device):
 
     with torch.no_grad():
         for bx, by in val_loader:
-            bx, by = bx.to(device, non_blocking=True), by.to(device, non_blocking=True)
+            bx = bx.to(device, non_blocking=True)
+            by = by.to(device, non_blocking=True)
             with torch.amp.autocast('cuda'):
                 val_out = model(bx)
                 loss = criterion(val_out, by)
@@ -244,7 +248,10 @@ def validate(model, val_loader, criterion, device):
     predictions = np.array(predictions)
     targets = np.array(targets)
     mae = np.mean(np.abs(predictions - targets))
-    correlation = np.corrcoef(predictions, targets)[0, 1] if len(predictions) > 1 else 0
+    correlation = (
+        np.corrcoef(predictions, targets)[0, 1]
+        if len(predictions) > 1 else 0
+    )
 
     return total_loss / len(val_loader), mae, correlation
 
@@ -263,7 +270,9 @@ def train():
     config = wandb.config
 
     # Cargar datos
-    train_dataset, val_dataset, _scaler = load_and_prepare_data(DATA_FOLDER, config)
+    train_dataset, val_dataset, _scaler = load_and_prepare_data(
+        DATA_FOLDER, config,
+    )
 
     train_loader = DataLoader(
         train_dataset,
@@ -315,7 +324,9 @@ def train():
             scaler_amp, scheduler, device, config
         )
 
-        avg_val_loss, val_mae, val_corr = validate(model, val_loader, criterion, device)
+        avg_val_loss, val_mae, val_corr = validate(
+            model, val_loader, criterion, device,
+        )
 
         # Log a WandB (lo que el sweep optimiza)
         wandb.log({
