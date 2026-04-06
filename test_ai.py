@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     model = CryptoTransformer().to(device)
     try:
-        model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+        model.load_state_dict(torch.load(MODEL_PATH, map_location=device, weights_only=True))
         model.eval()
     except Exception as e:
         exit(f"❌ Error: Modelo no compatible: {e}")

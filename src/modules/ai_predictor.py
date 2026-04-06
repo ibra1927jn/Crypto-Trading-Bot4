@@ -75,7 +75,7 @@ class AI_Predictor:
         try:
             self.model = CryptoTransformer().to(self.device)
             self.model.load_state_dict(
-                torch.load(self.model_path, map_location=self.device)
+                torch.load(self.model_path, map_location=self.device, weights_only=True)
             )
             self.model.eval()
             logger.info("✅ CEREBRO TRANSFORMER CONECTADO")
