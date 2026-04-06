@@ -1,0 +1,5 @@
+[flake8]
+max-line-length = 120
+# W503/W504: line break before/after binary operator
+# These rules conflict with each other; ignore both per pycodestyle recommendation
+extend-ignore = W503, W504
