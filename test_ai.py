@@ -114,7 +114,7 @@ if __name__ == "__main__":
     simulated = [100]
 
     for i in range(TEST_BARS):
-        seq = test_data[i:i+LOOKBACK]
+        seq = test_data[i:i + LOOKBACK]
         x = torch.tensor(seq, dtype=torch.float32).unsqueeze(0).to(device)
         with torch.no_grad():
             pred = model(x).item()
