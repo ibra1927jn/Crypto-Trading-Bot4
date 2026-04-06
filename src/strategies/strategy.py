@@ -276,14 +276,16 @@ class HybridStrategy:
 
             # Calcular señal combinada
             combined_value = (
-                ai_value * ai_weight * ai_confidence
-                + indicators_value * indicators_weight * indicators_confidence
+                ai_value * ai_weight * ai_confidence +
+                indicators_value *
+                indicators_weight *
+                indicators_confidence
             )
 
             # Calcular confianza combinada
             combined_confidence = (
-                ai_confidence * ai_weight
-                + indicators_confidence * indicators_weight
+                ai_confidence * ai_weight +
+                indicators_confidence * indicators_weight
             )
 
             # Determinar señal final
@@ -517,7 +519,7 @@ class HybridStrategy:
             if self.current_condition == MarketCondition.HIGH_VOLATILITY
             else "SWING",
             "ai_enabled": (
-                self.current_condition
-                == MarketCondition.LOW_VOLATILITY
+                self.current_condition ==
+                MarketCondition.LOW_VOLATILITY
             ),
         }
