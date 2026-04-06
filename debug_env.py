@@ -11,12 +11,15 @@ if se_cargo:
 else:
     print("❌ ERROR: No se encuentra el archivo .env")
 
-# 2. Intentar leer la clave (Solo mostramos los primeros 4 caracteres por seguridad)
+# 2. Leer la clave (solo primeros 4 chars por seguridad)
 api_key = os.getenv("BINANCE_API_KEY")
 
 if api_key:
     print(f"🔑 Clave detectada: {api_key[:4]}... (El resto es secreto)")
     print("🚀 ¡TODO LISTO! Ejecuta main.py")
 else:
-    print("⚠️  El archivo existe, pero la variable 'BINANCE_API_KEY' está vacía.")
+    print(
+        "⚠️  El archivo existe, pero "
+        "'BINANCE_API_KEY' está vacía."
+    )
     print("👉 Abre el archivo .env y asegúrate de GUARDARLO (Ctrl + S)")
