@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
+import contextlib
 import logging
 import os
 import sys
@@ -58,10 +59,10 @@ class CryptoRadar:
         })
         # Parche URLs
         base = 'https://testnet.binancefuture.com'
-        self.exchange.urls['api'] = {
-            k: f'{base}/fapi/v1'
-            for k in ['fapiPublic', 'fapiPrivate', 'public', 'private']
-        }
+        self.exchange.urls['api'] = dict.fromkeys(
+            ['fapiPublic', 'fapiPrivate', 'public', 'private'],
+            f'{base}/fapi/v1',
+        )
         self.exchange.urls['api'].update({
             'sapi': f'{base}/sapi/v1',
             'dapiPublic': f'{base}/dapi/v1',
@@ -133,7 +134,5 @@ async def _main():
 
 
 if __name__ == "__main__":
-    try:
+    with contextlib.suppress(KeyboardInterrupt):
         asyncio.run(_main())
-    except KeyboardInterrupt:
-        pass
