@@ -96,6 +96,39 @@ class TestAIPredictorPredict:
         assert conf == 0.0
 
 
+class TestAIPredictorSignalFromPrediction:
+    def test_buy_above_threshold(self):
+        predictor = AI_Predictor({})
+        assert predictor.signal_from_prediction(0.05, 0.8) == 'BUY'
+
+    def test_sell_below_threshold(self):
+        predictor = AI_Predictor({})
+        assert predictor.signal_from_prediction(-0.05, 0.8) == 'SELL'
+
+    def test_neutral_low_confidence(self):
+        predictor = AI_Predictor({})
+        assert predictor.signal_from_prediction(0.05, 0.3) == 'NEUTRAL'
+
+    def test_neutral_small_pct(self):
+        predictor = AI_Predictor({})
+        assert predictor.signal_from_prediction(0.01, 0.9) == 'NEUTRAL'
+
+    def test_custom_threshold(self):
+        predictor = AI_Predictor({})
+        assert predictor.signal_from_prediction(
+            0.05, 0.5, threshold=0.4,
+        ) == 'BUY'
+
+    def test_get_signal_calls_predict_only_once(self):
+        """Regression: get_signal must not invoke predict() twice."""
+        predictor = AI_Predictor({})
+        with patch.object(
+            predictor, 'predict', return_value=(0.05, 0.8),
+        ) as mock_predict:
+            predictor.get_signal(pd.DataFrame())
+            assert mock_predict.call_count == 1
+
+
 class TestAIPredictorGetSignal:
     def test_get_signal_neutral_no_model(self):
         predictor = AI_Predictor({})
