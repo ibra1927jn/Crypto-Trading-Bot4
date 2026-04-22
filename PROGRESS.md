@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-04-22 — Heartbeat Maintenance Cycle (pass 82)
+
+### Assessment
+- Full scan: 124/124 tests passing, 72% overall (100% on src/ modules), 0 lint errors, no TODOs/FIXMEs
+- Found: `HybridStrategy._swing_strategy` invoked `AI_Predictor.predict()` twice per tick — once directly, once indirectly through `get_signal(df)`. The transformer + feature engineering pipeline ran twice for every swing decision
+
+### Changes
+- **perf(strategy)**: Extract `signal_from_prediction(pct, confidence, threshold)` on `AI_Predictor`; reuse single inference result in `_swing_strategy` instead of re-predicting (4a85218)
+- **test(ai_predictor)**: Cover new helper across BUY/SELL/NEUTRAL paths plus regression test asserting `get_signal()` calls `predict()` exactly once (d0ce150)
+
+### Results
+- **Tests**: 130/130 passing (was 124/124)
+- **Coverage**: 72% overall, 100% on src/ modules (unchanged)
+- **Build**: clean (0 lint errors)
+
 ## 2026-04-06 — Heartbeat Maintenance Cycle (pass 81)
 
 ### Assessment
