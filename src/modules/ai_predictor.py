@@ -150,13 +150,22 @@ class AI_Predictor:
             logger.error("❌ Error en predict: %s", e)
             return 0.0, 0.0
 
-    def get_signal(
-        self, df: pd.DataFrame,
+    def signal_from_prediction(
+        self,
+        pct: float,
+        confidence: float,
         threshold: float = DEFAULT_SIGNAL_THRESHOLD,
     ) -> str:
-        pct, confidence = self.predict(df)
+        """Map a prediction (pct, confidence) to a BUY/SELL/NEUTRAL signal."""
         if pct > SIGNAL_PCT_THRESHOLD and confidence >= threshold:
             return "BUY"
         elif pct < -SIGNAL_PCT_THRESHOLD and confidence >= threshold:
             return "SELL"
         return "NEUTRAL"
+
+    def get_signal(
+        self, df: pd.DataFrame,
+        threshold: float = DEFAULT_SIGNAL_THRESHOLD,
+    ) -> str:
+        pct, confidence = self.predict(df)
+        return self.signal_from_prediction(pct, confidence, threshold)

@@ -253,14 +253,14 @@ class HybridStrategy:
                 self.indicators.get_combined_signal(df)
             )
 
-            # Obtener predicción de IA
+            # Obtener predicción de IA (single inference; reuse for signal)
             ai_prediction, ai_confidence = self.ai_predictor.predict(df)
             ai_threshold = self.swing_config.get(
                 "ai_confidence_threshold",
                 SWING_MIN_CONFIDENCE,
             )
-            ai_signal = self.ai_predictor.get_signal(
-                df, threshold=ai_threshold,
+            ai_signal = self.ai_predictor.signal_from_prediction(
+                ai_prediction, ai_confidence, ai_threshold,
             )
 
             # Combinar ambas señales
