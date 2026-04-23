@@ -41,7 +41,7 @@ DEFAULT_CONFIG = {
     "scheduler": "OneCycleLR",
     "architecture": "Transformer",
     "data_split": 0.8,
-    "early_stop_patience": 12  # Más agresivo para sweeps
+    "early_stop_patience": 12,  # Más agresivo para sweeps
 }
 
 NUM_WORKERS = 0
@@ -77,7 +77,7 @@ class PositionalEncoding(nn.Module):
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(
             torch.arange(0, d_model, 2).float()
-            * (-math.log(10000.0) / d_model)
+            * (-math.log(10000.0) / d_model),
         )
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
@@ -97,10 +97,10 @@ class CryptoTransformer(nn.Module):
             nhead=config["nhead"],
             dropout=config["dropout"],
             batch_first=True,
-            norm_first=True
+            norm_first=True,
         )
         self.transformer = nn.TransformerEncoder(
-            encoder_layer, num_layers=config["num_layers"]
+            encoder_layer, num_layers=config["num_layers"],
         )
         self.decoder = nn.Linear(config["d_model"], 1)
         self._init_weights()
@@ -192,10 +192,10 @@ def load_and_prepare_data(
 
     lookback = config["lookback"]
     train_dataset = LazyCryptoDataset(
-        X_scaled[:split], y_raw[:split], lookback
+        X_scaled[:split], y_raw[:split], lookback,
     )
     val_dataset = LazyCryptoDataset(
-        X_scaled[split:], y_raw[split:], lookback
+        X_scaled[split:], y_raw[split:], lookback,
     )
 
     return train_dataset, val_dataset, scaler
@@ -298,7 +298,7 @@ def train() -> None:
         shuffle=True,
         num_workers=NUM_WORKERS,
         pin_memory=PIN_MEMORY,
-        persistent_workers=False
+        persistent_workers=False,
     )
     val_loader = DataLoader(
         val_dataset,
@@ -306,7 +306,7 @@ def train() -> None:
         shuffle=False,
         num_workers=NUM_WORKERS,
         pin_memory=PIN_MEMORY,
-        persistent_workers=False
+        persistent_workers=False,
     )
 
     # Modelo
@@ -318,7 +318,7 @@ def train() -> None:
         model.parameters(),
         lr=config.learning_rate,
         weight_decay=config.weight_decay,
-        betas=(0.9, 0.999)
+        betas=(0.9, 0.999),
     )
 
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
@@ -329,7 +329,7 @@ def train() -> None:
         pct_start=0.3,
         anneal_strategy="cos",
         div_factor=25.0,
-        final_div_factor=1e4
+        final_div_factor=1e4,
     )
 
     early_stop = EarlyStopping(patience=config.early_stop_patience)
@@ -339,7 +339,7 @@ def train() -> None:
     for epoch in range(config.epochs):
         avg_train_loss = train_epoch(
             model, train_loader, criterion, optimizer,
-            scaler_amp, scheduler, device, config
+            scaler_amp, scheduler, device, config,
         )
 
         avg_val_loss, val_mae, val_corr = validate(
@@ -353,7 +353,7 @@ def train() -> None:
             "val/loss": avg_val_loss,
             "val/mae": val_mae,
             "val/correlation": val_corr,
-            "train/learning_rate": optimizer.param_groups[0]["lr"]
+            "train/learning_rate": optimizer.param_groups[0]["lr"],
         })
 
         # Guardar mejor modelo (no guardamos en sweep: demasiados modelos)
@@ -367,7 +367,7 @@ def train() -> None:
     # Métricas finales
     wandb.log({
         "final/best_val_loss": best_val_loss,
-        "final/total_epochs": epoch + 1
+        "final/total_epochs": epoch + 1,
     })
 
 
