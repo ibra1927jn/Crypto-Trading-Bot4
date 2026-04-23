@@ -50,7 +50,7 @@ PIN_MEMORY = True
 
 
 class LazyCryptoDataset(Dataset):
-    """Sliding-window dataset that materializes ``(lookback, features)`` tensors on demand."""
+    """Sliding-window dataset that yields ``(lookback, features)`` tensors on demand."""
 
     def __init__(
         self,
@@ -101,7 +101,7 @@ class CryptoTransformer(nn.Module):
     """Transformer encoder that maps ``(batch, seq, 8)`` features to a scalar return."""
 
     def __init__(self, config: dict) -> None:
-        """Build the network from a hyperparameter dict (d_model/nhead/num_layers/dropout)."""
+        """Build the network from a hyperparameter dict (d_model/nhead/layers/etc)."""
         super().__init__()
         self.embedding = nn.Linear(8, config["d_model"])
         self.pos_encoder = PositionalEncoding(config["d_model"])
@@ -139,10 +139,10 @@ class CryptoTransformer(nn.Module):
 
 
 class EarlyStopping:
-    """Halt training after ``patience`` epochs without ``min_delta`` improvement on val loss."""
+    """Halt training after ``patience`` epochs without ``min_delta`` val-loss gain."""
 
     def __init__(self, patience: int = 12, min_delta: float = 1e-6) -> None:
-        """Configure patience and minimum improvement delta; resets counter and best loss."""
+        """Configure patience and minimum improvement delta; reset counter/best loss."""
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0
