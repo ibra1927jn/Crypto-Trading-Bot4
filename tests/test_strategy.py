@@ -46,7 +46,7 @@ class MockAIPredictor:
     def signal_from_prediction(self, pct, confidence, threshold=0.65):
         if pct > 0.02 and confidence >= threshold:
             return 'BUY'
-        elif pct < -0.02 and confidence >= threshold:
+        if pct < -0.02 and confidence >= threshold:
             return 'SELL'
         return 'NEUTRAL'
 

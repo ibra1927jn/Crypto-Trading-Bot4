@@ -11,14 +11,13 @@ def make_ohlcv(n=100, base_price=100.0, seed=42):
     np.random.seed(seed)
     close = base_price + np.cumsum(np.random.randn(n) * 0.5)
     close = np.maximum(close, 1.0)
-    df = pd.DataFrame({
+    return pd.DataFrame({
         'open': close + np.random.randn(n) * 0.1,
         'high': close + abs(np.random.randn(n) * 0.3),
         'low': close - abs(np.random.randn(n) * 0.3),
         'close': close,
         'volume': np.random.randint(100, 10000, n).astype(float),
     })
-    return df
 
 
 @pytest.fixture
