@@ -100,33 +100,34 @@ class TechnicalIndicators:
         if df is None or df.empty:
             return "NEUTRAL", 0.0
         try:
-            signals = []
             rsi = df["rsi"].iloc[-1]
-            if rsi < RSI_OVERSOLD:
-                signals.append("BUY")
-            elif rsi > RSI_OVERBOUGHT:
-                signals.append("SELL")
-
-            if bollinger_signal is None:
-                bollinger_signal = self.get_bollinger_signal(df)
-            bol_sig, _ = bollinger_signal
-            if bol_sig != "NEUTRAL":
-                signals.append(bol_sig)
-
-            if not signals:
-                return "NEUTRAL", 0.0
-
-            buy = signals.count("BUY")
-            sell = signals.count("SELL")
-
-            if buy > sell:
-                return "BUY", COMBINED_SIGNAL_CONFIDENCE
-            if sell > buy:
-                return "SELL", COMBINED_SIGNAL_CONFIDENCE
-            return "NEUTRAL", 0.0
         except Exception:
             logger.exception("❌ Error en combined signal")
             return "NEUTRAL", 0.0
+
+        signals = []
+        if rsi < RSI_OVERSOLD:
+            signals.append("BUY")
+        elif rsi > RSI_OVERBOUGHT:
+            signals.append("SELL")
+
+        if bollinger_signal is None:
+            bollinger_signal = self.get_bollinger_signal(df)
+        bol_sig, _ = bollinger_signal
+        if bol_sig != "NEUTRAL":
+            signals.append(bol_sig)
+
+        if not signals:
+            return "NEUTRAL", 0.0
+
+        buy = signals.count("BUY")
+        sell = signals.count("SELL")
+
+        if buy > sell:
+            return "BUY", COMBINED_SIGNAL_CONFIDENCE
+        if sell > buy:
+            return "SELL", COMBINED_SIGNAL_CONFIDENCE
+        return "NEUTRAL", 0.0
 
     def get_indicators_summary(self, df: pd.DataFrame) -> dict:
         if df is None or df.empty:
