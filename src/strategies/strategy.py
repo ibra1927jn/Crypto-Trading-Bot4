@@ -169,11 +169,11 @@ class HybridStrategy:
 
             self.last_signal = signal
 
-            return signal, confidence, details
-
         except Exception as e:
             logger.exception("❌ Error getting signal")
             return Signal.NEUTRAL, 0.0, {"error": str(e)}
+
+        return signal, confidence, details
 
     def _scalping_strategy(
         self, df: pd.DataFrame
@@ -232,11 +232,11 @@ class HybridStrategy:
                 signal.value, confidence,
             )
 
-            return signal, confidence, details
-
         except Exception as e:
             logger.exception("❌ Error in scalping strategy")
             return Signal.NEUTRAL, 0.0, {"error": str(e)}
+
+        return signal, confidence, details
 
     def _swing_strategy(
         self, df: pd.DataFrame,
@@ -333,11 +333,11 @@ class HybridStrategy:
                 ai_signal, ai_prediction, ai_confidence,
             )
 
-            return signal, combined_confidence, details
-
         except Exception as e:
             logger.exception("❌ Error in swing strategy")
             return Signal.NEUTRAL, 0.0, {"error": str(e)}
+
+        return signal, combined_confidence, details
 
     def should_open_position(
         self,
