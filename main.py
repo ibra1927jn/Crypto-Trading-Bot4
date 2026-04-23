@@ -51,7 +51,7 @@ logger.info("=" * 50)
 
 
 class CryptoRadar:
-    def __init__(self):
+    def __init__(self) -> None:
         self.managers = {}
         self.timeframe = os.getenv('TIMEFRAME', '1m')
 
