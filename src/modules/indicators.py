@@ -54,12 +54,8 @@ class TechnicalIndicators:
         if df is None or df.empty:
             return "NEUTRAL", 0.0
         try:
-            macd_col = [
-                c for c in df.columns if c.startswith("MACD_")
-            ][0]
-            signal_col = [
-                c for c in df.columns if c.startswith("MACDs_")
-            ][0]
+            macd_col = next(c for c in df.columns if c.startswith("MACD_"))
+            signal_col = next(c for c in df.columns if c.startswith("MACDs_"))
             curr_macd = df[macd_col].iloc[-1]
             curr_sig = df[signal_col].iloc[-1]
             prev_macd = df[macd_col].iloc[-2]
