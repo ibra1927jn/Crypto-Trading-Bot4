@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 95)
+
+### Assessment
+- Entry state: 132/132 tests passing, 99% coverage, 0 lint errors on default profile
+- `src/modules/indicators.py` had a single uncovered line (74): the `get_macd_signal` NEUTRAL branch when prev/curr MACD stay on the same side of the signal line (no crossover)
+- Existing MACD tests only exercised the two crossover branches (BUY/SELL) and the empty-df error branch; the happy-path no-crossover fall-through was never hit
+
+### Changes
+- **test(test_indicators)**: `test_no_crossover_is_neutral` — sets both bars with MACD on the same side of the signal line (1.0 → 2.0, signal stays at 0.0) and asserts `('NEUTRAL', 0.0)` (7463faf)
+
+### Results
+- **Tests**: 133/133 passing (was 132/132)
+- **Coverage**: 99% total; `src/modules/indicators.py` 99% → 100%. Remaining 5 uncovered lines are all `if __name__ == "__main__"` guards / `__init__.py` version-dunders, not reachable from the test suite
+- **Build**: clean (0 lint errors on default profile)
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 94)
 
 ### Assessment
