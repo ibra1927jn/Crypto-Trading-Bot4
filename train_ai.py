@@ -49,15 +49,15 @@ PIN_MEMORY = True
 
 
 class LazyCryptoDataset(Dataset):
-    def __init__(self, features, targets, lookback):
+    def __init__(self, features: np.ndarray, targets: np.ndarray, lookback: int) -> None:
         self.features = features
         self.targets = targets
         self.lookback = lookback
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.features) - self.lookback
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         x = self.features[idx:idx + self.lookback]
         y = self.targets[idx + self.lookback]
         x_t = torch.tensor(x, dtype=torch.float32)
@@ -66,7 +66,7 @@ class LazyCryptoDataset(Dataset):
 
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, max_len=5000):
+    def __init__(self, d_model: int, max_len: int = 5000) -> None:
         super().__init__()
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
@@ -83,7 +83,7 @@ class PositionalEncoding(nn.Module):
 
 
 class CryptoTransformer(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config: dict) -> None:
         super().__init__()
         self.embedding = nn.Linear(8, config['d_model'])
         self.pos_encoder = PositionalEncoding(config['d_model'])
@@ -120,14 +120,14 @@ class CryptoTransformer(nn.Module):
 
 
 class EarlyStopping:
-    def __init__(self, patience=12, min_delta=1e-6):
+    def __init__(self, patience: int = 12, min_delta: float = 1e-6) -> None:
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0
         self.best_loss = None
         self.should_stop = False
 
-    def __call__(self, val_loss):
+    def __call__(self, val_loss: float) -> bool:
         if self.best_loss is None:
             self.best_loss = val_loss
         elif val_loss > self.best_loss - self.min_delta:
