@@ -69,8 +69,8 @@ for symbol in SYMBOLS:
             temp_since = ohlcv[-1][0] + 60000  # Sumar 1 minuto
             time.sleep(0.1)  # Pequeña pausa para cuidar la API
 
-        except Exception as e:
-            logger.error("Error (Velas): %s", e)
+        except Exception:
+            logger.exception("Error (Velas)")
             time.sleep(5)
 
     # -------------------------------------------
