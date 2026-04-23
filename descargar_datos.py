@@ -15,16 +15,16 @@ logging.basicConfig(
 # ==========================================
 # ⚙️ CONFIGURACIÓN "HIGH DEFINITION"
 # ==========================================
-SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'BNB/USDT', 'DOGE/USDT']
-TIMEFRAME = '1m'     # Bajamos a 1 minuto
+SYMBOLS = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "DOGE/USDT"]
+TIMEFRAME = "1m"     # Bajamos a 1 minuto
 YEARS = 4            # 4 años de 1m = ~2M velas
-OUTPUT_FOLDER = 'data'
+OUTPUT_FOLDER = "data"
 
 # Crear carpeta
 Path(OUTPUT_FOLDER).mkdir(parents=True, exist_ok=True)
 
 # Usamos el cliente de Futuros para tener acceso a datos avanzados
-exchange = ccxt.binance({'options': {'defaultType': 'future'}})
+exchange = ccxt.binance({"options": {"defaultType": "future"}})
 
 logger.info("INICIANDO RECOLECCION HD (Alta Definicion)")
 logger.info(
@@ -52,7 +52,7 @@ for symbol in SYMBOLS:
         try:
             dt_str = datetime.fromtimestamp(
                 temp_since / 1000, tz=timezone.utc,
-            ).strftime('%Y-%m-%d')
+            ).strftime("%Y-%m-%d")
             logger.info(
                 "Fecha: %s | Velas: %s",
                 dt_str, f"{len(all_ohlcv):,}",
@@ -92,10 +92,10 @@ for symbol in SYMBOLS:
                 break
 
             all_funding.extend(
-                [f['timestamp'], f['fundingRate']] for f in funding
+                [f["timestamp"], f["fundingRate"]] for f in funding
             )
 
-            temp_since = funding[-1]['timestamp'] + 1
+            temp_since = funding[-1]["timestamp"] + 1
             time.sleep(0.1)
 
         except Exception as e:
@@ -110,37 +110,37 @@ for symbol in SYMBOLS:
     # -------------------------------------------
     if len(all_ohlcv) > 0:
         # Crear DataFrame de Precios
-        cols = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+        cols = ["timestamp", "open", "high", "low", "close", "volume"]
         df_price = pd.DataFrame(all_ohlcv, columns=cols)
-        df_price['timestamp'] = pd.to_datetime(
-            df_price['timestamp'], unit='ms',
+        df_price["timestamp"] = pd.to_datetime(
+            df_price["timestamp"], unit="ms",
         )
-        df_price = df_price.set_index('timestamp')
+        df_price = df_price.set_index("timestamp")
 
         # Crear DataFrame de Funding
         if len(all_funding) > 0:
             df_funding = pd.DataFrame(
-                all_funding, columns=['timestamp', 'funding_rate']
+                all_funding, columns=["timestamp", "funding_rate"]
             )
-            df_funding['timestamp'] = pd.to_datetime(
-                df_funding['timestamp'], unit='ms',
+            df_funding["timestamp"] = pd.to_datetime(
+                df_funding["timestamp"], unit="ms",
             )
-            df_funding = df_funding.set_index('timestamp')
+            df_funding = df_funding.set_index("timestamp")
 
             # Re-muestrear Funding para que coincida con los minutos
             # (rellenar huecos: funding cambia cada 8h)
-            df_funding = df_funding.resample('1min').ffill()
+            df_funding = df_funding.resample("1min").ffill()
 
             # Unir todo
             df_final = df_price.join(df_funding)
             # Rellenar nulos iniciales
-            df_final['funding_rate'] = df_final['funding_rate'].fillna(0)
+            df_final["funding_rate"] = df_final["funding_rate"].fillna(0)
         else:
             df_final = df_price
-            df_final['funding_rate'] = 0.0
+            df_final["funding_rate"] = 0.0
 
         # Guardar
-        clean_name = symbol.replace('/', '_')
+        clean_name = symbol.replace("/", "_")
         filename = f"{OUTPUT_FOLDER}/{clean_name}_1m_HD.csv"
         df_final.reset_index().to_csv(filename, index=False)
 
