@@ -10,7 +10,7 @@ from modules.data_manager import DataManager
 
 
 class TestCalculateVolatility:
-    """Tests covering DataManager.calculate_volatility() and get_latest_data() helpers."""
+    """Tests covering DataManager.calculate_volatility() and get_latest_data()."""
 
     def _make_dm_with_data(
         self, prices: Sequence[float], timeframe: str = "1m",
@@ -118,7 +118,7 @@ class TestUpdateData:
 
     @pytest.mark.asyncio
     async def test_update_data_populates_df(self) -> None:
-        """update_data() populates an OHLCV+funding_rate DataFrame from exchange data."""
+        """update_data() populates an OHLCV+funding_rate DataFrame from exchange."""
         ohlcv = [
             [1000000, 100.0, 105.0, 95.0, 102.0, 5000.0],
             [1060000, 102.0, 106.0, 98.0, 104.0, 6000.0],

@@ -75,7 +75,7 @@ class MockAIPredictor:
     def signal_from_prediction(
         self, pct: float, confidence: float, threshold: float = 0.65,
     ) -> str:
-        """Replicate AI_Predictor.signal_from_prediction()'s BUY/SELL/NEUTRAL mapping."""
+        """Replicate AI_Predictor.signal_from_prediction()'s BUY/SELL/NEUTRAL map."""
         if pct > 0.02 and confidence >= threshold:
             return "BUY"
         if pct < -0.02 and confidence >= threshold:
@@ -385,7 +385,9 @@ class TestErrorBranches:
         assert signal == Signal.NEUTRAL
         assert "error" in details
 
-    def test_get_signal_calls_calculate_volatility_once(self, dummy_df: pd.DataFrame) -> None:
+    def test_get_signal_calls_calculate_volatility_once(
+        self, dummy_df: pd.DataFrame,
+    ) -> None:
         """Regression: get_signal must not re-invoke calculate_volatility.
 
         For the details dict, reuse the value cached by analyze_market_condition.
@@ -414,7 +416,9 @@ class TestErrorBranches:
         assert call_count == 1
         assert details["volatility"] == 1.0
 
-    def test_get_signal_unknown_condition_no_error(self, dummy_df: pd.DataFrame) -> None:
+    def test_get_signal_unknown_condition_no_error(
+        self, dummy_df: pd.DataFrame,
+    ) -> None:
         """UNKNOWN condition: analyze fails but volatility works."""
         call_count = 0
 
@@ -522,7 +526,9 @@ class TestErrorBranches:
 class TestSwingNeutralSignal:
     """Tests asserting the SWING branch settles on NEUTRAL for weak inputs."""
 
-    def test_swing_neutral_when_combined_near_zero(self, dummy_df: pd.DataFrame) -> None:
+    def test_swing_neutral_when_combined_near_zero(
+        self, dummy_df: pd.DataFrame,
+    ) -> None:
         """Weak signals combine to NEUTRAL."""
         s = make_strategy(
             volatility=1.0, ind_signal="NEUTRAL",
