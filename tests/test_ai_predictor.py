@@ -55,12 +55,12 @@ class TestAIPredictorPredict:
         close = 100 + np.cumsum(rng.standard_normal(n) * 0.1)
         close = np.maximum(close, 1.0)
         return pd.DataFrame({
-            'open': close + rng.standard_normal(n) * 0.01,
-            'high': close + abs(rng.standard_normal(n) * 0.05),
-            'low': close - abs(rng.standard_normal(n) * 0.05),
-            'close': close,
-            'volume': rng.integers(100, 10000, n).astype(float),
-            'funding_rate': rng.uniform(-0.001, 0.001, n),
+            "open": close + rng.standard_normal(n) * 0.01,
+            "high": close + abs(rng.standard_normal(n) * 0.05),
+            "low": close - abs(rng.standard_normal(n) * 0.05),
+            "close": close,
+            "volume": rng.integers(100, 10000, n).astype(float),
+            "funding_rate": rng.uniform(-0.001, 0.001, n),
         })
 
     def test_predict_returns_tuple(self) -> None:
@@ -102,31 +102,31 @@ class TestAIPredictorPredict:
 class TestAIPredictorSignalFromPrediction:
     def test_buy_above_threshold(self) -> None:
         predictor = AI_Predictor({})
-        assert predictor.signal_from_prediction(0.05, 0.8) == 'BUY'
+        assert predictor.signal_from_prediction(0.05, 0.8) == "BUY"
 
     def test_sell_below_threshold(self) -> None:
         predictor = AI_Predictor({})
-        assert predictor.signal_from_prediction(-0.05, 0.8) == 'SELL'
+        assert predictor.signal_from_prediction(-0.05, 0.8) == "SELL"
 
     def test_neutral_low_confidence(self) -> None:
         predictor = AI_Predictor({})
-        assert predictor.signal_from_prediction(0.05, 0.3) == 'NEUTRAL'
+        assert predictor.signal_from_prediction(0.05, 0.3) == "NEUTRAL"
 
     def test_neutral_small_pct(self) -> None:
         predictor = AI_Predictor({})
-        assert predictor.signal_from_prediction(0.01, 0.9) == 'NEUTRAL'
+        assert predictor.signal_from_prediction(0.01, 0.9) == "NEUTRAL"
 
     def test_custom_threshold(self) -> None:
         predictor = AI_Predictor({})
         assert predictor.signal_from_prediction(
             0.05, 0.5, threshold=0.4,
-        ) == 'BUY'
+        ) == "BUY"
 
     def test_get_signal_calls_predict_only_once(self) -> None:
         """Regression: get_signal must not invoke predict() twice."""
         predictor = AI_Predictor({})
         with patch.object(
-            predictor, 'predict', return_value=(0.05, 0.8),
+            predictor, "predict", return_value=(0.05, 0.8),
         ) as mock_predict:
             predictor.get_signal(pd.DataFrame())
             assert mock_predict.call_count == 1
@@ -135,39 +135,39 @@ class TestAIPredictorSignalFromPrediction:
 class TestAIPredictorGetSignal:
     def test_get_signal_neutral_no_model(self) -> None:
         predictor = AI_Predictor({})
-        df = pd.DataFrame({'close': [100.0] * 300})
+        df = pd.DataFrame({"close": [100.0] * 300})
         signal = predictor.get_signal(df)
-        assert signal == 'NEUTRAL'
+        assert signal == "NEUTRAL"
 
     def test_get_signal_buy(self) -> None:
         predictor = AI_Predictor({})
-        with patch.object(predictor, 'predict', return_value=(0.05, 0.8)):
+        with patch.object(predictor, "predict", return_value=(0.05, 0.8)):
             signal = predictor.get_signal(pd.DataFrame())
-            assert signal == 'BUY'
+            assert signal == "BUY"
 
     def test_get_signal_sell(self) -> None:
         predictor = AI_Predictor({})
-        with patch.object(predictor, 'predict', return_value=(-0.05, 0.8)):
+        with patch.object(predictor, "predict", return_value=(-0.05, 0.8)):
             signal = predictor.get_signal(pd.DataFrame())
-            assert signal == 'SELL'
+            assert signal == "SELL"
 
     def test_get_signal_neutral_low_confidence(self) -> None:
         predictor = AI_Predictor({})
-        with patch.object(predictor, 'predict', return_value=(0.05, 0.3)):
+        with patch.object(predictor, "predict", return_value=(0.05, 0.3)):
             signal = predictor.get_signal(pd.DataFrame())
-            assert signal == 'NEUTRAL'
+            assert signal == "NEUTRAL"
 
     def test_get_signal_neutral_small_pct(self) -> None:
         predictor = AI_Predictor({})
-        with patch.object(predictor, 'predict', return_value=(0.01, 0.9)):
+        with patch.object(predictor, "predict", return_value=(0.01, 0.9)):
             signal = predictor.get_signal(pd.DataFrame())
-            assert signal == 'NEUTRAL'
+            assert signal == "NEUTRAL"
 
     def test_get_signal_custom_threshold(self) -> None:
         predictor = AI_Predictor({})
-        with patch.object(predictor, 'predict', return_value=(0.05, 0.5)):
+        with patch.object(predictor, "predict", return_value=(0.05, 0.5)):
             signal = predictor.get_signal(pd.DataFrame(), threshold=0.4)
-            assert signal == 'BUY'
+            assert signal == "BUY"
 
 
 class TestAIPredictorLoadModel:
@@ -204,12 +204,12 @@ class TestAIPredictorPostDropna:
         close = 100 + np.cumsum(rng.standard_normal(n) * 0.1)
         close = np.maximum(close, 1.0)
         return pd.DataFrame({
-            'open': close + rng.standard_normal(n) * 0.01,
-            'high': close + abs(rng.standard_normal(n) * 0.05),
-            'low': close - abs(rng.standard_normal(n) * 0.05),
-            'close': close,
-            'volume': rng.integers(100, 10000, n).astype(float),
-            'funding_rate': rng.uniform(-0.001, 0.001, n),
+            "open": close + rng.standard_normal(n) * 0.01,
+            "high": close + abs(rng.standard_normal(n) * 0.05),
+            "low": close - abs(rng.standard_normal(n) * 0.05),
+            "close": close,
+            "volume": rng.integers(100, 10000, n).astype(float),
+            "funding_rate": rng.uniform(-0.001, 0.001, n),
         })
 
     def test_insufficient_data_after_dropna(self) -> None:
@@ -221,8 +221,8 @@ class TestAIPredictorPostDropna:
         # so that after dropna, fewer than lookback (180) rows remain
         df = self._make_df(210)
         # Set most volume to 0 so log(volume+1).pct_change() produces NaN/inf
-        df.loc[:100, 'volume'] = 0.0
-        df.loc[:100, 'close'] = np.nan
+        df.loc[:100, "volume"] = 0.0
+        df.loc[:100, "close"] = np.nan
         pct, conf = predictor.predict(df)
         assert pct == 0.0
         assert conf == 0.0

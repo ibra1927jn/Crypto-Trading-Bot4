@@ -11,15 +11,15 @@ from modules.data_manager import DataManager
 
 class TestCalculateVolatility:
     def _make_dm_with_data(
-        self, prices: Sequence[float], timeframe: str = '1m',
+        self, prices: Sequence[float], timeframe: str = "1m",
     ) -> DataManager:
-        dm = DataManager(exchange=None, symbol='BTC/USDT', timeframe=timeframe)
+        dm = DataManager(exchange=None, symbol="BTC/USDT", timeframe=timeframe)
         dm.data = pd.DataFrame({
-            'close': prices,
-            'open': prices,
-            'high': prices,
-            'low': prices,
-            'volume': [1000] * len(prices),
+            "close": prices,
+            "open": prices,
+            "high": prices,
+            "low": prices,
+            "volume": [1000] * len(prices),
         })
         return dm
 
@@ -32,7 +32,7 @@ class TestCalculateVolatility:
         assert vol >= 0
 
     def test_no_data_returns_zero(self) -> None:
-        dm = DataManager(exchange=None, symbol='BTC/USDT', timeframe='1m')
+        dm = DataManager(exchange=None, symbol="BTC/USDT", timeframe="1m")
         assert dm.calculate_volatility() == 0.0
 
     def test_constant_prices_zero_vol(self) -> None:
@@ -47,8 +47,8 @@ class TestCalculateVolatility:
         rng = np.random.default_rng(42)
         prices = 100 + np.cumsum(rng.standard_normal(50) * 0.5)
 
-        dm_1m = self._make_dm_with_data(prices, timeframe='1m')
-        dm_1h = self._make_dm_with_data(prices, timeframe='1h')
+        dm_1m = self._make_dm_with_data(prices, timeframe="1m")
+        dm_1h = self._make_dm_with_data(prices, timeframe="1h")
 
         vol_1m = dm_1m.calculate_volatility()
         vol_1h = dm_1h.calculate_volatility()
@@ -63,7 +63,7 @@ class TestCalculateVolatility:
             )
 
     def test_get_latest_data_none_by_default(self) -> None:
-        dm = DataManager(exchange=None, symbol='BTC/USDT', timeframe='1m')
+        dm = DataManager(exchange=None, symbol="BTC/USDT", timeframe="1m")
         assert dm.get_latest_data() is None
 
     def test_get_latest_data_returns_data(self) -> None:
@@ -81,7 +81,7 @@ class TestCalculateVolatility:
         """Unknown timeframe should fall back to 1m factor."""
         rng = np.random.default_rng(42)
         prices = 100 + np.cumsum(rng.standard_normal(50) * 0.5)
-        dm = self._make_dm_with_data(prices, timeframe='3m')
+        dm = self._make_dm_with_data(prices, timeframe="3m")
         vol = dm.calculate_volatility()
         assert isinstance(vol, float)
         assert vol >= 0
@@ -93,7 +93,7 @@ class TestUpdateData:
         has_ohlcv: bool = True, funding_raises: bool = False,
     ) -> AsyncMock:
         exchange = AsyncMock()
-        exchange.has = {'fetchOHLCV': has_ohlcv}
+        exchange.has = {"fetchOHLCV": has_ohlcv}
         exchange.fetch_ohlcv = AsyncMock(return_value=ohlcv_data)
         if funding_raises:
             exchange.fetch_funding_rate = AsyncMock(
@@ -101,7 +101,7 @@ class TestUpdateData:
             )
         else:
             exchange.fetch_funding_rate = AsyncMock(
-                return_value={'fundingRate': funding_rate}
+                return_value={"fundingRate": funding_rate}
             )
         return exchange
 
@@ -112,31 +112,31 @@ class TestUpdateData:
             [1060000, 102.0, 106.0, 98.0, 104.0, 6000.0],
         ]
         exchange = self._make_exchange(ohlcv_data=ohlcv)
-        dm = DataManager(exchange, 'BTC/USDT', '1m')
+        dm = DataManager(exchange, "BTC/USDT", "1m")
         await dm.update_data()
         data = dm.get_latest_data()
         assert data is not None
         assert len(data) == 2
-        assert 'close' in data.columns
-        assert 'funding_rate' in data.columns
-        assert data['funding_rate'].iloc[0] == 0.001
+        assert "close" in data.columns
+        assert "funding_rate" in data.columns
+        assert data["funding_rate"].iloc[0] == 0.001
 
     @pytest.mark.asyncio
     async def test_update_data_funding_fallback(self) -> None:
         """When funding rate fetch fails, column should default to 0.0."""
         ohlcv = [[1000000, 100.0, 105.0, 95.0, 102.0, 5000.0]]
         exchange = self._make_exchange(ohlcv_data=ohlcv, funding_raises=True)
-        dm = DataManager(exchange, 'BTC/USDT', '1m')
+        dm = DataManager(exchange, "BTC/USDT", "1m")
         await dm.update_data()
         data = dm.get_latest_data()
         assert data is not None
-        assert data['funding_rate'].iloc[0] == 0.0
+        assert data["funding_rate"].iloc[0] == 0.0
 
     @pytest.mark.asyncio
     async def test_update_data_no_ohlcv_support(self) -> None:
         """If exchange doesn't support fetchOHLCV, data stays None."""
         exchange = self._make_exchange(has_ohlcv=False)
-        dm = DataManager(exchange, 'BTC/USDT', '1m')
+        dm = DataManager(exchange, "BTC/USDT", "1m")
         await dm.update_data()
         assert dm.get_latest_data() is None
 
@@ -144,7 +144,7 @@ class TestUpdateData:
     async def test_update_data_empty_ohlcv(self) -> None:
         """If exchange returns empty list, data stays None."""
         exchange = self._make_exchange(ohlcv_data=[])
-        dm = DataManager(exchange, 'BTC/USDT', '1m')
+        dm = DataManager(exchange, "BTC/USDT", "1m")
         await dm.update_data()
         assert dm.get_latest_data() is None
 
@@ -152,10 +152,10 @@ class TestUpdateData:
     async def test_update_data_exception_handled(self) -> None:
         """If fetch_ohlcv raises, data stays None (no crash)."""
         exchange = AsyncMock()
-        exchange.has = {'fetchOHLCV': True}
+        exchange.has = {"fetchOHLCV": True}
         exchange.fetch_ohlcv = AsyncMock(
             side_effect=Exception("network error")
         )
-        dm = DataManager(exchange, 'BTC/USDT', '1m')
+        dm = DataManager(exchange, "BTC/USDT", "1m")
         await dm.update_data()
         assert dm.get_latest_data() is None
