@@ -12,8 +12,8 @@ from sklearn.preprocessing import RobustScaler
 from torch import nn
 
 # Configuración idéntica
-DATA_FOLDER = 'data'
-MODEL_PATH = 'models/trading_model.pth'
+DATA_FOLDER = "data"
+MODEL_PATH = "models/trading_model.pth"
 TEST_BARS = 400
 LOOKBACK = 180
 D_MODEL = 128
@@ -37,7 +37,7 @@ class PositionalEncoding(nn.Module):
         )
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
-        self.register_buffer('pe', pe.unsqueeze(0))
+        self.register_buffer("pe", pe.unsqueeze(0))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x + self.pe[:, :x.size(1)]
@@ -73,25 +73,25 @@ if __name__ == "__main__":
     df = pd.read_csv(csv_file)
 
     # Ingeniería
-    df['return'] = np.log(df['close'] / df['close'].shift(1))
-    df['vol_change'] = np.log(df['volume'] + 1).pct_change()
-    df['rsi'] = ta.rsi(df['close'], length=14) / 100.0
-    df['atr_rel'] = (
-        ta.atr(df['high'], df['low'], df['close'], length=14)
-        / df['close']
+    df["return"] = np.log(df["close"] / df["close"].shift(1))
+    df["vol_change"] = np.log(df["volume"] + 1).pct_change()
+    df["rsi"] = ta.rsi(df["close"], length=14) / 100.0
+    df["atr_rel"] = (
+        ta.atr(df["high"], df["low"], df["close"], length=14)
+        / df["close"]
     )
-    macd = ta.macd(df['close'])
-    df['macd'] = macd['MACD_12_26_9']
-    df['macd_sig'] = macd['MACDs_12_26_9']
-    ema = ta.ema(df['close'], length=50)
-    df['dist_ema'] = (df['close'] - ema) / ema
-    df['funding'] = df.get('funding_rate', 0.0)
+    macd = ta.macd(df["close"])
+    df["macd"] = macd["MACD_12_26_9"]
+    df["macd_sig"] = macd["MACDs_12_26_9"]
+    ema = ta.ema(df["close"], length=50)
+    df["dist_ema"] = (df["close"] - ema) / ema
+    df["funding"] = df.get("funding_rate", 0.0)
     df = df.replace([np.inf, -np.inf], np.nan)
     df = df.dropna()
 
     feat_cols = [
-        'return', 'vol_change', 'rsi', 'macd',
-        'macd_sig', 'atr_rel', 'dist_ema', 'funding',
+        "return", "vol_change", "rsi", "macd",
+        "macd_sig", "atr_rel", "dist_ema", "funding",
     ]
     features = df[feat_cols].to_numpy()
     scaler = RobustScaler()
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     start_idx = random.randint(0, len(scaled) - TEST_BARS - LOOKBACK)
     test_data = scaled[start_idx:start_idx + TEST_BARS + LOOKBACK]
     end_idx = start_idx + TEST_BARS + LOOKBACK
-    real_ret = df['return'].to_numpy()[start_idx + LOOKBACK:end_idx]
+    real_ret = df["return"].to_numpy()[start_idx + LOOKBACK:end_idx]
 
     hits = 0
     total = 0
@@ -138,5 +138,5 @@ if __name__ == "__main__":
     acc = (hits / total * 100) if total > 0 else 0
     print(f"📊 ACIERTO: {acc:.2f}%")
     plt.plot(simulated)
-    plt.savefig('resultado_examen.png')
+    plt.savefig("resultado_examen.png")
     print("📸 Gráfico guardado.")
