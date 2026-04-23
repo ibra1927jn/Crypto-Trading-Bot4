@@ -101,7 +101,7 @@ class CryptoRadar:
                 logger.exception("Error")
                 await asyncio.sleep(5)
 
-    async def _scan(self):
+    async def _scan(self) -> None:
         logger.info(
             "\n📡 --- %s ---",
             datetime.now(tz=timezone.utc).strftime("%H:%M:%S"),
@@ -133,7 +133,7 @@ class CryptoRadar:
                 logger.exception("Error %s", symbol)
 
 
-async def _main():
+async def _main() -> None:
     radar = CryptoRadar()
     if await radar.initialize():
         await radar.run()
