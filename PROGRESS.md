@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 99)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage, 0 lint errors on default profile
+- Ruff `--select BLE001` flagged 4 blind `except Exception as e` handlers — all in log-and-continue or log-and-exit patterns around third-party I/O (ccxt exchange calls, torch model load, per-file training-data load). Not real bugs; semantic docs for intent were missing.
+
+### Changes
+- **refactor(data_manager)**: BLE001 — noqa + comment on ccxt funding-rate fallback catch (8abe51d)
+- **refactor(descargar_datos)**: BLE001 — noqa + comment on ccxt funding-history paging catch (cd9e68c)
+- **refactor(test_ai)**: BLE001 — noqa + comment on torch model-load CLI exit catch (e9b783c)
+- **refactor(train_ai)**: BLE001 — noqa + comment on per-file training-data load skip catch (a4c9a16)
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged; noqa-comment-only refactors)
+- **Build**: clean (0 lint errors on default profile; BLE001 now fully clean across the entire repo)
+
+### Known Issues (unchanged from prior passes)
+- Pre-commit hook `API_KEY\s*=\s*\S+` pattern still matches test fixture assignments (`Config.API_KEY = "test_key"`) in `tests/test_config.py`, blocking the pending Q000 quote normalization and residual I001 unsorted-imports fix on that file. Hook needs a test-file or `= ""`/`= "test_*"` exclusion to unblock.
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 98)
 
 ### Assessment
