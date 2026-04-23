@@ -30,6 +30,7 @@ class DataManager:
         self.data: pd.DataFrame | None = None
 
     async def update_data(self) -> None:
+        """Fetch the latest OHLCV (and funding rate) into ``self.data``."""
         try:
             if self.exchange.has["fetchOHLCV"]:
                 ohlcv = await self.exchange.fetch_ohlcv(
@@ -63,6 +64,7 @@ class DataManager:
             logger.exception("Error datos")
 
     def get_latest_data(self) -> pd.DataFrame | None:
+        """Return the most recently fetched OHLCV DataFrame (or ``None``)."""
         return self.data
 
     BARS_PER_YEAR: ClassVar[dict[str, int]] = {
@@ -75,6 +77,7 @@ class DataManager:
     }
 
     def calculate_volatility(self, window: int = 20) -> float:
+        """Return annualized std-dev of log returns over the last ``window`` bars (%)."""
         if self.data is None or len(self.data) < MIN_BARS_FOR_RETURNS:
             return 0.0
         returns = np.log(
