@@ -1,6 +1,8 @@
 """Tests para Config."""
 import logging
 
+import pytest
+
 from config import Config
 
 
@@ -68,26 +70,30 @@ class TestGetExchangeConfig:
         assert "secret" in config
         assert "enableRateLimit" in config
 
-    def test_testnet_config(self, monkeypatch) -> None:
+    def test_testnet_config(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Testnet mode adds an 'options' section to the exchange config."""
         monkeypatch.setattr(Config, "TESTNET", True)
         config = Config.get_exchange_config()
         assert "options" in config
 
-    def test_non_testnet_config(self, monkeypatch) -> None:
+    def test_non_testnet_config(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Production mode omits the 'urls' override."""
         monkeypatch.setattr(Config, "TESTNET", False)
         config = Config.get_exchange_config()
         assert "urls" not in config
 
-    def test_testnet_binance_has_urls(self, monkeypatch) -> None:
+    def test_testnet_binance_has_urls(
+        self, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Binance + testnet adds a 'urls' override pointing at the sandbox."""
         monkeypatch.setattr(Config, "TESTNET", True)
         monkeypatch.setattr(Config, "EXCHANGE", "binance")
         config = Config.get_exchange_config()
         assert "urls" in config
 
-    def test_testnet_non_binance_no_urls(self, monkeypatch) -> None:
+    def test_testnet_non_binance_no_urls(
+        self, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Non-binance exchanges in testnet mode do not get a 'urls' override."""
         monkeypatch.setattr(Config, "TESTNET", True)
         monkeypatch.setattr(Config, "EXCHANGE", "kraken")
