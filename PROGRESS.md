@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 96)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage, 0 lint errors on default profile
+- Ruff `--select COM812` flagged 15 missing trailing commas across root-level scripts: `debug_env.py` (1), `test_ai.py` (1), `train_ai.py` (13)
+- Working tree had WIP quote normalization in `tests/test_config.py`; pre-commit hook flagged `API_KEY = "test_key"` test fixtures as false-positive secrets, so that file was left uncommitted (same hook limitation documented in passes 1–2)
+
+### Changes
+- **refactor(debug_env)**: add trailing comma to multi-line `print` call — COM812 (3e7ba4e)
+- **refactor(test_ai)**: add trailing comma to multi-line `torch.exp` call — COM812 (649b678)
+- **refactor(train_ai)**: add trailing commas to 13 multi-line calls/dict literals across config, positional encoding, transformer layer, data loaders, optimizer, and scheduler — COM812 (152db0b)
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged; trailing-comma refactors only)
+- **Build**: clean (0 lint errors on default profile; 0 remaining COM812 across the tree)
+
+### Known Issues (unchanged from prior passes)
+- Pre-commit hook `API_KEY\s*=\s*\S+` pattern still matches test fixture assignments (`Config.API_KEY = "test_key"`) in `tests/test_config.py`, blocking the pending Q000 double-quote normalization on that file. Hook needs a test-file or `= ""`/`= "test_*"` exclusion to unblock.
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 95)
 
 ### Assessment
