@@ -1,7 +1,7 @@
 import logging
-import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone
+from pathlib import Path
 
 import ccxt
 import pandas as pd
@@ -21,7 +21,7 @@ YEARS = 4            # 4 años de 1m = ~2M velas
 OUTPUT_FOLDER = 'data'
 
 # Crear carpeta
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+Path(OUTPUT_FOLDER).mkdir(parents=True, exist_ok=True)
 
 # Usamos el cliente de Futuros para tener acceso a datos avanzados
 exchange = ccxt.binance({'options': {'defaultType': 'future'}})
@@ -51,7 +51,7 @@ for symbol in SYMBOLS:
     while temp_since < now:
         try:
             dt_str = datetime.fromtimestamp(
-                temp_since / 1000,
+                temp_since / 1000, tz=timezone.utc,
             ).strftime('%Y-%m-%d')
             logger.info(
                 "Fecha: %s | Velas: %s",
