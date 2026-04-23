@@ -284,13 +284,33 @@ class TestErrorBranches:
         cond = s.analyze_market_condition()
         assert cond == MarketCondition.UNKNOWN
 
-    def test_get_signal_unknown_condition(self, dummy_df):
-        """UNKNOWN condition: get_signal catches error."""
-        dm = MockDataManager(volatility=1.0)
+    def test_get_signal_outer_exception(self, dummy_df):
+        """If a sub-strategy bypasses its inner handler and raises,
+        get_signal's outer except returns NEUTRAL with error key.
+        """
+        s = make_strategy(volatility=3.0, ind_signal='BUY', ind_conf=0.7)
 
-        def _raise():
-            raise RuntimeError("fail")
-        dm.calculate_volatility = _raise
+        def _raise(df):
+            raise RuntimeError("boom")
+        s._scalping_strategy = _raise
+
+        signal, _conf, details = s.get_signal(dummy_df)
+        assert signal == Signal.NEUTRAL
+        assert 'error' in details
+
+    def test_get_signal_calls_calculate_volatility_once(self, dummy_df):
+        """Regression: get_signal must not re-invoke calculate_volatility
+        for the details dict; reuse the value cached by analyze_market_condition.
+        """
+        call_count = 0
+
+        class CountingDataManager:
+            def calculate_volatility(self):
+                nonlocal call_count
+                call_count += 1
+                return 1.0
+
+        dm = CountingDataManager()
         ind = MockIndicators()
         ai = MockAIPredictor()
         config = {
@@ -302,9 +322,9 @@ class TestErrorBranches:
             },
         }
         s = HybridStrategy(dm, ind, ai, config)
-        signal, _conf, details = s.get_signal(dummy_df)
-        assert signal == Signal.NEUTRAL
-        assert 'error' in details
+        _signal, _conf, details = s.get_signal(dummy_df)
+        assert call_count == 1
+        assert details['volatility'] == 1.0
 
     def test_get_signal_unknown_condition_no_error(self, dummy_df):
         """UNKNOWN condition: analyze fails but volatility works."""

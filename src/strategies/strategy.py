@@ -82,6 +82,7 @@ class HybridStrategy:
 
         # Estado actual
         self.current_condition = MarketCondition.UNKNOWN
+        self.current_volatility = 0.0
         self.last_signal = Signal.NEUTRAL
 
         logger.info("🎯 HybridStrategy initialized")
@@ -97,6 +98,7 @@ class HybridStrategy:
         try:
             # Calcular volatilidad actual
             volatility = self.data_manager.calculate_volatility()
+            self.current_volatility = volatility
 
             if volatility > self.volatility_threshold:
                 self.current_condition = MarketCondition.HIGH_VOLATILITY
@@ -138,7 +140,7 @@ class HybridStrategy:
 
             details = {
                 "market_condition": condition.value,
-                "volatility": self.data_manager.calculate_volatility(),
+                "volatility": self.current_volatility,
                 "strategy_used": None,
             }
 
