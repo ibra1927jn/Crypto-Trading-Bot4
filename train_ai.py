@@ -3,6 +3,7 @@ import math
 import os
 import warnings
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -145,7 +146,7 @@ class EarlyStopping:
 
 
 def load_and_prepare_data(
-    data_folder, config,
+    data_folder: str, config: Any,
 ) -> tuple[LazyCryptoDataset, LazyCryptoDataset, RobustScaler]:
     """Carga datos (versión silenciosa para sweeps)"""
     csv_files = [str(p) for p in Path(data_folder).glob("*_HD.csv")]
@@ -201,8 +202,14 @@ def load_and_prepare_data(
 
 
 def train_epoch(
-    model, train_loader, criterion, optimizer,
-    scaler_amp, scheduler, device, config,
+    model: nn.Module,
+    train_loader: DataLoader,
+    criterion: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    scaler_amp: torch.amp.GradScaler,
+    scheduler: torch.optim.lr_scheduler.LRScheduler,
+    device: torch.device,
+    config: Any,
 ) -> float:
     """Entrena una época"""
     model.train()
@@ -234,7 +241,10 @@ def train_epoch(
 
 
 def validate(
-    model, val_loader, criterion, device,
+    model: nn.Module,
+    val_loader: DataLoader,
+    criterion: nn.Module,
+    device: torch.device,
 ) -> tuple[float, float, float]:
     """Validación"""
     model.eval()
