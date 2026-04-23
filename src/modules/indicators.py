@@ -76,12 +76,16 @@ class TechnicalIndicators:
         try:
             latest = df.iloc[-1]
             close = latest["close"]
-            bbl = [c for c in df.columns if c.startswith("BBL")]
-            bbu = [c for c in df.columns if c.startswith("BBU")]
+            bbl_col = next(
+                (c for c in df.columns if c.startswith("BBL")), None,
+            )
+            bbu_col = next(
+                (c for c in df.columns if c.startswith("BBU")), None,
+            )
 
-            if bbl and close < latest[bbl[0]]:
+            if bbl_col is not None and close < latest[bbl_col]:
                 return "BUY", BOLLINGER_BREAK_CONFIDENCE
-            if bbu and close > latest[bbu[0]]:
+            if bbu_col is not None and close > latest[bbu_col]:
                 return "SELL", BOLLINGER_BREAK_CONFIDENCE
             return "NEUTRAL", 0.0
         except Exception as e:
