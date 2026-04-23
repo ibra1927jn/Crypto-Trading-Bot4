@@ -308,3 +308,16 @@ class TestCombinedSignalBollingerContribution:
         # 1 BUY (RSI) + 1 SELL (Bollinger) = tied = NEUTRAL
         assert sig == 'NEUTRAL'
         assert conf == 0.0
+
+    def test_precomputed_bollinger_is_reused(self, indicators, mocker):
+        """Passing bollinger_signal skips the internal get_bollinger_signal call."""
+        df = make_ohlcv(200)
+        df = indicators.calculate_all(df)
+        df.iloc[-1, df.columns.get_loc('rsi')] = 50.0
+        spy = mocker.spy(indicators, 'get_bollinger_signal')
+        sig, conf = indicators.get_combined_signal(
+            df, bollinger_signal=('SELL', 0.9),
+        )
+        assert spy.call_count == 0
+        assert sig == 'SELL'
+        assert conf == 0.7
