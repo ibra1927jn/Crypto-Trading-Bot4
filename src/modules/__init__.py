@@ -1,4 +1,4 @@
-"""Módulos del bot de trading"""
+"""Módulos del bot de trading."""
 
 from .ai_predictor import AI_Predictor
 from .data_manager import DataManager

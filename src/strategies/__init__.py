@@ -1,4 +1,4 @@
-"""Estrategias de trading"""
+"""Estrategias de trading."""
 
 from .strategy import HybridStrategy, MarketCondition, Signal
 
