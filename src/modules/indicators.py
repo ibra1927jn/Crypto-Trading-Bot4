@@ -16,7 +16,7 @@ RSI_OVERBOUGHT = 70
 
 
 class TechnicalIndicators:
-    def __init__(self, config: dict[str, Any] | None):
+    def __init__(self, config: dict[str, Any] | None) -> None:
         self.config = config or {}
         self.rsi_period = self.config.get("RSI", {}).get("period", 14)
         self.macd_fast = self.config.get("MACD", {}).get("fast_period", 12)
