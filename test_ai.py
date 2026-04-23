@@ -37,7 +37,7 @@ class PositionalEncoding(nn.Module):
         pe[:, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe.unsqueeze(0))
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x + self.pe[:, :x.size(1)]
 
 
@@ -55,7 +55,7 @@ class CryptoTransformer(nn.Module):
         )
         self.decoder = nn.Linear(D_MODEL, 1)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.embedding(x)
         x = self.pos_encoder(x)
         x = self.transformer(x)
