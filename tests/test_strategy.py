@@ -354,7 +354,8 @@ class TestErrorBranches:
         dm = MockDataManager(volatility=1.0)
 
         def _raise() -> NoReturn:
-            raise RuntimeError("fail")
+            msg = "fail"
+            raise RuntimeError(msg)
         dm.calculate_volatility = _raise
         ind = MockIndicators()
         ai = MockAIPredictor()
@@ -378,7 +379,8 @@ class TestErrorBranches:
         s = make_strategy(volatility=3.0, ind_signal="BUY", ind_conf=0.7)
 
         def _raise(df: pd.DataFrame) -> NoReturn:
-            raise RuntimeError("boom")
+            msg = "boom"
+            raise RuntimeError(msg)
         s._scalping_strategy = _raise
 
         signal, _conf, details = s.get_signal(dummy_df)
@@ -429,7 +431,8 @@ class TestErrorBranches:
                 nonlocal call_count
                 call_count += 1
                 if call_count == 1:
-                    raise RuntimeError("fail")
+                    msg = "fail"
+                    raise RuntimeError(msg)
                 return 1.5
 
         dm = FailOnceDataManager()
@@ -454,7 +457,8 @@ class TestErrorBranches:
         ind = MockIndicators()
 
         def _raise(df: pd.DataFrame) -> NoReturn:
-            raise RuntimeError("bad")
+            msg = "bad"
+            raise RuntimeError(msg)
 
         ind.get_combined_signal = _raise
         ai = MockAIPredictor()
@@ -478,7 +482,8 @@ class TestErrorBranches:
         ai = MockAIPredictor()
 
         def _raise(df: pd.DataFrame) -> NoReturn:
-            raise RuntimeError("ai fail")
+            msg = "ai fail"
+            raise RuntimeError(msg)
 
         ai.predict = _raise
         config = {
