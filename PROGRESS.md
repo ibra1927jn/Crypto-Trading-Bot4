@@ -1,5 +1,29 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 97)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage, 0 lint errors on default profile
+- Ruff `--select D212,D413,D204,D202,D403,I001` flagged 28 docstring-formatting hits (all auto-fixable): D212 multi-line summary on first line (14), D413 missing blank line after last section (10), and singletons in D204/D202/D403/I001
+- Targets split cleanly by file: `src/__init__.py` (1 D212), `src/config.py` (1 D212), `src/strategies/strategy.py` (11 D212 + 10 D413), `tests/test_indicators.py` (1 D403), `tests/test_strategy.py` (1 D204), `train_ai.py` (1 D202)
+- Working tree still has WIP quote normalization in `tests/test_config.py` and the I001 unsorted-import hit is in that same file; both left uncommitted due to the pre-commit secret-scanner false positive (same hook limitation documented in passes 1–2, 96)
+
+### Changes
+- **refactor(src)**: D212 — move `src/__init__.py` docstring summary to first line (a951ee6)
+- **refactor(config)**: D212 — move `src/config.py` docstring summary to first line (db4bbbe)
+- **refactor(strategy)**: D212/D413 — docstring summaries on first line and blank line after last section across 11 methods/class docstrings in `src/strategies/strategy.py` (a3b9377)
+- **refactor(test_indicators)**: D403 — capitalize docstring first word (`df` → `DataFrame`) in `test_macd_signal_no_macd_columns` (bada7be)
+- **refactor(test_strategy)**: D204 — blank line after `FailOnceDataManager` class docstring (55b874e)
+- **refactor(train_ai)**: D202 — remove blank line after `train()` function docstring (f5a88e8)
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged; docstring-only refactors)
+- **Build**: clean (0 lint errors on default profile; D212/D413/D204/D202/D403 now all clean across the entire repo)
+
+### Known Issues (unchanged from prior passes)
+- Pre-commit hook `API_KEY\s*=\s*\S+` pattern still matches test fixture assignments (`Config.API_KEY = "test_key"`) in `tests/test_config.py`, blocking the pending Q000 quote normalization and the residual I001 unsorted-imports fix on that file. Hook needs a test-file or `= ""`/`= "test_*"` exclusion to unblock.
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 96)
 
 ### Assessment
