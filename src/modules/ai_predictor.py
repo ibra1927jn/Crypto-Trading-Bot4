@@ -40,7 +40,10 @@ FEATURE_COLUMNS = (
 
 
 class PositionalEncoding(nn.Module):
+    """Sinusoidal positional encoding for Transformer inputs."""
+
     def __init__(self, d_model: int, max_len: int = 5000) -> None:
+        """Precompute positional encodings for up to ``max_len`` positions."""
         super().__init__()
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
@@ -57,7 +60,10 @@ class PositionalEncoding(nn.Module):
 
 
 class CryptoTransformer(nn.Module):
+    """Transformer encoder that predicts a single scalar from a feature sequence."""
+
     def __init__(self) -> None:
+        """Build the embedding, positional encoder, transformer stack, and decoder."""
         super().__init__()
         self.embedding = nn.Linear(len(FEATURE_COLUMNS), D_MODEL)
         self.pos_encoder = PositionalEncoding(D_MODEL)
@@ -78,7 +84,10 @@ class CryptoTransformer(nn.Module):
 
 
 class AI_Predictor:
+    """Wrap the Transformer model and expose a ``predict`` interface for dataframes."""
+
     def __init__(self, config: dict[str, Any] | None) -> None:
+        """Load the model from ``config['model_path']`` (if present) onto CUDA or CPU."""
         default_path = "models/trading_model.pth"
         self.model_path = (
             config.get("model_path", default_path)
