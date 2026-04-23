@@ -6,7 +6,7 @@ import pytest
 from modules.indicators import TechnicalIndicators
 
 
-def make_ohlcv(n=100, base_price=100.0, seed=42):
+def make_ohlcv(n: int = 100, base_price: float = 100.0, seed: int = 42) -> pd.DataFrame:
     """Genera DataFrame OHLCV sintético."""
     rng = np.random.default_rng(seed)
     close = base_price + np.cumsum(rng.standard_normal(n) * 0.5)
@@ -21,12 +21,12 @@ def make_ohlcv(n=100, base_price=100.0, seed=42):
 
 
 @pytest.fixture
-def indicators():
+def indicators() -> TechnicalIndicators:
     return TechnicalIndicators({})
 
 
 @pytest.fixture
-def df_with_indicators(indicators):
+def df_with_indicators(indicators: TechnicalIndicators) -> pd.DataFrame:
     df = make_ohlcv(200)
     return indicators.calculate_all(df)
 
