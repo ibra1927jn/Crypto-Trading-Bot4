@@ -197,7 +197,7 @@ def load_and_prepare_data(
             targs = df["return"].to_numpy(dtype=np.float32)
             all_features.append(feats)
             all_targets.append(targs)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — per-file training data may fail for many reasons (missing columns, parse errors, empty frames); skip and continue
             logger.warning("Skipping %s: %s", file, e)
 
     X_raw = np.concatenate(all_features)  # noqa: N806 — sklearn X convention
