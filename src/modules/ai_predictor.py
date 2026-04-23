@@ -4,14 +4,16 @@ from __future__ import annotations
 import logging
 import math
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-import pandas as pd
 import pandas_ta as ta
 import torch
 from sklearn.preprocessing import RobustScaler
 from torch import nn
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
