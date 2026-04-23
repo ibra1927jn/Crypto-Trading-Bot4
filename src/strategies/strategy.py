@@ -45,6 +45,9 @@ INDICATORS_WEIGHT = 0.3
 # Umbral de señal combinada para decidir BUY/SELL
 SIGNAL_THRESHOLD = 0.3
 
+# Mapa de señal textual a valor numérico para combinación ponderada
+SIGNAL_VALUES = {"BUY": 1, "NEUTRAL": 0, "SELL": -1}
+
 
 class HybridStrategy:
     """
@@ -274,10 +277,8 @@ class HybridStrategy:
             indicators_weight = INDICATORS_WEIGHT
 
             # Convertir señales a valores numéricos
-            signal_values = {"BUY": 1, "NEUTRAL": 0, "SELL": -1}
-
-            indicators_value = signal_values.get(indicators_signal, 0)
-            ai_value = signal_values.get(ai_signal, 0)
+            indicators_value = SIGNAL_VALUES.get(indicators_signal, 0)
+            ai_value = SIGNAL_VALUES.get(ai_signal, 0)
 
             # Calcular señal combinada
             combined_value = (
