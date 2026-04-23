@@ -1,5 +1,6 @@
 """Tests para HybridStrategy"""
 import logging
+from typing import NoReturn
 
 import numpy as np
 import pandas as pd
@@ -269,7 +270,7 @@ class TestErrorBranches:
         """calculate_volatility() raises → UNKNOWN."""
         dm = MockDataManager(volatility=1.0)
 
-        def _raise():
+        def _raise() -> NoReturn:
             raise RuntimeError("fail")
         dm.calculate_volatility = _raise
         ind = MockIndicators()
@@ -292,7 +293,7 @@ class TestErrorBranches:
         """
         s = make_strategy(volatility=3.0, ind_signal='BUY', ind_conf=0.7)
 
-        def _raise(df):
+        def _raise(df) -> NoReturn:
             raise RuntimeError("boom")
         s._scalping_strategy = _raise
 
@@ -307,7 +308,7 @@ class TestErrorBranches:
         call_count = 0
 
         class CountingDataManager:
-            def calculate_volatility(self):
+            def calculate_volatility(self) -> float:
                 nonlocal call_count
                 call_count += 1
                 return 1.0
@@ -334,7 +335,7 @@ class TestErrorBranches:
 
         class FailOnceDataManager:
             """First call raises; second succeeds."""
-            def calculate_volatility(self):
+            def calculate_volatility(self) -> float:
                 nonlocal call_count
                 call_count += 1
                 if call_count == 1:
@@ -362,7 +363,7 @@ class TestErrorBranches:
         dm = MockDataManager(volatility=3.0)
         ind = MockIndicators()
 
-        def _raise(df):
+        def _raise(df) -> NoReturn:
             raise RuntimeError("bad")
 
         ind.get_combined_signal = _raise
@@ -386,7 +387,7 @@ class TestErrorBranches:
         ind = MockIndicators()
         ai = MockAIPredictor()
 
-        def _raise(df):
+        def _raise(df) -> NoReturn:
             raise RuntimeError("ai fail")
 
         ai.predict = _raise
