@@ -30,7 +30,7 @@ from modules.indicators import TechnicalIndicators  # noqa: E402
 from strategies.strategy import HybridStrategy  # noqa: E402
 
 
-def setup_logging():
+def setup_logging() -> logging.Logger:
     formatter = colorlog.ColoredFormatter(
         "%(log_color)s%(asctime)s %(levelname)s: %(message)s",
         datefmt='%H:%M:%S',
@@ -55,7 +55,7 @@ class CryptoRadar:
         self.managers = {}
         self.timeframe = os.getenv('TIMEFRAME', '1m')
 
-    async def initialize(self):
+    async def initialize(self) -> bool:
         self.exchange = ccxt.binance({
             'apiKey': API_KEY, 'secret': SECRET_KEY, 'enableRateLimit': True,
             'options': {'defaultType': 'future'}
@@ -90,7 +90,7 @@ class CryptoRadar:
             )
         return True
 
-    async def run(self):
+    async def run(self) -> None:
         logger.info("🟢 RADAR GIRANDO (%s Pares)...", len(SYMBOLS))
         while True:
             try:
