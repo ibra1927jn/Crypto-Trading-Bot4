@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 83)
+
+### Assessment
+- Full scan: 130/130 tests passing, 99% coverage, 0 lint errors, no TODOs/FIXMEs
+- Found: `HybridStrategy.get_signal` invoked `DataManager.calculate_volatility()` twice per tick — once via `analyze_market_condition()`, then again to populate `details["volatility"]`. Same anti-pattern as pass 82's double-`predict()` issue: log returns + std + sqrt computed redundantly on every signal generation
+
+### Changes
+- **perf(strategy)**: Cache volatility on `self.current_volatility` in `analyze_market_condition()`; reuse it for the details dict in `get_signal()` (99a8da0)
+- **refactor(tests)**: Apply ruff one-import-per-line in `test_ai_predictor.py` (b2c5518)
+
+### Results
+- **Tests**: 131/131 passing (was 130/130)
+- **Coverage**: 99% (100% on src/ modules)
+- **Build**: clean (0 lint errors)
+
 ## 2026-04-22 — Heartbeat Maintenance Cycle (pass 82)
 
 ### Assessment
