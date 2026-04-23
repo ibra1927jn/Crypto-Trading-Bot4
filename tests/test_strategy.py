@@ -22,13 +22,17 @@ class MockIndicators:
         self._signal = signal
         self._confidence = confidence
 
-    def get_combined_signal(self, df, bollinger_signal=None) -> tuple[str, float]:
+    def get_combined_signal(
+        self,
+        df: pd.DataFrame,
+        bollinger_signal: tuple[str, float] | None = None,
+    ) -> tuple[str, float]:
         return self._signal, self._confidence
 
-    def get_macd_signal(self, df) -> tuple[str, float]:
+    def get_macd_signal(self, df: pd.DataFrame) -> tuple[str, float]:
         return self._signal, self._confidence
 
-    def get_bollinger_signal(self, df) -> tuple[str, float]:
+    def get_bollinger_signal(self, df: pd.DataFrame) -> tuple[str, float]:
         return self._signal, self._confidence
 
 
@@ -43,10 +47,12 @@ class MockAIPredictor:
         self._confidence = confidence
         self._prediction = prediction  # pct value (float)
 
-    def predict(self, df) -> tuple[float, float]:
+    def predict(self, df: pd.DataFrame) -> tuple[float, float]:
         return self._prediction, self._confidence
 
-    def get_signal(self, df, threshold: float = 0.65) -> str:
+    def get_signal(
+        self, df: pd.DataFrame, threshold: float = 0.65,
+    ) -> str:
         return self.signal_from_prediction(
             self._prediction, self._confidence, threshold,
         )
@@ -61,8 +67,14 @@ class MockAIPredictor:
         return 'NEUTRAL'
 
 
-def make_strategy(volatility=1.0, ind_signal='NEUTRAL', ind_conf=0.0,
-                  ai_signal='NEUTRAL', ai_conf=0.0, ai_pred=0.0) -> HybridStrategy:
+def make_strategy(
+    volatility: float = 1.0,
+    ind_signal: str = 'NEUTRAL',
+    ind_conf: float = 0.0,
+    ai_signal: str = 'NEUTRAL',
+    ai_conf: float = 0.0,
+    ai_pred: float = 0.0,
+) -> HybridStrategy:
     dm = MockDataManager(volatility)
     ind = MockIndicators(ind_signal, ind_conf)
     ai = MockAIPredictor(ai_signal, ai_conf, ai_pred)
@@ -106,32 +118,32 @@ class TestMarketCondition:
 
 
 class TestGetSignal:
-    def test_high_vol_uses_scalping(self, dummy_df) -> None:
+    def test_high_vol_uses_scalping(self, dummy_df: pd.DataFrame) -> None:
         s = make_strategy(volatility=3.0, ind_signal='BUY', ind_conf=0.7)
         signal, _conf, details = s.get_signal(dummy_df)
         assert details['strategy_used'] == 'SCALPING'
         assert signal == Signal.BUY
 
-    def test_low_vol_uses_swing(self, dummy_df) -> None:
+    def test_low_vol_uses_swing(self, dummy_df: pd.DataFrame) -> None:
         s = make_strategy(volatility=1.0, ai_conf=0.9, ai_pred=0.5)
         _signal, _conf, details = s.get_signal(dummy_df)
         assert details['strategy_used'] == 'SWING'
 
-    def test_neutral_on_no_signals(self, dummy_df) -> None:
+    def test_neutral_on_no_signals(self, dummy_df: pd.DataFrame) -> None:
         s = make_strategy(volatility=3.0)
         signal, _conf, _details = s.get_signal(dummy_df)
         assert signal == Signal.NEUTRAL
 
 
 class TestSwingStrategy:
-    def test_ai_weight_dominates(self, dummy_df) -> None:
+    def test_ai_weight_dominates(self, dummy_df: pd.DataFrame) -> None:
         """AI con señal BUY fuerte debe dominar sobre indicadores neutrales."""
         s = make_strategy(volatility=1.0, ind_signal='NEUTRAL', ind_conf=0.0,
                           ai_conf=0.9, ai_pred=0.5)
         signal, _conf, _details = s.get_signal(dummy_df)
         assert signal == Signal.BUY
 
-    def test_conflicting_signals(self, dummy_df) -> None:
+    def test_conflicting_signals(self, dummy_df: pd.DataFrame) -> None:
         """Indicadores SELL + AI BUY: AI (70%) debe ganar."""
         s = make_strategy(volatility=1.0, ind_signal='SELL', ind_conf=0.7,
                           ai_conf=0.9, ai_pred=0.5)
@@ -141,7 +153,7 @@ class TestSwingStrategy:
 
 
 class TestSwingStrategyLogging:
-    def test_swing_does_not_crash_on_log(self, dummy_df) -> None:
+    def test_swing_does_not_crash_on_log(self, dummy_df: pd.DataFrame) -> None:
         """predict() returning string must not crash logger."""
         s = make_strategy(volatility=1.0, ind_signal='BUY', ind_conf=0.7,
                           ai_conf=0.9, ai_pred=0.5)
@@ -260,13 +272,13 @@ class TestGetStrategySummary:
 
 
 class TestScalpingSignals:
-    def test_scalping_sell(self, dummy_df) -> None:
+    def test_scalping_sell(self, dummy_df: pd.DataFrame) -> None:
         s = make_strategy(volatility=3.0, ind_signal='SELL', ind_conf=0.8)
         signal, _conf, details = s.get_signal(dummy_df)
         assert signal == Signal.SELL
         assert details['strategy_used'] == 'SCALPING'
 
-    def test_scalping_neutral(self, dummy_df) -> None:
+    def test_scalping_neutral(self, dummy_df: pd.DataFrame) -> None:
         s = make_strategy(volatility=3.0, ind_signal='NEUTRAL', ind_conf=0.0)
         signal, _conf, _details = s.get_signal(dummy_df)
         assert signal == Signal.NEUTRAL
@@ -294,13 +306,13 @@ class TestErrorBranches:
         cond = s.analyze_market_condition()
         assert cond == MarketCondition.UNKNOWN
 
-    def test_get_signal_outer_exception(self, dummy_df) -> None:
+    def test_get_signal_outer_exception(self, dummy_df: pd.DataFrame) -> None:
         """If a sub-strategy bypasses its inner handler and raises,
         get_signal's outer except returns NEUTRAL with error key.
         """
         s = make_strategy(volatility=3.0, ind_signal='BUY', ind_conf=0.7)
 
-        def _raise(df) -> NoReturn:
+        def _raise(df: pd.DataFrame) -> NoReturn:
             raise RuntimeError("boom")
         s._scalping_strategy = _raise
 
@@ -308,7 +320,7 @@ class TestErrorBranches:
         assert signal == Signal.NEUTRAL
         assert 'error' in details
 
-    def test_get_signal_calls_calculate_volatility_once(self, dummy_df) -> None:
+    def test_get_signal_calls_calculate_volatility_once(self, dummy_df: pd.DataFrame) -> None:
         """Regression: get_signal must not re-invoke calculate_volatility
         for the details dict; reuse the value cached by analyze_market_condition.
         """
@@ -336,7 +348,7 @@ class TestErrorBranches:
         assert call_count == 1
         assert details['volatility'] == 1.0
 
-    def test_get_signal_unknown_condition_no_error(self, dummy_df) -> None:
+    def test_get_signal_unknown_condition_no_error(self, dummy_df: pd.DataFrame) -> None:
         """UNKNOWN condition: analyze fails but volatility works."""
         call_count = 0
 
@@ -365,12 +377,12 @@ class TestErrorBranches:
         assert signal == Signal.NEUTRAL
         assert details['strategy_used'] == 'NONE'
 
-    def test_scalping_strategy_error(self, dummy_df) -> None:
+    def test_scalping_strategy_error(self, dummy_df: pd.DataFrame) -> None:
         """Error branch: indicator raises in scalping → NEUTRAL with error."""
         dm = MockDataManager(volatility=3.0)
         ind = MockIndicators()
 
-        def _raise(df) -> NoReturn:
+        def _raise(df: pd.DataFrame) -> NoReturn:
             raise RuntimeError("bad")
 
         ind.get_combined_signal = _raise
@@ -388,13 +400,13 @@ class TestErrorBranches:
         # scalping error returns NEUTRAL, then get_signal wraps it
         assert signal == Signal.NEUTRAL
 
-    def test_swing_strategy_error(self, dummy_df) -> None:
+    def test_swing_strategy_error(self, dummy_df: pd.DataFrame) -> None:
         """Error branch: AI predictor raises in swing → NEUTRAL with error."""
         dm = MockDataManager(volatility=1.0)
         ind = MockIndicators()
         ai = MockAIPredictor()
 
-        def _raise(df) -> NoReturn:
+        def _raise(df: pd.DataFrame) -> NoReturn:
             raise RuntimeError("ai fail")
 
         ai.predict = _raise
@@ -441,7 +453,7 @@ class TestErrorBranches:
 
 
 class TestSwingNeutralSignal:
-    def test_swing_neutral_when_combined_near_zero(self, dummy_df) -> None:
+    def test_swing_neutral_when_combined_near_zero(self, dummy_df: pd.DataFrame) -> None:
         """Weak signals combine to NEUTRAL."""
         s = make_strategy(
             volatility=1.0, ind_signal='NEUTRAL',
@@ -452,7 +464,7 @@ class TestSwingNeutralSignal:
 
 
 class TestSwingSellSignal:
-    def test_ai_sell_dominates(self, dummy_df) -> None:
+    def test_ai_sell_dominates(self, dummy_df: pd.DataFrame) -> None:
         s = make_strategy(
             volatility=1.0, ind_signal='NEUTRAL',
             ind_conf=0.0, ai_conf=0.9, ai_pred=-0.5,
