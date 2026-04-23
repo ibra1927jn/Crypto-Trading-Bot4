@@ -23,10 +23,10 @@ class TechnicalIndicators:
         self.macd_slow = self.config.get("MACD", {}).get("slow_period", 26)
         self.macd_signal = self.config.get("MACD", {}).get("signal_period", 9)
         self.bollinger_period = self.config.get(
-            "BOLLINGER", {}
+            "BOLLINGER", {},
         ).get("period", 20)
         self.bollinger_std = self.config.get(
-            "BOLLINGER", {}
+            "BOLLINGER", {},
         ).get("std_dev", 2.0)
 
     def calculate_all(self, df: pd.DataFrame) -> pd.DataFrame:

@@ -29,7 +29,7 @@ class DataManager:
         try:
             if self.exchange.has["fetchOHLCV"]:
                 ohlcv = await self.exchange.fetch_ohlcv(
-                    self.symbol, self.timeframe, limit=self.limit
+                    self.symbol, self.timeframe, limit=self.limit,
                 )
             else:
                 return
@@ -47,7 +47,7 @@ class DataManager:
                 # Intentar bajar funding
                 try:
                     funding = await self.exchange.fetch_funding_rate(
-                        self.symbol
+                        self.symbol,
                     )
                     df["funding_rate"] = funding["fundingRate"]
                 except Exception as e:
@@ -74,10 +74,10 @@ class DataManager:
         if self.data is None or len(self.data) < MIN_BARS_FOR_RETURNS:
             return 0.0
         returns = np.log(
-            self.data["close"] / self.data["close"].shift(1)
+            self.data["close"] / self.data["close"].shift(1),
         )
         bars_per_year = self.BARS_PER_YEAR.get(
-            self.timeframe, self.BARS_PER_YEAR["1m"]
+            self.timeframe, self.BARS_PER_YEAR["1m"],
         )
         vol = returns.tail(window).std() * np.sqrt(bars_per_year) * 100
         return 0.0 if np.isnan(vol) else float(vol)

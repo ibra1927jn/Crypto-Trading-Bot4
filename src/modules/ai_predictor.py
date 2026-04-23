@@ -45,7 +45,7 @@ class PositionalEncoding(nn.Module):
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(
             torch.arange(0, d_model, 2).float() *
-            (-math.log(10000.0) / d_model)
+            (-math.log(10000.0) / d_model),
         )
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
@@ -61,10 +61,10 @@ class CryptoTransformer(nn.Module):
         self.embedding = nn.Linear(len(FEATURE_COLUMNS), D_MODEL)
         self.pos_encoder = PositionalEncoding(D_MODEL)
         encoder_layer = nn.TransformerEncoderLayer(
-            d_model=D_MODEL, nhead=NHEAD, dropout=DROPOUT, batch_first=True
+            d_model=D_MODEL, nhead=NHEAD, dropout=DROPOUT, batch_first=True,
         )
         self.transformer = nn.TransformerEncoder(
-            encoder_layer, num_layers=NUM_LAYERS
+            encoder_layer, num_layers=NUM_LAYERS,
         )
         self.decoder = nn.Linear(D_MODEL, 1)
 
@@ -88,7 +88,7 @@ class AI_Predictor:
         self.scaler = RobustScaler()
         self.model = None
         self.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu"
+            "cuda" if torch.cuda.is_available() else "cpu",
         )
         self._load_model()
 
@@ -138,7 +138,7 @@ class AI_Predictor:
             scaled = self.scaler.transform(feats[-self.lookback:])
 
             tensor = torch.tensor(
-                scaled, dtype=torch.float32
+                scaled, dtype=torch.float32,
             ).unsqueeze(0).to(self.device)
             with torch.no_grad():
                 pred = self.model(tensor).item()
