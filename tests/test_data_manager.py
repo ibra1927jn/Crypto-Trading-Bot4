@@ -10,9 +10,12 @@ from modules.data_manager import DataManager
 
 
 class TestCalculateVolatility:
+    """Tests covering DataManager.calculate_volatility() and get_latest_data() helpers."""
+
     def _make_dm_with_data(
         self, prices: Sequence[float], timeframe: str = "1m",
     ) -> DataManager:
+        """Build a DataManager pre-populated with OHLCV from the given close prices."""
         dm = DataManager(exchange=None, symbol="BTC/USDT", timeframe=timeframe)
         dm.data = pd.DataFrame({
             "close": prices,
@@ -24,6 +27,7 @@ class TestCalculateVolatility:
         return dm
 
     def test_returns_float(self) -> None:
+        """calculate_volatility() returns a non-negative float on noisy data."""
         rng = np.random.default_rng(42)
         prices = 100 + np.cumsum(rng.standard_normal(50) * 0.5)
         dm = self._make_dm_with_data(prices)
@@ -32,6 +36,7 @@ class TestCalculateVolatility:
         assert vol >= 0
 
     def test_no_data_returns_zero(self) -> None:
+        """Volatility with no data is 0.0 by convention."""
         dm = DataManager(exchange=None, symbol="BTC/USDT", timeframe="1m")
         assert dm.calculate_volatility() == 0.0
 
@@ -63,10 +68,12 @@ class TestCalculateVolatility:
             )
 
     def test_get_latest_data_none_by_default(self) -> None:
+        """get_latest_data() is None before any data is loaded."""
         dm = DataManager(exchange=None, symbol="BTC/USDT", timeframe="1m")
         assert dm.get_latest_data() is None
 
     def test_get_latest_data_returns_data(self) -> None:
+        """get_latest_data() returns the populated DataFrame."""
         prices = [100.0, 101.0, 102.0]
         dm = self._make_dm_with_data(prices)
         data = dm.get_latest_data()
@@ -74,6 +81,7 @@ class TestCalculateVolatility:
         assert len(data) == 3
 
     def test_single_price_returns_zero(self) -> None:
+        """A single-row DataFrame yields zero volatility."""
         dm = self._make_dm_with_data([100.0])
         assert dm.calculate_volatility() == 0.0
 
@@ -88,10 +96,13 @@ class TestCalculateVolatility:
 
 
 class TestUpdateData:
+    """Tests for DataManager.update_data() across exchange response scenarios."""
+
     def _make_exchange(
         self, ohlcv_data: list | None = None, funding_rate: float = 0.001,
         has_ohlcv: bool = True, funding_raises: bool = False,
     ) -> AsyncMock:
+        """Build an AsyncMock exchange with configurable OHLCV/funding behavior."""
         exchange = AsyncMock()
         exchange.has = {"fetchOHLCV": has_ohlcv}
         exchange.fetch_ohlcv = AsyncMock(return_value=ohlcv_data)
@@ -107,6 +118,7 @@ class TestUpdateData:
 
     @pytest.mark.asyncio
     async def test_update_data_populates_df(self) -> None:
+        """update_data() populates an OHLCV+funding_rate DataFrame from exchange data."""
         ohlcv = [
             [1000000, 100.0, 105.0, 95.0, 102.0, 5000.0],
             [1060000, 102.0, 106.0, 98.0, 104.0, 6000.0],
