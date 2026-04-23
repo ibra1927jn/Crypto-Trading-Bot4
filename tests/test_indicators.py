@@ -1,4 +1,4 @@
-"""Tests para TechnicalIndicators"""
+"""Tests para TechnicalIndicators."""
 import numpy as np
 import pandas as pd
 import pytest

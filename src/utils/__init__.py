@@ -1,3 +1,3 @@
-"""Utilidades del bot"""
+"""Utilidades del bot."""
 
 __all__ = []

@@ -1,4 +1,4 @@
-"""Tests para HybridStrategy"""
+"""Tests para HybridStrategy."""
 import logging
 from typing import NoReturn
 
