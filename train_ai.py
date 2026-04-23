@@ -168,8 +168,8 @@ def load_and_prepare_data(data_folder, config):
                 'return', 'vol_change', 'rsi', 'macd',
                 'macd_sig', 'atr_rel', 'dist_ema', 'funding',
             ]
-            feats = df[feat_cols].values.astype(np.float32)
-            targs = df['return'].values.astype(np.float32)
+            feats = df[feat_cols].to_numpy(dtype=np.float32)
+            targs = df['return'].to_numpy(dtype=np.float32)
             all_features.append(feats)
             all_targets.append(targs)
         except Exception as e:

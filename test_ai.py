@@ -90,7 +90,7 @@ if __name__ == "__main__":
         'return', 'vol_change', 'rsi', 'macd',
         'macd_sig', 'atr_rel', 'dist_ema', 'funding',
     ]
-    features = df[feat_cols].values
+    features = df[feat_cols].to_numpy()
     scaler = RobustScaler()
     scaled = scaler.fit_transform(features)
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     start_idx = random.randint(0, len(scaled) - TEST_BARS - LOOKBACK)
     test_data = scaled[start_idx:start_idx + TEST_BARS + LOOKBACK]
     end_idx = start_idx + TEST_BARS + LOOKBACK
-    real_ret = df['return'].values[start_idx + LOOKBACK:end_idx]
+    real_ret = df['return'].to_numpy()[start_idx + LOOKBACK:end_idx]
 
     hits = 0
     total = 0
