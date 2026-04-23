@@ -28,7 +28,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Arquitectura
 class PositionalEncoding(nn.Module):
+    """Sinusoidal positional encoding added to the input embeddings."""
+
     def __init__(self, d_model: int, max_len: int = 5000) -> None:
+        """Precompute the (1, max_len, d_model) positional-encoding buffer."""
         super().__init__()
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
@@ -41,11 +44,15 @@ class PositionalEncoding(nn.Module):
         self.register_buffer("pe", pe.unsqueeze(0))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Add positional encoding to ``x`` (shape ``(batch, seq, d_model)``)."""
         return x + self.pe[:, :x.size(1)]
 
 
 class CryptoTransformer(nn.Module):
+    """Transformer encoder that maps ``(batch, seq, 8)`` features to a scalar return."""
+
     def __init__(self) -> None:
+        """Build embedding, positional encoder, transformer stack, and decoder."""
         super().__init__()
         self.embedding = nn.Linear(8, D_MODEL)
         self.pos_encoder = PositionalEncoding(D_MODEL)
@@ -59,6 +66,7 @@ class CryptoTransformer(nn.Module):
         self.decoder = nn.Linear(D_MODEL, 1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Return a ``(batch, 1)`` tensor of predicted next-step returns."""
         x = self.embedding(x)
         x = self.pos_encoder(x)
         x = self.transformer(x)
