@@ -1,5 +1,24 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 94)
+
+### Assessment
+- Entry state: 132/132 tests passing, 99% coverage, 0 lint errors on default profile
+- Ran ruff with `--select ANN202`: 13 remaining hits in `main.py` (2), `train_ai.py` (1), `tests/test_ai_predictor.py` (2), `tests/test_data_manager.py` (2), `tests/test_strategy.py` (6) — private function return-type annotations missing
+- Targets match the ANN204 cleanup pattern from pass 93; this pass completes the private-function return-type layer
+
+### Changes
+- **refactor(main)**: `CryptoRadar._scan` and module-level `_main` — add `-> None` (690da40)
+- **refactor(train_ai)**: `CryptoTransformer._init_weights` — add `-> None` (4522c56)
+- **refactor(test_ai_predictor)**: Both `_make_df` helpers — `n: int = 300` and `-> pd.DataFrame` (509207f)
+- **refactor(test_data_manager)**: `_make_dm_with_data` → `DataManager`, `_make_exchange` → `AsyncMock` (boolean kwargs left untyped-positional to avoid FBT002 churn, already pre-existing) (6de93f1)
+- **refactor(test_strategy)**: 4 `_raise` nested helpers → `NoReturn`; 2 `calculate_volatility` nested methods → `float`; `typing.NoReturn` added to imports (e559870)
+
+### Results
+- **Tests**: 132/132 passing (unchanged)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 lint errors on default profile; ANN202 now fully clean across the entire repo, 0 remaining)
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 93)
 
 ### Assessment
