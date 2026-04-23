@@ -1,5 +1,21 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 89)
+
+### Assessment
+- Entry state: 132/132 tests passing, 99% coverage, 0 lint errors on default profile
+- Ran ruff with targeted rule sets (`--select DTZ,NPY,PTH,BLE,SLF`): found NPY002 (legacy numpy random) in tests, plus DTZ005/DTZ006/PTH100/PTH103/PTH118/PTH120 in repo-root scripts
+
+### Changes
+- **refactor(tests)**: Modernize `np.random.seed/randn/randint/uniform` → `np.random.default_rng(42).standard_normal/integers/uniform` in both `_make_df` helpers in `tests/test_ai_predictor.py` — NPY002; seed preserved for deterministic test data (e9e0241)
+- **refactor(main)**: Replace `os.path.abspath/dirname/join` chain for `BASE_DIR` and `sys.path` insertion with `Path(__file__).resolve().parent` + `/` operator; pass `tz=timezone.utc` to `datetime.now()` so log timestamps are unambiguous — PTH100/PTH118/PTH120/DTZ005 (91ba7db)
+- **refactor(descargar_datos)**: Replace `os.makedirs(OUTPUT_FOLDER, exist_ok=True)` with `Path(OUTPUT_FOLDER).mkdir(parents=True, exist_ok=True)`; drop the now-unused `os` import; pass `tz=timezone.utc` to `datetime.fromtimestamp` — PTH103/DTZ006 (bedee24)
+
+### Results
+- **Tests**: 132/132 passing (unchanged)
+- **Coverage**: 99% (100% on src/ modules, unchanged)
+- **Build**: clean (0 lint errors on default profile; NPY002/DTZ005/DTZ006/PTH100/PTH103/PTH118/PTH120 now also clean at targeted sites)
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 88)
 
 ### Assessment
