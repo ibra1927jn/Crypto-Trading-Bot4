@@ -99,7 +99,7 @@ class TestUpdateData:
     """Tests for DataManager.update_data() across exchange response scenarios."""
 
     def _make_exchange(
-        self, ohlcv_data: list | None = None, funding_rate: float = 0.001,
+        self, *, ohlcv_data: list | None = None, funding_rate: float = 0.001,
         has_ohlcv: bool = True, funding_raises: bool = False,
     ) -> AsyncMock:
         """Build an AsyncMock exchange with configurable OHLCV/funding behavior."""
