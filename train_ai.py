@@ -100,7 +100,7 @@ class CryptoTransformer(nn.Module):
         self.decoder = nn.Linear(config['d_model'], 1)
         self._init_weights()
 
-    def _init_weights(self):
+    def _init_weights(self) -> None:
         for module in self.modules():
             if isinstance(module, nn.Linear):
                 nn.init.xavier_uniform_(module.weight)
