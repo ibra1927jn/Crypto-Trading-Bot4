@@ -50,16 +50,16 @@ class TestPositionalEncoding:
 
 class TestAIPredictorPredict:
     def _make_df(self, n=300):
-        np.random.seed(42)
-        close = 100 + np.cumsum(np.random.randn(n) * 0.1)
+        rng = np.random.default_rng(42)
+        close = 100 + np.cumsum(rng.standard_normal(n) * 0.1)
         close = np.maximum(close, 1.0)
         return pd.DataFrame({
-            'open': close + np.random.randn(n) * 0.01,
-            'high': close + abs(np.random.randn(n) * 0.05),
-            'low': close - abs(np.random.randn(n) * 0.05),
+            'open': close + rng.standard_normal(n) * 0.01,
+            'high': close + abs(rng.standard_normal(n) * 0.05),
+            'low': close - abs(rng.standard_normal(n) * 0.05),
             'close': close,
-            'volume': np.random.randint(100, 10000, n).astype(float),
-            'funding_rate': np.random.uniform(-0.001, 0.001, n),
+            'volume': rng.integers(100, 10000, n).astype(float),
+            'funding_rate': rng.uniform(-0.001, 0.001, n),
         })
 
     def test_predict_returns_tuple(self):
@@ -199,16 +199,16 @@ class TestAIPredictorLoadModel:
 
 class TestAIPredictorPostDropna:
     def _make_df(self, n=300):
-        np.random.seed(42)
-        close = 100 + np.cumsum(np.random.randn(n) * 0.1)
+        rng = np.random.default_rng(42)
+        close = 100 + np.cumsum(rng.standard_normal(n) * 0.1)
         close = np.maximum(close, 1.0)
         return pd.DataFrame({
-            'open': close + np.random.randn(n) * 0.01,
-            'high': close + abs(np.random.randn(n) * 0.05),
-            'low': close - abs(np.random.randn(n) * 0.05),
+            'open': close + rng.standard_normal(n) * 0.01,
+            'high': close + abs(rng.standard_normal(n) * 0.05),
+            'low': close - abs(rng.standard_normal(n) * 0.05),
             'close': close,
-            'volume': np.random.randint(100, 10000, n).astype(float),
-            'funding_rate': np.random.uniform(-0.001, 0.001, n),
+            'volume': rng.integers(100, 10000, n).astype(float),
+            'funding_rate': rng.uniform(-0.001, 0.001, n),
         })
 
     def test_insufficient_data_after_dropna(self):
