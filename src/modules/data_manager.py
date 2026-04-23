@@ -45,8 +45,8 @@ class DataManager:
                     df["funding_rate"] = 0.0
 
                 self.data = df
-        except Exception as e:
-            logger.error("Error datos: %s", e)
+        except Exception:
+            logger.exception("Error datos")
 
     def get_latest_data(self) -> pd.DataFrame | None:
         return self.data

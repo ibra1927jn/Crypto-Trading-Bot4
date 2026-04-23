@@ -46,8 +46,8 @@ class TechnicalIndicators:
             )
             if bb is not None:
                 df = df.join(bb)
-        except Exception as e:
-            logger.error("❌ Error calculando indicadores: %s", e)
+        except Exception:
+            logger.exception("❌ Error calculando indicadores")
         return df
 
     def get_macd_signal(self, df: pd.DataFrame) -> tuple[str, float]:
@@ -66,8 +66,8 @@ class TechnicalIndicators:
             if prev_macd > prev_sig and curr_macd < curr_sig:
                 return "SELL", MACD_CROSSOVER_CONFIDENCE
             return "NEUTRAL", 0.0
-        except Exception as e:
-            logger.error("❌ Error en MACD signal: %s", e)
+        except Exception:
+            logger.exception("❌ Error en MACD signal")
             return "NEUTRAL", 0.0
 
     def get_bollinger_signal(self, df: pd.DataFrame) -> tuple[str, float]:
@@ -88,8 +88,8 @@ class TechnicalIndicators:
             if bbu_col is not None and close > latest[bbu_col]:
                 return "SELL", BOLLINGER_BREAK_CONFIDENCE
             return "NEUTRAL", 0.0
-        except Exception as e:
-            logger.error("❌ Error en Bollinger signal: %s", e)
+        except Exception:
+            logger.exception("❌ Error en Bollinger signal")
             return "NEUTRAL", 0.0
 
     def get_combined_signal(
@@ -124,8 +124,8 @@ class TechnicalIndicators:
             if sell > buy:
                 return "SELL", COMBINED_SIGNAL_CONFIDENCE
             return "NEUTRAL", 0.0
-        except Exception as e:
-            logger.error("❌ Error en combined signal: %s", e)
+        except Exception:
+            logger.exception("❌ Error en combined signal")
             return "NEUTRAL", 0.0
 
     def get_indicators_summary(self, df: pd.DataFrame) -> dict:
@@ -133,6 +133,6 @@ class TechnicalIndicators:
             return {}
         try:
             return {"rsi": df["rsi"].iloc[-1]}
-        except Exception as e:
-            logger.error("❌ Error en indicators summary: %s", e)
+        except Exception:
+            logger.exception("❌ Error en indicators summary")
             return {}

@@ -118,8 +118,8 @@ class HybridStrategy:
 
             return self.current_condition
 
-        except Exception as e:
-            logger.error("❌ Error analyzing market condition: %s", e)
+        except Exception:
+            logger.exception("❌ Error analyzing market condition")
             return MarketCondition.UNKNOWN
 
     def get_signal(
@@ -172,7 +172,7 @@ class HybridStrategy:
             return signal, confidence, details
 
         except Exception as e:
-            logger.error("❌ Error getting signal: %s", e)
+            logger.exception("❌ Error getting signal")
             return Signal.NEUTRAL, 0.0, {"error": str(e)}
 
     def _scalping_strategy(
@@ -235,7 +235,7 @@ class HybridStrategy:
             return signal, confidence, details
 
         except Exception as e:
-            logger.error("❌ Error in scalping strategy: %s", e)
+            logger.exception("❌ Error in scalping strategy")
             return Signal.NEUTRAL, 0.0, {"error": str(e)}
 
     def _swing_strategy(
@@ -336,7 +336,7 @@ class HybridStrategy:
             return signal, combined_confidence, details
 
         except Exception as e:
-            logger.error("❌ Error in swing strategy: %s", e)
+            logger.exception("❌ Error in swing strategy")
             return Signal.NEUTRAL, 0.0, {"error": str(e)}
 
     def should_open_position(
@@ -392,10 +392,8 @@ class HybridStrategy:
             )
             return True
 
-        except Exception as e:
-            logger.error(
-                "❌ Error determining position: %s", e
-            )
+        except Exception:
+            logger.exception("❌ Error determining position")
             return False
 
     def calculate_position_size(
@@ -434,8 +432,8 @@ class HybridStrategy:
 
             return quantity
 
-        except Exception as e:
-            logger.error("❌ Error calculating position size: %s", e)
+        except Exception:
+            logger.exception("❌ Error calculating position size")
             return 0.0
 
     def calculate_stop_loss_take_profit(
@@ -490,8 +488,8 @@ class HybridStrategy:
 
             return stop_loss, take_profit
 
-        except Exception as e:
-            logger.error("❌ Error calculating SL/TP: %s", e)
+        except Exception:
+            logger.exception("❌ Error calculating SL/TP")
             return entry_price, entry_price
 
     def get_check_interval(self) -> int:
