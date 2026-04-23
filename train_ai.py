@@ -50,20 +50,25 @@ PIN_MEMORY = True
 
 
 class LazyCryptoDataset(Dataset):
+    """Sliding-window dataset that materializes ``(lookback, features)`` tensors on demand."""
+
     def __init__(
         self,
         features: np.ndarray,
         targets: np.ndarray,
         lookback: int,
     ) -> None:
+        """Store feature/target arrays and window size; no copy is made."""
         self.features = features
         self.targets = targets
         self.lookback = lookback
 
     def __len__(self) -> int:
+        """Return the number of valid ``lookback``-sized windows."""
         return len(self.features) - self.lookback
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return the ``idx``-th ``(x_window, y_next)`` tensor pair."""
         x = self.features[idx:idx + self.lookback]
         y = self.targets[idx + self.lookback]
         x_t = torch.tensor(x, dtype=torch.float32)
@@ -72,7 +77,10 @@ class LazyCryptoDataset(Dataset):
 
 
 class PositionalEncoding(nn.Module):
+    """Sinusoidal positional encoding added to the input embeddings."""
+
     def __init__(self, d_model: int, max_len: int = 5000) -> None:
+        """Precompute the (1, max_len, d_model) positional-encoding buffer."""
         super().__init__()
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
@@ -85,11 +93,15 @@ class PositionalEncoding(nn.Module):
         self.register_buffer("pe", pe.unsqueeze(0))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Add positional encoding to ``x`` (shape ``(batch, seq, d_model)``)."""
         return x + self.pe[:, :x.size(1)]
 
 
 class CryptoTransformer(nn.Module):
+    """Transformer encoder that maps ``(batch, seq, 8)`` features to a scalar return."""
+
     def __init__(self, config: dict) -> None:
+        """Build the network from a hyperparameter dict (d_model/nhead/num_layers/dropout)."""
         super().__init__()
         self.embedding = nn.Linear(8, config["d_model"])
         self.pos_encoder = PositionalEncoding(config["d_model"])
@@ -117,6 +129,7 @@ class CryptoTransformer(nn.Module):
                 nn.init.zeros_(module.bias)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Return a ``(batch,)`` tensor of predicted next-step returns."""
         x = self.embedding(x)
         x = self.pos_encoder(x)
         x = self.transformer(x)
@@ -126,7 +139,10 @@ class CryptoTransformer(nn.Module):
 
 
 class EarlyStopping:
+    """Halt training after ``patience`` epochs without ``min_delta`` improvement on val loss."""
+
     def __init__(self, patience: int = 12, min_delta: float = 1e-6) -> None:
+        """Configure patience and minimum improvement delta; resets counter and best loss."""
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0
@@ -134,6 +150,7 @@ class EarlyStopping:
         self.should_stop = False
 
     def __call__(self, val_loss: float) -> bool:
+        """Update state with ``val_loss`` and return True once training should stop."""
         if self.best_loss is None:
             self.best_loss = val_loss
         elif val_loss > self.best_loss - self.min_delta:
