@@ -1,4 +1,5 @@
 """Tests para AI_Predictor - tensor shapes y lógica de predicción."""
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -175,7 +176,7 @@ class TestAIPredictorLoadModel:
         predictor = AI_Predictor({})
         assert predictor.model is None
 
-    def test_load_model_bad_file(self, tmp_path) -> None:
+    def test_load_model_bad_file(self, tmp_path: Path) -> None:
         """Model is instantiated even if state_dict load fails (logs error)."""
         bad_model = tmp_path / "bad_model.pth"
         bad_model.write_text("not a model")
@@ -185,7 +186,7 @@ class TestAIPredictorLoadModel:
         # Model object is created before load_state_dict, so it persists
         assert predictor.model is not None
 
-    def test_load_model_success(self, tmp_path) -> None:
+    def test_load_model_success(self, tmp_path: Path) -> None:
         """Successful load sets model to eval mode."""
         model = CryptoTransformer()
         model_path = tmp_path / "good_model.pth"
