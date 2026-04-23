@@ -9,7 +9,7 @@ from strategies.strategy import HybridStrategy, MarketCondition, Signal
 
 
 class MockDataManager:
-    def __init__(self, volatility=1.0):
+    def __init__(self, volatility: float = 1.0) -> None:
         self._volatility = volatility
 
     def calculate_volatility(self):
@@ -17,7 +17,7 @@ class MockDataManager:
 
 
 class MockIndicators:
-    def __init__(self, signal='NEUTRAL', confidence=0.0):
+    def __init__(self, signal: str = 'NEUTRAL', confidence: float = 0.0) -> None:
         self._signal = signal
         self._confidence = confidence
 
@@ -32,7 +32,7 @@ class MockIndicators:
 
 
 class MockAIPredictor:
-    def __init__(self, signal='NEUTRAL', confidence=0.0, prediction=0.0):
+    def __init__(self, signal: str = 'NEUTRAL', confidence: float = 0.0, prediction: float = 0.0) -> None:
         self._signal = signal
         self._confidence = confidence
         self._prediction = prediction  # pct value (float)
