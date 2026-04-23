@@ -338,10 +338,8 @@ def train():
             "train/learning_rate": optimizer.param_groups[0]['lr']
         })
 
-        # Guardar mejor modelo
-        if avg_val_loss < best_val_loss:
-            best_val_loss = avg_val_loss
-            # No guardamos en sweep (demasiados modelos)
+        # Guardar mejor modelo (no guardamos en sweep: demasiados modelos)
+        best_val_loss = min(best_val_loss, avg_val_loss)
 
         # Early stopping
         if early_stop(avg_val_loss):
