@@ -498,9 +498,8 @@ class HybridStrategy:
         if self.current_condition == MarketCondition.HIGH_VOLATILITY:
             # Scalping: chequear más frecuentemente
             return self.scalping_config.get("check_interval", 5)
-        else:
-            # Swing: chequear menos frecuentemente
-            return self.swing_config.get("check_interval", 60)
+        # Swing: chequear menos frecuentemente
+        return self.swing_config.get("check_interval", 60)
 
     def get_strategy_summary(self) -> dict[str, Any]:
         """

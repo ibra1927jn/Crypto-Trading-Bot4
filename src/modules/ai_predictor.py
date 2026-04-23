@@ -159,7 +159,7 @@ class AI_Predictor:
         """Map a prediction (pct, confidence) to a BUY/SELL/NEUTRAL signal."""
         if pct > SIGNAL_PCT_THRESHOLD and confidence >= threshold:
             return "BUY"
-        elif pct < -SIGNAL_PCT_THRESHOLD and confidence >= threshold:
+        if pct < -SIGNAL_PCT_THRESHOLD and confidence >= threshold:
             return "SELL"
         return "NEUTRAL"
 
