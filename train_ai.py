@@ -200,11 +200,11 @@ def load_and_prepare_data(
         except Exception as e:
             logger.warning("Skipping %s: %s", file, e)
 
-    X_raw = np.concatenate(all_features)
+    X_raw = np.concatenate(all_features)  # noqa: N806 — sklearn X convention
     y_raw = np.concatenate(all_targets)
 
     scaler = RobustScaler()
-    X_scaled = scaler.fit_transform(X_raw)
+    X_scaled = scaler.fit_transform(X_raw)  # noqa: N806
 
     split = int(len(X_scaled) * config["data_split"])
 
