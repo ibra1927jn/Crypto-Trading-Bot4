@@ -59,7 +59,7 @@ class TestCalculateVolatility:
             pytest.fail(
                 f"Volatility identical for 1m "
                 f"({vol_1m:.4f}) and 1h "
-                f"({vol_1h:.4f})."
+                f"({vol_1h:.4f}).",
             )
 
     def test_get_latest_data_none_by_default(self) -> None:
@@ -97,11 +97,11 @@ class TestUpdateData:
         exchange.fetch_ohlcv = AsyncMock(return_value=ohlcv_data)
         if funding_raises:
             exchange.fetch_funding_rate = AsyncMock(
-                side_effect=Exception("no funding")
+                side_effect=Exception("no funding"),
             )
         else:
             exchange.fetch_funding_rate = AsyncMock(
-                return_value={"fundingRate": funding_rate}
+                return_value={"fundingRate": funding_rate},
             )
         return exchange
 
@@ -154,7 +154,7 @@ class TestUpdateData:
         exchange = AsyncMock()
         exchange.has = {"fetchOHLCV": True}
         exchange.fetch_ohlcv = AsyncMock(
-            side_effect=Exception("network error")
+            side_effect=Exception("network error"),
         )
         dm = DataManager(exchange, "BTC/USDT", "1m")
         await dm.update_data()
