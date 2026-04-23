@@ -22,7 +22,7 @@ class DataManager:
         timeframe: str,
         historical_bars: int = 300,
     ) -> None:
-        """Store exchange/symbol/timeframe and the number of historical bars to fetch."""
+        """Store exchange/symbol/timeframe and number of historical bars to fetch."""
         self.exchange = exchange
         self.symbol = symbol
         self.timeframe = timeframe
@@ -77,7 +77,7 @@ class DataManager:
     }
 
     def calculate_volatility(self, window: int = 20) -> float:
-        """Return annualized std-dev of log returns over the last ``window`` bars (%)."""
+        """Return annualized std-dev of log returns over the last ``window`` bars."""
         if self.data is None or len(self.data) < MIN_BARS_FOR_RETURNS:
             return 0.0
         returns = np.log(
