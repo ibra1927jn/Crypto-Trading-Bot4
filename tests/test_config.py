@@ -104,7 +104,11 @@ class TestGetExchangeConfig:
 class TestValidateConfig:
     """Tests for Config.validate_config() return value and log output."""
 
-    def test_validate_no_credentials(self, caplog, monkeypatch) -> None:
+    def test_validate_no_credentials(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Missing credentials → False plus a 'credentials not found' warning."""
         monkeypatch.setattr(Config, "API_KEY", "")
         monkeypatch.setattr(Config, "API_SECRET", "")
@@ -113,7 +117,11 @@ class TestValidateConfig:
         assert result is False
         assert "credentials not found" in caplog.text
 
-    def test_validate_with_credentials_testnet(self, caplog, monkeypatch) -> None:
+    def test_validate_with_credentials_testnet(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Valid credentials + testnet → True plus a 'TESTNET' info log."""
         monkeypatch.setattr(Config, "API_KEY", "test_key")
         monkeypatch.setattr(Config, "API_SECRET", "test_secret")
@@ -123,7 +131,11 @@ class TestValidateConfig:
         assert result is True
         assert "TESTNET" in caplog.text
 
-    def test_validate_production_mode(self, caplog, monkeypatch) -> None:
+    def test_validate_production_mode(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Valid credentials + production → True plus a 'PRODUCTION' warning."""
         monkeypatch.setattr(Config, "API_KEY", "test_key")
         monkeypatch.setattr(Config, "API_SECRET", "test_secret")
@@ -137,7 +149,7 @@ class TestValidateConfig:
 class TestPrintConfig:
     """Tests for Config.print_config()'s logged output."""
 
-    def test_print_config_output(self, caplog) -> None:
+    def test_print_config_output(self, caplog: pytest.LogCaptureFixture) -> None:
         """Printed output includes the banner plus current EXCHANGE and SYMBOL."""
         with caplog.at_level(logging.INFO, logger="config"):
             Config.print_config()
