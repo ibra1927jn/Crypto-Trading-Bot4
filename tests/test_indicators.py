@@ -108,6 +108,20 @@ class TestMACDSignal:
         assert sig == 'SELL'
         assert conf == 0.8
 
+    def test_no_crossover_is_neutral(self, indicators: TechnicalIndicators) -> None:
+        """Sin cruce (misma relación MACD/señal en ambas barras) => NEUTRAL."""
+        df = make_ohlcv(200)
+        df = indicators.calculate_all(df)
+        macd_col = next(c for c in df.columns if c.startswith('MACD_'))
+        signal_col = next(c for c in df.columns if c.startswith('MACDs_'))
+        df.iloc[-2, df.columns.get_loc(macd_col)] = 1.0
+        df.iloc[-2, df.columns.get_loc(signal_col)] = 0.0
+        df.iloc[-1, df.columns.get_loc(macd_col)] = 2.0
+        df.iloc[-1, df.columns.get_loc(signal_col)] = 0.0
+        sig, conf = indicators.get_macd_signal(df)
+        assert sig == 'NEUTRAL'
+        assert conf == 0.0
+
 
 class TestBollingerSignal:
     def test_returns_tuple(
