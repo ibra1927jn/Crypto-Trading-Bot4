@@ -1,6 +1,7 @@
 import math
-import os
 import random
+import sys
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -64,9 +65,9 @@ class CryptoTransformer(nn.Module):
 
 if __name__ == "__main__":
     # Carga
-    csv_file = f"{DATA_FOLDER}/BTC_USDT_1m_HD.csv"
-    if not os.path.exists(csv_file):
-        exit("❌ Faltan datos BTC")
+    csv_file = Path(DATA_FOLDER) / "BTC_USDT_1m_HD.csv"
+    if not csv_file.exists():
+        sys.exit("❌ Faltan datos BTC")
     df = pd.read_csv(csv_file)
 
     # Ingeniería
@@ -101,7 +102,7 @@ if __name__ == "__main__":
         ))
         model.eval()
     except Exception as e:
-        exit(f"❌ Error: Modelo no compatible: {e}")
+        sys.exit(f"❌ Error: Modelo no compatible: {e}")
 
     # Test
     start_idx = random.randint(0, len(scaled) - TEST_BARS - LOOKBACK)
