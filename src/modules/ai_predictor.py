@@ -130,7 +130,7 @@ class AI_Predictor:
                     "dist_ema",
                     "funding",
                 ]
-            ].values
+            ].to_numpy()
             self.scaler.fit(feats)
             scaled = self.scaler.transform(feats[-self.lookback:])
 
