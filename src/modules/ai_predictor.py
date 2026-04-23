@@ -1,3 +1,4 @@
+"""Modelo transformer y predictor AI para señales de trading."""
 from __future__ import annotations
 
 import logging

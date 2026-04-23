@@ -1,3 +1,4 @@
+"""Gestor de datos OHLCV: descarga y mantiene el DataFrame del mercado."""
 from __future__ import annotations
 
 import logging

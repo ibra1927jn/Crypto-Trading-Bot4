@@ -1,3 +1,4 @@
+"""Indicadores técnicos: RSI, MACD, Bollinger y señales combinadas."""
 from __future__ import annotations
 
 import logging
