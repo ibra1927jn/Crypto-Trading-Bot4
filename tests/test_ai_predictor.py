@@ -49,7 +49,7 @@ class TestPositionalEncoding:
 
 
 class TestAIPredictorPredict:
-    def _make_df(self, n=300):
+    def _make_df(self, n: int = 300) -> pd.DataFrame:
         rng = np.random.default_rng(42)
         close = 100 + np.cumsum(rng.standard_normal(n) * 0.1)
         close = np.maximum(close, 1.0)
@@ -198,7 +198,7 @@ class TestAIPredictorLoadModel:
 
 
 class TestAIPredictorPostDropna:
-    def _make_df(self, n=300):
+    def _make_df(self, n: int = 300) -> pd.DataFrame:
         rng = np.random.default_rng(42)
         close = 100 + np.cumsum(rng.standard_normal(n) * 0.1)
         close = np.maximum(close, 1.0)
