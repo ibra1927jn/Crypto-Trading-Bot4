@@ -1,6 +1,6 @@
 import logging
 import math
-import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -90,7 +90,7 @@ class AI_Predictor:
         self._load_model()
 
     def _load_model(self) -> None:
-        if not os.path.exists(self.model_path):
+        if not Path(self.model_path).exists():
             logger.warning("Modelo no encontrado en %s", self.model_path)
             return
         try:
