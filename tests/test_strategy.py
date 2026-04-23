@@ -307,7 +307,8 @@ class TestErrorBranches:
         assert cond == MarketCondition.UNKNOWN
 
     def test_get_signal_outer_exception(self, dummy_df: pd.DataFrame) -> None:
-        """If a sub-strategy bypasses its inner handler and raises,
+        """If a sub-strategy bypasses its inner handler and raises, return NEUTRAL.
+
         get_signal's outer except returns NEUTRAL with error key.
         """
         s = make_strategy(volatility=3.0, ind_signal="BUY", ind_conf=0.7)
@@ -321,8 +322,9 @@ class TestErrorBranches:
         assert "error" in details
 
     def test_get_signal_calls_calculate_volatility_once(self, dummy_df: pd.DataFrame) -> None:
-        """Regression: get_signal must not re-invoke calculate_volatility
-        for the details dict; reuse the value cached by analyze_market_condition.
+        """Regression: get_signal must not re-invoke calculate_volatility.
+
+        For the details dict, reuse the value cached by analyze_market_condition.
         """
         call_count = 0
 
