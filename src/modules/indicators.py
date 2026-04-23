@@ -34,6 +34,7 @@ class TechnicalIndicators:
         ).get("std_dev", 2.0)
 
     def calculate_all(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Append RSI, MACD, and Bollinger Band columns to ``df`` in place."""
         if df is None or df.empty:
             return df
         try:
@@ -58,6 +59,7 @@ class TechnicalIndicators:
         return df
 
     def get_macd_signal(self, df: pd.DataFrame) -> tuple[str, float]:
+        """Return a (BUY/SELL/NEUTRAL, confidence) pair based on MACD crossover."""
         if df is None or df.empty:
             return "NEUTRAL", 0.0
         try:
@@ -78,6 +80,7 @@ class TechnicalIndicators:
         return "NEUTRAL", 0.0
 
     def get_bollinger_signal(self, df: pd.DataFrame) -> tuple[str, float]:
+        """Return a (BUY/SELL/NEUTRAL, confidence) pair based on Bollinger breakouts."""
         if df is None or df.empty:
             return "NEUTRAL", 0.0
         try:
@@ -104,6 +107,7 @@ class TechnicalIndicators:
         df: pd.DataFrame,
         bollinger_signal: tuple[str, float] | None = None,
     ) -> tuple[str, float]:
+        """Combine RSI and Bollinger votes into a single BUY/SELL/NEUTRAL signal."""
         if df is None or df.empty:
             return "NEUTRAL", 0.0
         try:
@@ -137,6 +141,7 @@ class TechnicalIndicators:
         return "NEUTRAL", 0.0
 
     def get_indicators_summary(self, df: pd.DataFrame) -> dict:
+        """Return a small dict of the latest indicator values (currently RSI)."""
         if df is None or df.empty:
             return {}
         try:
