@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 import pandas_ta as ta
 import torch
-import torch.nn as nn
 from sklearn.preprocessing import RobustScaler
+from torch import nn
 
 # Configuración idéntica
 DATA_FOLDER = 'data'
