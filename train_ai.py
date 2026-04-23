@@ -49,7 +49,12 @@ PIN_MEMORY = True
 
 
 class LazyCryptoDataset(Dataset):
-    def __init__(self, features: np.ndarray, targets: np.ndarray, lookback: int) -> None:
+    def __init__(
+        self,
+        features: np.ndarray,
+        targets: np.ndarray,
+        lookback: int,
+    ) -> None:
         self.features = features
         self.targets = targets
         self.lookback = lookback
