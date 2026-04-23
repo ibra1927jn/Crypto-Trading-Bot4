@@ -58,7 +58,7 @@ class CryptoRadar:
     async def initialize(self) -> bool:
         self.exchange = ccxt.binance({
             'apiKey': API_KEY, 'secret': SECRET_KEY, 'enableRateLimit': True,
-            'options': {'defaultType': 'future'}
+            'options': {'defaultType': 'future'},
         })
         # Parche URLs
         base = 'https://testnet.binancefuture.com'
@@ -86,7 +86,7 @@ class CryptoRadar:
             )
             self.managers[sym] = mgr
             self.strategies[sym] = HybridStrategy(
-                mgr, self.indicators, self.ai_predictor, {}
+                mgr, self.indicators, self.ai_predictor, {},
             )
         return True
 
