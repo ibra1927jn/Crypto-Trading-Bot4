@@ -23,6 +23,17 @@ DEFAULT_SIGNAL_THRESHOLD = 0.65
 LOOKBACK_PERIOD = 180
 SIGNAL_PCT_THRESHOLD = 0.02
 
+FEATURE_COLUMNS = (
+    "return",
+    "log_vol",
+    "rsi",
+    "macd",
+    "macd_sig",
+    "atr_rel",
+    "dist_ema",
+    "funding",
+)
+
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
@@ -119,18 +130,7 @@ class AI_Predictor:
             if len(data) < self.lookback:
                 return 0.0, 0.0
 
-            feats = data[
-                [
-                    "return",
-                    "log_vol",
-                    "rsi",
-                    "macd",
-                    "macd_sig",
-                    "atr_rel",
-                    "dist_ema",
-                    "funding",
-                ]
-            ].to_numpy()
+            feats = data[list(FEATURE_COLUMNS)].to_numpy()
             self.scaler.fit(feats)
             scaled = self.scaler.transform(feats[-self.lookback:])
 
