@@ -1,4 +1,5 @@
-"""Módulo de Estrategias de Trading
+"""Módulo de Estrategias de Trading.
+
 =================================
 Implementa estrategias híbridas que se adaptan a las condiciones del mercado:
 
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class MarketCondition(Enum):
-    """Condiciones del mercado"""
+    """Condiciones del mercado."""
 
     HIGH_VOLATILITY = "HIGH_VOLATILITY"
     LOW_VOLATILITY = "LOW_VOLATILITY"
@@ -33,7 +34,7 @@ class MarketCondition(Enum):
 
 
 class Signal(Enum):
-    """Señales de trading"""
+    """Señales de trading."""
 
     BUY = "BUY"
     SELL = "SELL"
@@ -56,7 +57,8 @@ SIGNAL_VALUES = {"BUY": 1, "NEUTRAL": 0, "SELL": -1}
 
 
 class HybridStrategy:
-    """Estrategia híbrida que combina:
+    """Estrategia híbrida que combina indicadores e IA.
+
     - Indicadores técnicos (para alta volatilidad/scalping)
     - Predicciones de IA (para baja volatilidad/swing)
 
@@ -70,7 +72,7 @@ class HybridStrategy:
         ai_predictor: AI_Predictor,
         config: dict[str, Any],
     ) -> None:
-        """Inicializa la estrategia híbrida
+        """Inicializa la estrategia híbrida.
 
         Args:
             data_manager: Instancia de DataManager
@@ -100,7 +102,7 @@ class HybridStrategy:
         logger.info("   Volatility Threshold: %s", self.volatility_threshold)
 
     def analyze_market_condition(self) -> MarketCondition:
-        """Analiza las condiciones actuales del mercado
+        """Analiza las condiciones actuales del mercado.
 
         Returns:
             MarketCondition (HIGH_VOLATILITY o LOW_VOLATILITY)
@@ -133,7 +135,7 @@ class HybridStrategy:
     def get_signal(
         self, df: pd.DataFrame,
     ) -> tuple[Signal, float, dict[str, Any]]:
-        """Genera señal de trading según la estrategia apropiada
+        """Genera señal de trading según la estrategia apropiada.
 
         Args:
             df: DataFrame con datos e indicadores
@@ -186,7 +188,7 @@ class HybridStrategy:
     def _scalping_strategy(
         self, df: pd.DataFrame,
     ) -> tuple[Signal, float, dict[str, Any]]:
-        """Estrategia de SCALPING para alta volatilidad
+        """Estrategia de SCALPING para alta volatilidad.
 
         Usa indicadores técnicos rápidos para aprovechar movimientos rápidos.
         No consulta IA para maximizar velocidad.
@@ -249,7 +251,7 @@ class HybridStrategy:
     def _swing_strategy(
         self, df: pd.DataFrame,
     ) -> tuple[Signal, float, dict[str, Any]]:
-        """Estrategia de SWING para baja volatilidad
+        """Estrategia de SWING para baja volatilidad.
 
         Combina indicadores técnicos con predicciones de IA.
         Consulta al AI_Predictor antes de tomar decisiones.
@@ -350,7 +352,7 @@ class HybridStrategy:
         current_positions: int,
         max_positions: int,
     ) -> bool:
-        """Determina si se debe abrir una nueva posición
+        """Determina si se debe abrir una nueva posición.
 
         Args:
             signal: Señal generada
@@ -404,7 +406,7 @@ class HybridStrategy:
     def calculate_position_size(
         self, balance: float, position_size_percent: float, price: float,
     ) -> float:
-        """Calcula el tamaño de la posición
+        """Calcula el tamaño de la posición.
 
         Args:
             balance: Balance disponible
@@ -448,7 +450,7 @@ class HybridStrategy:
         stop_loss_percent: float,
         take_profit_percent: float,
     ) -> tuple[float, float]:
-        """Calcula niveles de Stop Loss y Take Profit
+        """Calcula niveles de Stop Loss y Take Profit.
 
         Args:
             entry_price: Precio de entrada
@@ -498,7 +500,7 @@ class HybridStrategy:
         return stop_loss, take_profit
 
     def get_check_interval(self) -> int:
-        """Retorna el intervalo de chequeo según la estrategia actual
+        """Retorna el intervalo de chequeo según la estrategia actual.
 
         Returns:
             Intervalo en segundos
@@ -511,7 +513,7 @@ class HybridStrategy:
         return self.swing_config.get("check_interval", 60)
 
     def get_strategy_summary(self) -> dict[str, Any]:
-        """Retorna un resumen del estado actual de la estrategia
+        """Retorna un resumen del estado actual de la estrategia.
 
         Returns:
             Diccionario con información de la estrategia
