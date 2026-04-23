@@ -12,18 +12,18 @@ import colorlog
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(dotenv_path=BASE_DIR / '.env', override=True)
+load_dotenv(dotenv_path=BASE_DIR / ".env", override=True)
 
 MIN_BARS_FOR_SIGNAL = 200
 
 SYMBOLS = [
     s.strip()
-    for s in os.getenv('TRADING_SYMBOLS', 'BTC/USDT').split(',')
+    for s in os.getenv("TRADING_SYMBOLS", "BTC/USDT").split(",")
 ]
-API_KEY = os.getenv('BINANCE_API_KEY')
-SECRET_KEY = os.getenv('BINANCE_API_SECRET')
+API_KEY = os.getenv("BINANCE_API_KEY")
+SECRET_KEY = os.getenv("BINANCE_API_SECRET")
 
-sys.path.insert(0, str(BASE_DIR / 'src'))
+sys.path.insert(0, str(BASE_DIR / "src"))
 from modules.ai_predictor import AI_Predictor  # noqa: E402
 from modules.data_manager import DataManager  # noqa: E402
 from modules.indicators import TechnicalIndicators  # noqa: E402
@@ -33,8 +33,8 @@ from strategies.strategy import HybridStrategy  # noqa: E402
 def setup_logging() -> logging.Logger:
     formatter = colorlog.ColoredFormatter(
         "%(log_color)s%(asctime)s %(levelname)s: %(message)s",
-        datefmt='%H:%M:%S',
-        log_colors={'INFO': 'green', 'WARNING': 'yellow', 'ERROR': 'red'},
+        datefmt="%H:%M:%S",
+        log_colors={"INFO": "green", "WARNING": "yellow", "ERROR": "red"},
     )
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
@@ -53,23 +53,23 @@ logger.info("=" * 50)
 class CryptoRadar:
     def __init__(self) -> None:
         self.managers = {}
-        self.timeframe = os.getenv('TIMEFRAME', '1m')
+        self.timeframe = os.getenv("TIMEFRAME", "1m")
 
     async def initialize(self) -> bool:
         self.exchange = ccxt.binance({
-            'apiKey': API_KEY, 'secret': SECRET_KEY, 'enableRateLimit': True,
-            'options': {'defaultType': 'future'},
+            "apiKey": API_KEY, "secret": SECRET_KEY, "enableRateLimit": True,
+            "options": {"defaultType": "future"},
         })
         # Parche URLs
-        base = 'https://testnet.binancefuture.com'
-        self.exchange.urls['api'] = dict.fromkeys(
-            ['fapiPublic', 'fapiPrivate', 'public', 'private'],
-            f'{base}/fapi/v1',
+        base = "https://testnet.binancefuture.com"
+        self.exchange.urls["api"] = dict.fromkeys(
+            ["fapiPublic", "fapiPrivate", "public", "private"],
+            f"{base}/fapi/v1",
         )
-        self.exchange.urls['api'].update({
-            'sapi': f'{base}/sapi/v1',
-            'dapiPublic': f'{base}/dapi/v1',
-            'dapiPrivate': f'{base}/dapi/v1',
+        self.exchange.urls["api"].update({
+            "sapi": f"{base}/sapi/v1",
+            "dapiPublic": f"{base}/dapi/v1",
+            "dapiPrivate": f"{base}/dapi/v1",
         })
 
         await self.exchange.load_markets()
@@ -115,7 +115,7 @@ class CryptoRadar:
                     continue
 
                 df = self.indicators.calculate_all(df)
-                price = df['close'].iloc[-1]
+                price = df["close"].iloc[-1]
 
                 signal, _, _ = self.strategies[symbol].get_signal(df)
 
