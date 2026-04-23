@@ -25,7 +25,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Arquitectura
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, max_len=5000):
+    def __init__(self, d_model: int, max_len: int = 5000) -> None:
         super().__init__()
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
@@ -42,7 +42,7 @@ class PositionalEncoding(nn.Module):
 
 
 class CryptoTransformer(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.embedding = nn.Linear(8, D_MODEL)
         self.pos_encoder = PositionalEncoding(D_MODEL)
