@@ -186,7 +186,7 @@ class HybridStrategy:
         return signal, confidence, details
 
     def _scalping_strategy(
-        self, df: pd.DataFrame
+        self, df: pd.DataFrame,
     ) -> tuple[Signal, float, dict[str, Any]]:
         """
         Estrategia de SCALPING para alta volatilidad
@@ -408,7 +408,7 @@ class HybridStrategy:
         return True
 
     def calculate_position_size(
-        self, balance: float, position_size_percent: float, price: float
+        self, balance: float, position_size_percent: float, price: float,
     ) -> float:
         """
         Calcula el tamaño de la posición
