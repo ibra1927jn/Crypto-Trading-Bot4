@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(dotenv_path=BASE_DIR / '.env', override=True)
 
+MIN_BARS_FOR_SIGNAL = 200
+
 SYMBOLS = [
     s.strip()
     for s in os.getenv('TRADING_SYMBOLS', 'BTC/USDT').split(',')
@@ -109,7 +111,7 @@ class CryptoRadar:
                 mgr = self.managers[symbol]
                 await mgr.update_data()
                 df = mgr.get_latest_data()
-                if df is None or len(df) < 200:
+                if df is None or len(df) < MIN_BARS_FOR_SIGNAL:
                     continue
 
                 df = self.indicators.calculate_all(df)
