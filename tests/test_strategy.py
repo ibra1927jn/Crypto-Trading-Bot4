@@ -354,6 +354,7 @@ class TestErrorBranches:
 
         class FailOnceDataManager:
             """First call raises; second succeeds."""
+
             def calculate_volatility(self) -> float:
                 nonlocal call_count
                 call_count += 1
