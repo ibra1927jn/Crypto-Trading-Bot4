@@ -1,5 +1,4 @@
-"""
-Módulo de Configuración del Bot de Trading
+"""Módulo de Configuración del Bot de Trading
 ==========================================
 Este módulo gestiona todas las configuraciones del bot, incluyendo:
 - Credenciales de exchange
