@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 86)
+
+### Assessment
+- Entry state: 132/132 tests passing, 99% coverage, 0 lint errors on default profile
+- Ran ruff with `--select ALL`: found PD011 in `ai_predictor.predict` (deprecated pandas `.values`), PT018 composite assertion in `test_empty_input`
+- Observed `signal_values` dict and `FEATURE_COLUMNS` literal being rebuilt each call — module-constant candidates
+
+### Changes
+- **refactor(ai_predictor)**: Replace `.values` with `.to_numpy()` in feature extraction — aligns with pandas 3.x recommended API (a29b5cd)
+- **refactor(tests)**: Split composite `test_empty_input` assertion per PT018 — better failure diagnostics (7b93f1c)
+- **refactor(ai_predictor)**: Extract `FEATURE_COLUMNS` module constant; `data[list(FEATURE_COLUMNS)]` replaces inline 8-row literal (635d2cf)
+- **refactor(strategy)**: Hoist `SIGNAL_VALUES` dict to module-level constant — no longer rebuilt per `_swing_strategy` call (9011e8b)
+
+### Results
+- **Tests**: 132/132 passing (unchanged)
+- **Coverage**: 99% (100% on src/ modules, unchanged)
+- **Build**: clean (0 lint errors)
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 85)
 
 ### Assessment
