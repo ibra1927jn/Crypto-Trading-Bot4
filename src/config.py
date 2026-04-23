@@ -1,4 +1,5 @@
-"""Módulo de Configuración del Bot de Trading
+"""Módulo de Configuración del Bot de Trading.
+
 ==========================================
 Este módulo gestiona todas las configuraciones del bot, incluyendo:
 - Credenciales de exchange
@@ -20,7 +21,7 @@ load_dotenv()
 
 
 class Config:
-    """Clase de configuración centralizada para el bot de trading"""
+    """Clase de configuración centralizada para el bot de trading."""
 
     # ===========================
     # CONFIGURACIÓN DEL EXCHANGE
@@ -119,7 +120,7 @@ class Config:
 
     @classmethod
     def get_exchange_config(cls) -> dict[str, Any]:
-        """Retorna la configuración del exchange en formato dict"""
+        """Retorna la configuración del exchange en formato dict."""
         config = {
             "apiKey": cls.API_KEY,
             "secret": cls.API_SECRET,
@@ -142,7 +143,7 @@ class Config:
 
     @classmethod
     def validate_config(cls) -> bool:
-        """Valida que la configuración sea correcta"""
+        """Valida que la configuración sea correcta."""
         if not cls.API_KEY or not cls.API_SECRET:
             logger.warning(
                 "API credentials not found! "
@@ -159,7 +160,7 @@ class Config:
 
     @classmethod
     def print_config(cls) -> None:
-        """Imprime la configuración actual (sin mostrar credenciales)"""
+        """Imprime la configuración actual (sin mostrar credenciales)."""
         logger.info("CRYPTO TRADING BOT - CONFIGURATION")
         logger.info("Exchange:          %s", cls.EXCHANGE)
         mode = "TESTNET" if cls.TESTNET else "PRODUCTION"
