@@ -203,14 +203,14 @@ def train_epoch(
     total_loss = 0
 
     for bx, by in train_loader:
-        bx = bx.to(device, non_blocking=True)
-        by = by.to(device, non_blocking=True)
+        bx_d = bx.to(device, non_blocking=True)
+        by_d = by.to(device, non_blocking=True)
 
         optimizer.zero_grad(set_to_none=True)
 
         with torch.amp.autocast('cuda'):
-            out = model(bx)
-            loss = criterion(out, by)
+            out = model(bx_d)
+            loss = criterion(out, by_d)
 
         scaler_amp.scale(loss).backward()
         scaler_amp.unscale_(optimizer)
@@ -236,14 +236,14 @@ def validate(model, val_loader, criterion, device):
 
     with torch.no_grad():
         for bx, by in val_loader:
-            bx = bx.to(device, non_blocking=True)
-            by = by.to(device, non_blocking=True)
+            bx_d = bx.to(device, non_blocking=True)
+            by_d = by.to(device, non_blocking=True)
             with torch.amp.autocast('cuda'):
-                val_out = model(bx)
-                loss = criterion(val_out, by)
+                val_out = model(bx_d)
+                loss = criterion(val_out, by_d)
             total_loss += loss.item()
             predictions.extend(val_out.cpu().numpy())
-            targets.extend(by.cpu().numpy())
+            targets.extend(by_d.cpu().numpy())
 
     predictions = np.array(predictions)
     targets = np.array(targets)
