@@ -53,7 +53,7 @@ logger.info("=" * 50)
 
 
 class CryptoRadar:
-    """Scans configured symbols on a fixed interval and emits BUY/SELL/NEUTRAL signals."""
+    """Scan configured symbols on a fixed interval and emit BUY/SELL/NEUTRAL signals."""
 
     def __init__(self) -> None:
         """Initialize empty manager registry and read timeframe from env."""
@@ -61,7 +61,7 @@ class CryptoRadar:
         self.timeframe = os.getenv("TIMEFRAME", "1m")
 
     async def initialize(self) -> bool:
-        """Connect to Binance futures testnet and build per-symbol managers/strategies."""
+        """Connect to Binance futures testnet and build per-symbol managers."""
         self.exchange = ccxt.binance({
             "apiKey": API_KEY, "secret": SECRET_KEY, "enableRateLimit": True,
             "options": {"defaultType": "future"},
