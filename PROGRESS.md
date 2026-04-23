@@ -1,5 +1,24 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 90)
+
+### Assessment
+- Entry state: 132/132 tests passing, 99% coverage, 0 lint errors on default profile
+- Ran ruff with `--select ALL`: 11 remaining NPY002 hits in `tests/test_data_manager.py`, `tests/test_indicators.py`, `tests/test_strategy.py`; PTH110/PLR1722 in `test_ai.py`; PTH207 in `train_ai.py`; PLC0415/I001 in tests; PLW2901 (4×) in train/validate loops
+- Tried to add blank line between stdlib and first-party imports in `tests/test_config.py`, but pre-commit hook flags the file due to pre-existing credential-fixture lines (see earlier passes) — reverted and left the I001 open
+
+### Changes
+- **refactor(tests)**: Modernise remaining `np.random.seed/randn/randint/uniform/RandomState` calls across three test files to `np.random.default_rng(...)` Generator API — clears NPY002 in `tests/` (1e1a827)
+- **refactor(test_ai)**: Swap `os.path.exists` for `Path.exists` and bare `exit()` for `sys.exit()` in the top-level examination script — PTH110/PLR1722 (1d9807d)
+- **refactor(train_ai)**: `glob.glob(f"{data_folder}/*_HD.csv")` → `[str(p) for p in Path(data_folder).glob("*_HD.csv")]`; drop `import glob` — PTH207 (9996438)
+- **refactor(test_strategy)**: Hoist in-body `import logging` inside `test_swing_does_not_crash_on_log` to module-scope import block — PLC0415 (6a2b839)
+- **refactor(train_ai)**: Rename `bx`/`by` reassignments inside train/validate loops to `bx_d`/`by_d` for the device-moved tensors, leaving the loop variables untouched — PLW2901 × 4 (51e5b70)
+
+### Results
+- **Tests**: 132/132 passing (unchanged)
+- **Coverage**: 99% (100% on src/ modules, unchanged)
+- **Build**: clean (0 lint errors; NPY002/PTH110/PTH207/PLR1722/PLC0415/PLW2901 now clean at all sites touched)
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 89)
 
 ### Assessment
