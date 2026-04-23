@@ -20,7 +20,7 @@ class TestCalculateVolatility:
         })
         return dm
 
-    def test_returns_float(self):
+    def test_returns_float(self) -> None:
         rng = np.random.default_rng(42)
         prices = 100 + np.cumsum(rng.standard_normal(50) * 0.5)
         dm = self._make_dm_with_data(prices)
@@ -28,18 +28,18 @@ class TestCalculateVolatility:
         assert isinstance(vol, float)
         assert vol >= 0
 
-    def test_no_data_returns_zero(self):
+    def test_no_data_returns_zero(self) -> None:
         dm = DataManager(exchange=None, symbol='BTC/USDT', timeframe='1m')
         assert dm.calculate_volatility() == 0.0
 
-    def test_constant_prices_zero_vol(self):
+    def test_constant_prices_zero_vol(self) -> None:
         """Precios constantes deben dar volatilidad ~0."""
         prices = [100.0] * 50
         dm = self._make_dm_with_data(prices)
         vol = dm.calculate_volatility()
         assert vol == 0.0 or np.isnan(vol)
 
-    def test_annualization_factor_depends_on_timeframe(self):
+    def test_annualization_factor_depends_on_timeframe(self) -> None:
         """Volatility uses correct annualization factor."""
         rng = np.random.default_rng(42)
         prices = 100 + np.cumsum(rng.standard_normal(50) * 0.5)
@@ -59,22 +59,22 @@ class TestCalculateVolatility:
                 f"({vol_1h:.4f})."
             )
 
-    def test_get_latest_data_none_by_default(self):
+    def test_get_latest_data_none_by_default(self) -> None:
         dm = DataManager(exchange=None, symbol='BTC/USDT', timeframe='1m')
         assert dm.get_latest_data() is None
 
-    def test_get_latest_data_returns_data(self):
+    def test_get_latest_data_returns_data(self) -> None:
         prices = [100.0, 101.0, 102.0]
         dm = self._make_dm_with_data(prices)
         data = dm.get_latest_data()
         assert data is not None
         assert len(data) == 3
 
-    def test_single_price_returns_zero(self):
+    def test_single_price_returns_zero(self) -> None:
         dm = self._make_dm_with_data([100.0])
         assert dm.calculate_volatility() == 0.0
 
-    def test_unknown_timeframe_uses_default(self):
+    def test_unknown_timeframe_uses_default(self) -> None:
         """Unknown timeframe should fall back to 1m factor."""
         rng = np.random.default_rng(42)
         prices = 100 + np.cumsum(rng.standard_normal(50) * 0.5)
@@ -103,7 +103,7 @@ class TestUpdateData:
         return exchange
 
     @pytest.mark.asyncio
-    async def test_update_data_populates_df(self):
+    async def test_update_data_populates_df(self) -> None:
         ohlcv = [
             [1000000, 100.0, 105.0, 95.0, 102.0, 5000.0],
             [1060000, 102.0, 106.0, 98.0, 104.0, 6000.0],
@@ -119,7 +119,7 @@ class TestUpdateData:
         assert data['funding_rate'].iloc[0] == 0.001
 
     @pytest.mark.asyncio
-    async def test_update_data_funding_fallback(self):
+    async def test_update_data_funding_fallback(self) -> None:
         """When funding rate fetch fails, column should default to 0.0."""
         ohlcv = [[1000000, 100.0, 105.0, 95.0, 102.0, 5000.0]]
         exchange = self._make_exchange(ohlcv_data=ohlcv, funding_raises=True)
@@ -130,7 +130,7 @@ class TestUpdateData:
         assert data['funding_rate'].iloc[0] == 0.0
 
     @pytest.mark.asyncio
-    async def test_update_data_no_ohlcv_support(self):
+    async def test_update_data_no_ohlcv_support(self) -> None:
         """If exchange doesn't support fetchOHLCV, data stays None."""
         exchange = self._make_exchange(has_ohlcv=False)
         dm = DataManager(exchange, 'BTC/USDT', '1m')
@@ -138,7 +138,7 @@ class TestUpdateData:
         assert dm.get_latest_data() is None
 
     @pytest.mark.asyncio
-    async def test_update_data_empty_ohlcv(self):
+    async def test_update_data_empty_ohlcv(self) -> None:
         """If exchange returns empty list, data stays None."""
         exchange = self._make_exchange(ohlcv_data=[])
         dm = DataManager(exchange, 'BTC/USDT', '1m')
@@ -146,7 +146,7 @@ class TestUpdateData:
         assert dm.get_latest_data() is None
 
     @pytest.mark.asyncio
-    async def test_update_data_exception_handled(self):
+    async def test_update_data_exception_handled(self) -> None:
         """If fetch_ohlcv raises, data stays None (no crash)."""
         exchange = AsyncMock()
         exchange.has = {'fetchOHLCV': True}
