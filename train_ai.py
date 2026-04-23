@@ -16,32 +16,32 @@ from torch.utils.data import DataLoader, Dataset
 
 warnings.filterwarnings("ignore")
 os.environ["PYTHONWARNINGS"] = "ignore"
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 logger = logging.getLogger(__name__)
 
 # ==========================================
 # ⚡ CONFIGURACIÓN BASE (SWEEP PUEDE OVERRIDE)
 # ==========================================
-DATA_FOLDER = 'data'
+DATA_FOLDER = "data"
 
 # Valores por defecto (el sweep los reemplazará)
 DEFAULT_CONFIG = {
-    'epochs': 80,              # Reducido para sweeps rápidos
-    'batch_size': 1024,
-    'learning_rate': 5e-4,
-    'lookback': 180,
-    'd_model': 128,
-    'nhead': 4,
-    'num_layers': 4,
-    'dropout': 0.3,
-    'gradient_clip': 1.0,
-    'weight_decay': 1e-4,
-    'optimizer': 'AdamW',
-    'scheduler': 'OneCycleLR',
-    'architecture': 'Transformer',
-    'data_split': 0.8,
-    'early_stop_patience': 12  # Más agresivo para sweeps
+    "epochs": 80,              # Reducido para sweeps rápidos
+    "batch_size": 1024,
+    "learning_rate": 5e-4,
+    "lookback": 180,
+    "d_model": 128,
+    "nhead": 4,
+    "num_layers": 4,
+    "dropout": 0.3,
+    "gradient_clip": 1.0,
+    "weight_decay": 1e-4,
+    "optimizer": "AdamW",
+    "scheduler": "OneCycleLR",
+    "architecture": "Transformer",
+    "data_split": 0.8,
+    "early_stop_patience": 12  # Más agresivo para sweeps
 }
 
 NUM_WORKERS = 0
@@ -81,7 +81,7 @@ class PositionalEncoding(nn.Module):
         )
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
-        self.register_buffer('pe', pe.unsqueeze(0))
+        self.register_buffer("pe", pe.unsqueeze(0))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x + self.pe[:, :x.size(1)]
@@ -90,19 +90,19 @@ class PositionalEncoding(nn.Module):
 class CryptoTransformer(nn.Module):
     def __init__(self, config: dict) -> None:
         super().__init__()
-        self.embedding = nn.Linear(8, config['d_model'])
-        self.pos_encoder = PositionalEncoding(config['d_model'])
+        self.embedding = nn.Linear(8, config["d_model"])
+        self.pos_encoder = PositionalEncoding(config["d_model"])
         encoder_layer = nn.TransformerEncoderLayer(
-            d_model=config['d_model'],
-            nhead=config['nhead'],
-            dropout=config['dropout'],
+            d_model=config["d_model"],
+            nhead=config["nhead"],
+            dropout=config["dropout"],
             batch_first=True,
             norm_first=True
         )
         self.transformer = nn.TransformerEncoder(
-            encoder_layer, num_layers=config['num_layers']
+            encoder_layer, num_layers=config["num_layers"]
         )
-        self.decoder = nn.Linear(config['d_model'], 1)
+        self.decoder = nn.Linear(config["d_model"], 1)
         self._init_weights()
 
     def _init_weights(self) -> None:
@@ -156,27 +156,27 @@ def load_and_prepare_data(
     for file in csv_files:
         try:
             df = pd.read_csv(file)
-            df['return'] = np.log(df['close'] / df['close'].shift(1))
-            df['vol_change'] = np.log(df['volume'] + 1).pct_change()
-            df['rsi'] = ta.rsi(df['close'], length=14) / 100.0
-            macd = ta.macd(df['close'])
-            df['macd'] = macd['MACD_12_26_9']
-            df['macd_sig'] = macd['MACDs_12_26_9']
-            atr = ta.atr(df['high'], df['low'], df['close'], length=14)
-            df['atr_rel'] = atr / df['close']
-            ema = ta.ema(df['close'], length=50)
-            df['dist_ema'] = (df['close'] - ema) / ema
-            df['funding'] = df.get('funding_rate', 0.0)
+            df["return"] = np.log(df["close"] / df["close"].shift(1))
+            df["vol_change"] = np.log(df["volume"] + 1).pct_change()
+            df["rsi"] = ta.rsi(df["close"], length=14) / 100.0
+            macd = ta.macd(df["close"])
+            df["macd"] = macd["MACD_12_26_9"]
+            df["macd_sig"] = macd["MACDs_12_26_9"]
+            atr = ta.atr(df["high"], df["low"], df["close"], length=14)
+            df["atr_rel"] = atr / df["close"]
+            ema = ta.ema(df["close"], length=50)
+            df["dist_ema"] = (df["close"] - ema) / ema
+            df["funding"] = df.get("funding_rate", 0.0)
 
             df = df.replace([np.inf, -np.inf], np.nan)
             df = df.dropna()
 
             feat_cols = [
-                'return', 'vol_change', 'rsi', 'macd',
-                'macd_sig', 'atr_rel', 'dist_ema', 'funding',
+                "return", "vol_change", "rsi", "macd",
+                "macd_sig", "atr_rel", "dist_ema", "funding",
             ]
             feats = df[feat_cols].to_numpy(dtype=np.float32)
-            targs = df['return'].to_numpy(dtype=np.float32)
+            targs = df["return"].to_numpy(dtype=np.float32)
             all_features.append(feats)
             all_targets.append(targs)
         except Exception as e:
@@ -188,9 +188,9 @@ def load_and_prepare_data(
     scaler = RobustScaler()
     X_scaled = scaler.fit_transform(X_raw)
 
-    split = int(len(X_scaled) * config['data_split'])
+    split = int(len(X_scaled) * config["data_split"])
 
-    lookback = config['lookback']
+    lookback = config["lookback"]
     train_dataset = LazyCryptoDataset(
         X_scaled[:split], y_raw[:split], lookback
     )
@@ -221,14 +221,14 @@ def train_epoch(
 
         optimizer.zero_grad(set_to_none=True)
 
-        with torch.amp.autocast('cuda'):
+        with torch.amp.autocast("cuda"):
             out = model(bx_d)
             loss = criterion(out, by_d)
 
         scaler_amp.scale(loss).backward()
         scaler_amp.unscale_(optimizer)
         torch.nn.utils.clip_grad_norm_(
-            model.parameters(), config['gradient_clip'],
+            model.parameters(), config["gradient_clip"],
         )
 
         scaler_amp.step(optimizer)
@@ -256,7 +256,7 @@ def validate(
         for bx, by in val_loader:
             bx_d = bx.to(device, non_blocking=True)
             by_d = by.to(device, non_blocking=True)
-            with torch.amp.autocast('cuda'):
+            with torch.amp.autocast("cuda"):
                 val_out = model(bx_d)
                 loss = criterion(val_out, by_d)
             total_loss += loss.item()
@@ -312,7 +312,7 @@ def train() -> None:
     # Modelo
     model = CryptoTransformer(config).to(device)
     criterion = nn.MSELoss()
-    scaler_amp = torch.amp.GradScaler('cuda')
+    scaler_amp = torch.amp.GradScaler("cuda")
 
     optimizer = torch.optim.AdamW(
         model.parameters(),
@@ -327,13 +327,13 @@ def train() -> None:
         epochs=config.epochs,
         steps_per_epoch=len(train_loader),
         pct_start=0.3,
-        anneal_strategy='cos',
+        anneal_strategy="cos",
         div_factor=25.0,
         final_div_factor=1e4
     )
 
     early_stop = EarlyStopping(patience=config.early_stop_patience)
-    best_val_loss = float('inf')
+    best_val_loss = float("inf")
 
     # Training loop
     for epoch in range(config.epochs):
@@ -353,7 +353,7 @@ def train() -> None:
             "val/loss": avg_val_loss,
             "val/mae": val_mae,
             "val/correlation": val_corr,
-            "train/learning_rate": optimizer.param_groups[0]['lr']
+            "train/learning_rate": optimizer.param_groups[0]["lr"]
         })
 
         # Guardar mejor modelo (no guardamos en sweep: demasiados modelos)
@@ -371,5 +371,5 @@ def train() -> None:
     })
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     train()
