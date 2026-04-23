@@ -1,8 +1,8 @@
-import glob
 import logging
 import math
 import os
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -142,7 +142,7 @@ class EarlyStopping:
 
 def load_and_prepare_data(data_folder, config):
     """Carga datos (versión silenciosa para sweeps)"""
-    csv_files = glob.glob(f"{data_folder}/*_HD.csv")
+    csv_files = [str(p) for p in Path(data_folder).glob("*_HD.csv")]
 
     all_features, all_targets = [], []
 
