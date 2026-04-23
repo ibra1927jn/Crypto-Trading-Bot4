@@ -32,6 +32,7 @@ from strategies.strategy import HybridStrategy  # noqa: E402
 
 
 def setup_logging() -> logging.Logger:
+    """Configure and return the root logger with colored INFO-level output."""
     formatter = colorlog.ColoredFormatter(
         "%(log_color)s%(asctime)s %(levelname)s: %(message)s",
         datefmt="%H:%M:%S",
@@ -52,11 +53,15 @@ logger.info("=" * 50)
 
 
 class CryptoRadar:
+    """Scans configured symbols on a fixed interval and emits BUY/SELL/NEUTRAL signals."""
+
     def __init__(self) -> None:
+        """Initialize empty manager registry and read timeframe from env."""
         self.managers = {}
         self.timeframe = os.getenv("TIMEFRAME", "1m")
 
     async def initialize(self) -> bool:
+        """Connect to Binance futures testnet and build per-symbol managers/strategies."""
         self.exchange = ccxt.binance({
             "apiKey": API_KEY, "secret": SECRET_KEY, "enableRateLimit": True,
             "options": {"defaultType": "future"},
@@ -92,6 +97,7 @@ class CryptoRadar:
         return True
 
     async def run(self) -> None:
+        """Scan loop: call _scan() every 60s, backing off 5s on exceptions."""
         logger.info("🟢 RADAR GIRANDO (%s Pares)...", len(SYMBOLS))
         while True:
             try:
