@@ -6,7 +6,9 @@ import pandas as pd
 import torch
 
 from modules.ai_predictor import (
-    AI_Predictor, CryptoTransformer, PositionalEncoding,
+    AI_Predictor,
+    CryptoTransformer,
+    PositionalEncoding,
 )
 
 
