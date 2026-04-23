@@ -10,7 +10,7 @@ Este módulo gestiona todas las configuraciones del bot, incluyendo:
 
 import logging
 import os
-from typing import Any
+from typing import Any, ClassVar
 
 from dotenv import load_dotenv
 
@@ -47,7 +47,7 @@ class Config:
     # ===========================
     # CONFIGURACIÓN DE INDICADORES
     # ===========================
-    INDICATORS_CONFIG = {
+    INDICATORS_CONFIG: ClassVar[dict[str, dict[str, Any]]] = {
         "RSI": {
             "period": 14,
             "overbought": 70,
@@ -71,14 +71,14 @@ class Config:
     VOLATILITY_THRESHOLD = float(os.getenv("VOLATILITY_THRESHOLD", "2.0"))
 
     # Configuración para estrategia de Scalping (Alta Volatilidad)
-    SCALPING_CONFIG = {
+    SCALPING_CONFIG: ClassVar[dict[str, Any]] = {
         "check_interval": 5,  # segundos
         "quick_profit_target": 0.5,  # 0.5%
         "quick_stop_loss": 0.3,  # 0.3%
     }
 
     # Configuración para estrategia de Swing (Baja Volatilidad)
-    SWING_CONFIG = {
+    SWING_CONFIG: ClassVar[dict[str, Any]] = {
         "check_interval": 60,  # segundos
         "use_ai_predictor": True,
         "ai_confidence_threshold": 0.65  # Confianza mínima del modelo
@@ -87,7 +87,7 @@ class Config:
     # ===========================
     # CONFIGURACIÓN DE IA/ML
     # ===========================
-    AI_CONFIG = {
+    AI_CONFIG: ClassVar[dict[str, Any]] = {
         # pytorch o tensorflow
         "model_type": os.getenv("AI_MODEL_TYPE", "pytorch"),
         "model_path": os.getenv(
@@ -106,7 +106,7 @@ class Config:
     # ===========================
     # CONFIGURACIÓN DE DATOS
     # ===========================
-    DATA_CONFIG = {
+    DATA_CONFIG: ClassVar[dict[str, Any]] = {
         "historical_bars": 500,  # Cantidad de velas históricas a descargar
         "update_interval": 60,  # Actualizar datos cada 60 segundos
         "cache_enabled": True
