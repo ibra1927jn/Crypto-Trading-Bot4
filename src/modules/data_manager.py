@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import logging
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import numpy as np
 import pandas as pd
@@ -10,12 +12,18 @@ MIN_BARS_FOR_RETURNS = 2
 
 
 class DataManager:
-    def __init__(self, exchange, symbol, timeframe, historical_bars=300):
+    def __init__(
+        self,
+        exchange: Any,
+        symbol: str,
+        timeframe: str,
+        historical_bars: int = 300,
+    ) -> None:
         self.exchange = exchange
         self.symbol = symbol
         self.timeframe = timeframe
         self.limit = historical_bars
-        self.data = None
+        self.data: pd.DataFrame | None = None
 
     async def update_data(self) -> None:
         try:
