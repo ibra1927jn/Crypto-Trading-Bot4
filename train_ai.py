@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 # ⚡ CONFIGURACIÓN BASE (SWEEP PUEDE OVERRIDE)
 # ==========================================
 DATA_FOLDER = 'data'
-MODEL_PATH = 'models/trading_model_sweep.pth'
 
 # Valores por defecto (el sweep los reemplazará)
 DEFAULT_CONFIG = {
