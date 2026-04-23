@@ -130,16 +130,14 @@ class Config:
             }
         }
 
-        # Si es testnet, agregar configuración específica
-        if cls.TESTNET:
-            # Binance Testnet URLs
-            if cls.EXCHANGE == 'binance':
-                config['urls'] = {
-                    'api': {
-                        'public': 'https://testnet.binancefuture.com/fapi/v1',
-                        'private': 'https://testnet.binancefuture.com/fapi/v1',
-                    }
+        # Testnet Binance: URLs específicas de futures
+        if cls.TESTNET and cls.EXCHANGE == 'binance':
+            config['urls'] = {
+                'api': {
+                    'public': 'https://testnet.binancefuture.com/fapi/v1',
+                    'private': 'https://testnet.binancefuture.com/fapi/v1',
                 }
+            }
 
         return config
 
