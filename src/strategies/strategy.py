@@ -390,11 +390,12 @@ class HybridStrategy:
                 "✅ Should open %s position (confidence: %.2f)",
                 signal.value, confidence,
             )
-            return True
 
         except Exception:
             logger.exception("❌ Error determining position")
             return False
+
+        return True
 
     def calculate_position_size(
         self, balance: float, position_size_percent: float, price: float
@@ -430,11 +431,11 @@ class HybridStrategy:
                 quantity, amount_usdt, price,
             )
 
-            return quantity
-
         except Exception:
             logger.exception("❌ Error calculating position size")
             return 0.0
+
+        return quantity
 
     def calculate_stop_loss_take_profit(
         self,
@@ -486,11 +487,11 @@ class HybridStrategy:
                 take_profit, take_profit_percent,
             )
 
-            return stop_loss, take_profit
-
         except Exception:
             logger.exception("❌ Error calculating SL/TP")
             return entry_price, entry_price
+
+        return stop_loss, take_profit
 
     def get_check_interval(self) -> int:
         """
