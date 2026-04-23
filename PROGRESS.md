@@ -1,5 +1,22 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 92)
+
+### Assessment
+- Entry state: 132/132 tests passing, 99% coverage, 0 lint errors on default profile
+- Ran ruff with `--select ALL`: 7 remaining TRY300 hits all in `src/strategies/strategy.py` — success-path returns still inside `try` blocks
+- Same pattern as the recent ai_predictor/indicators cleanup (commits 2df8c58, 16189d9, 4a536f4): lift the success return below the except fallback
+
+### Changes
+- **refactor(strategy)**: `analyze_market_condition` — success return lifted out of try; except fallback stays as the only in-try return (25cbf91)
+- **refactor(strategy)**: `get_signal`, `_scalping_strategy`, `_swing_strategy` — success tuple returns lifted out of try blocks; signal/confidence/details names remain in scope on the success path (77c5225)
+- **refactor(strategy)**: `should_open_position`, `calculate_position_size`, `calculate_stop_loss_take_profit` — final three success returns lifted out; early-return guards inside try retained (intentional control flow, not error paths) (36c4876)
+
+### Results
+- **Tests**: 132/132 passing (unchanged)
+- **Coverage**: 99% (100% on src/ modules, unchanged)
+- **Build**: clean (0 lint errors on default profile; TRY300 now also clean across the entire repo, 0 remaining)
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 91)
 
 ### Assessment
