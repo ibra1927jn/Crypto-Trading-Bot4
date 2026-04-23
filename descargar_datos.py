@@ -1,3 +1,4 @@
+"""Descarga histórica de velas OHLCV desde el exchange a ficheros CSV."""
 import logging
 import time
 from datetime import datetime, timezone

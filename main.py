@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Punto de entrada del bot de trading: orquesta exchange, datos y estrategia."""
 import asyncio
 import contextlib
 import logging

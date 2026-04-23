@@ -1,3 +1,4 @@
+"""Entrenamiento del modelo Transformer con soporte para sweeps de WandB."""
 import logging
 import math
 import os

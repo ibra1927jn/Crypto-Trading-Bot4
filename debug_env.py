@@ -1,3 +1,4 @@
+"""Utilidad de diagnóstico: verifica que .env carga la clave API correctamente."""
 import os
 
 from dotenv import load_dotenv

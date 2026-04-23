@@ -1,3 +1,4 @@
+"""Backtest rápido del modelo AI sobre una ventana aleatoria de datos."""
 import math
 import random
 import sys

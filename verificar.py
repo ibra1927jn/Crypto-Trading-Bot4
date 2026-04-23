@@ -1,3 +1,4 @@
+"""Diagnóstico de entorno: verifica GPU, PyTorch y librerías de trading."""
 import ccxt
 import pandas_ta as ta
 import torch
