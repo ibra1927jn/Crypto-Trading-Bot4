@@ -9,7 +9,7 @@ from modules.data_manager import DataManager
 
 
 class TestCalculateVolatility:
-    def _make_dm_with_data(self, prices, timeframe='1m'):
+    def _make_dm_with_data(self, prices, timeframe: str = '1m') -> DataManager:
         dm = DataManager(exchange=None, symbol='BTC/USDT', timeframe=timeframe)
         dm.data = pd.DataFrame({
             'close': prices,
@@ -86,9 +86,9 @@ class TestCalculateVolatility:
 
 class TestUpdateData:
     def _make_exchange(
-        self, ohlcv_data=None, funding_rate=0.001,
-        has_ohlcv=True, funding_raises=False,
-    ):
+        self, ohlcv_data=None, funding_rate: float = 0.001,
+        has_ohlcv: bool = True, funding_raises: bool = False,
+    ) -> AsyncMock:
         exchange = AsyncMock()
         exchange.has = {'fetchOHLCV': has_ohlcv}
         exchange.fetch_ohlcv = AsyncMock(return_value=ohlcv_data)
