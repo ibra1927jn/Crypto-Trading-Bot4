@@ -1,4 +1,5 @@
 import logging
+from typing import ClassVar
 
 import numpy as np
 import pandas as pd
@@ -50,7 +51,7 @@ class DataManager:
     def get_latest_data(self) -> pd.DataFrame | None:
         return self.data
 
-    BARS_PER_YEAR = {
+    BARS_PER_YEAR: ClassVar[dict[str, int]] = {
         "1m": 365 * 24 * 60,
         "5m": 365 * 24 * 12,
         "15m": 365 * 24 * 4,
