@@ -55,7 +55,8 @@ class TestCalculateAll:
 
     def test_empty_input(self, indicators):
         result = indicators.calculate_all(pd.DataFrame())
-        assert result is not None and result.empty
+        assert result is not None
+        assert result.empty
 
 
 class TestMACDSignal:
