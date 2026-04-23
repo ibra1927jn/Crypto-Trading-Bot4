@@ -148,7 +148,7 @@ class EarlyStopping:
 def load_and_prepare_data(
     data_folder: str, config: Any,
 ) -> tuple[LazyCryptoDataset, LazyCryptoDataset, RobustScaler]:
-    """Carga datos (versión silenciosa para sweeps)"""
+    """Carga datos (versión silenciosa para sweeps)."""
     csv_files = [str(p) for p in Path(data_folder).glob("*_HD.csv")]
 
     all_features, all_targets = [], []
@@ -211,7 +211,7 @@ def train_epoch(
     device: torch.device,
     config: Any,
 ) -> float:
-    """Entrena una época"""
+    """Entrena una época."""
     model.train()
     total_loss = 0
 
@@ -246,7 +246,7 @@ def validate(
     criterion: nn.Module,
     device: torch.device,
 ) -> tuple[float, float, float]:
-    """Validación"""
+    """Validación."""
     model.eval()
     total_loss = 0
     predictions = []
@@ -275,7 +275,7 @@ def validate(
 
 
 def train() -> None:
-    """Función principal de entrenamiento (compatible con sweeps)"""
+    """Función principal de entrenamiento (compatible con sweeps)."""
     # Configuración hardware
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
