@@ -1,5 +1,21 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 87)
+
+### Assessment
+- Entry state: 132/132 tests passing, 99% coverage, 0 lint errors on default profile
+- Ran ruff with `--select ALL`: found PTH110 (`os.path.exists`) in `ai_predictor._load_model`, and 15 TRY400 hits across `src/` where `logger.error("msg: %s", e)` inside `except` blocks drops the traceback
+- Verified no tests assert on log message format via `caplog` for these handlers
+
+### Changes
+- **refactor(ai_predictor)**: Replace `os.path.exists(self.model_path)` with `Path(self.model_path).exists()`; drop now-unused `os` import (b12f61c)
+- **refactor(logging)**: Convert 15 `logger.error("...: %s", e)` → `logger.exception("...")` across `ai_predictor`, `data_manager`, `indicators`, and `strategy` — `exc_info=True` now attaches the full traceback in production logs (0e9e1ae)
+
+### Results
+- **Tests**: 132/132 passing (unchanged)
+- **Coverage**: 99% (100% on src/ modules, unchanged)
+- **Build**: clean (0 lint errors; TRY400 and PTH110 now also clean in src/)
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 86)
 
 ### Assessment
