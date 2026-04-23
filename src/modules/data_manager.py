@@ -6,6 +6,8 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+MIN_BARS_FOR_RETURNS = 2
+
 
 class DataManager:
     def __init__(self, exchange, symbol, timeframe, historical_bars=300):
@@ -61,7 +63,7 @@ class DataManager:
     }
 
     def calculate_volatility(self, window: int = 20) -> float:
-        if self.data is None or len(self.data) < 2:
+        if self.data is None or len(self.data) < MIN_BARS_FOR_RETURNS:
             return 0.0
         returns = np.log(
             self.data["close"] / self.data["close"].shift(1)
