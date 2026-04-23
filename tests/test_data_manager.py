@@ -21,7 +21,8 @@ class TestCalculateVolatility:
         return dm
 
     def test_returns_float(self):
-        prices = 100 + np.cumsum(np.random.randn(50) * 0.5)
+        rng = np.random.default_rng(42)
+        prices = 100 + np.cumsum(rng.standard_normal(50) * 0.5)
         dm = self._make_dm_with_data(prices)
         vol = dm.calculate_volatility()
         assert isinstance(vol, float)
@@ -40,8 +41,8 @@ class TestCalculateVolatility:
 
     def test_annualization_factor_depends_on_timeframe(self):
         """Volatility uses correct annualization factor."""
-        np.random.seed(42)
-        prices = 100 + np.cumsum(np.random.randn(50) * 0.5)
+        rng = np.random.default_rng(42)
+        prices = 100 + np.cumsum(rng.standard_normal(50) * 0.5)
 
         dm_1m = self._make_dm_with_data(prices, timeframe='1m')
         dm_1h = self._make_dm_with_data(prices, timeframe='1h')
@@ -75,7 +76,8 @@ class TestCalculateVolatility:
 
     def test_unknown_timeframe_uses_default(self):
         """Unknown timeframe should fall back to 1m factor."""
-        prices = 100 + np.cumsum(np.random.RandomState(42).randn(50) * 0.5)
+        rng = np.random.default_rng(42)
+        prices = 100 + np.cumsum(rng.standard_normal(50) * 0.5)
         dm = self._make_dm_with_data(prices, timeframe='3m')
         vol = dm.calculate_volatility()
         assert isinstance(vol, float)

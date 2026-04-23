@@ -70,10 +70,11 @@ def make_strategy(volatility=1.0, ind_signal='NEUTRAL', ind_conf=0.0,
 @pytest.fixture
 def dummy_df():
     n = 50
-    close = 100 + np.cumsum(np.random.randn(n) * 0.5)
+    rng = np.random.default_rng(42)
+    close = 100 + np.cumsum(rng.standard_normal(n) * 0.5)
     return pd.DataFrame({
         'close': close,
-        'rsi': np.random.uniform(30, 70, n),
+        'rsi': rng.uniform(30, 70, n),
     })
 
 

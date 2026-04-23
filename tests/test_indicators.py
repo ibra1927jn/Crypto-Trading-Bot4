@@ -8,15 +8,15 @@ from modules.indicators import TechnicalIndicators
 
 def make_ohlcv(n=100, base_price=100.0, seed=42):
     """Genera DataFrame OHLCV sintético."""
-    np.random.seed(seed)
-    close = base_price + np.cumsum(np.random.randn(n) * 0.5)
+    rng = np.random.default_rng(seed)
+    close = base_price + np.cumsum(rng.standard_normal(n) * 0.5)
     close = np.maximum(close, 1.0)
     return pd.DataFrame({
-        'open': close + np.random.randn(n) * 0.1,
-        'high': close + abs(np.random.randn(n) * 0.3),
-        'low': close - abs(np.random.randn(n) * 0.3),
+        'open': close + rng.standard_normal(n) * 0.1,
+        'high': close + abs(rng.standard_normal(n) * 0.3),
+        'low': close - abs(rng.standard_normal(n) * 0.3),
         'close': close,
-        'volume': np.random.randint(100, 10000, n).astype(float),
+        'volume': rng.integers(100, 10000, n).astype(float),
     })
 
 
