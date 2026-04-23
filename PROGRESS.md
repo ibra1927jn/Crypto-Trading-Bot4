@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 85)
+
+### Assessment
+- Entry state: 132/132 tests passing, 99% coverage, 0 lint errors on default profile
+- Ran ruff with `--select ALL`: found RUF015 in `indicators.get_macd_signal` — two full column-list comprehensions built before indexing `[0]` when only the first match is ever used
+- Same RUF015 pattern repeated 14 times across `tests/test_indicators.py` (MACD/MACDs/BBL/BBU column lookups)
+- Also PLR0402 in `ai_predictor.py`: `import torch.nn as nn` where alias matches the submodule name
+
+### Changes
+- **perf(indicators)**: Replace `[c for c in df.columns if ...][0]` with `next(c for c in df.columns if ...)` in `get_macd_signal` — short-circuits on first match instead of materialising the full filtered list (84ba6f9)
+- **refactor(tests)**: Apply the same `next(...)` idiom to all 14 column-lookup sites in `test_indicators.py` (362e80d)
+- **refactor(ai_predictor)**: Use `from torch import nn` in place of `import torch.nn as nn` alias (7639b34)
+
+### Results
+- **Tests**: 132/132 passing (unchanged)
+- **Coverage**: 99% (100% on src/ modules, unchanged)
+- **Build**: clean (0 lint errors)
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 84)
 
 ### Assessment
