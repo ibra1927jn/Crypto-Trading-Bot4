@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 93)
+
+### Assessment
+- Entry state: 132/132 tests passing, 99% coverage, 0 lint errors on default profile
+- Ran ruff with `--select ANN204`: 13 remaining hits in repo-root scripts and test fixtures — the `-> None`/dunder-annotation cleanup pattern from pass 92 (commit 18d2a4d) was not yet applied outside `src/modules/indicators.py`
+- Targets: `main.py` (CryptoRadar), `test_ai.py` (PositionalEncoding, CryptoTransformer), `tests/test_strategy.py` (three Mock classes), `train_ai.py` (LazyCryptoDataset with `__len__`/`__getitem__`, PositionalEncoding, CryptoTransformer, EarlyStopping with `__call__`)
+
+### Changes
+- **refactor(main)**: `CryptoRadar.__init__` — add `-> None` (b78e5d4)
+- **refactor(tests)**: Annotate `MockDataManager`, `MockIndicators`, `MockAIPredictor` `__init__` signatures and `-> None` return — ANN204 (7ea7522)
+- **refactor(test_ai)**: Annotate `PositionalEncoding`/`CryptoTransformer` `__init__` — ANN204 (915efcb)
+- **refactor(train_ai)**: Annotate `LazyCryptoDataset.__init__/__len__/__getitem__`, `PositionalEncoding.__init__`, `CryptoTransformer.__init__`, `EarlyStopping.__init__/__call__` — ANN204 (6622abd)
+
+### Results
+- **Tests**: 132/132 passing (unchanged)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 lint errors on default profile; ANN204 now fully clean across the entire repo, 0 remaining)
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 92)
 
 ### Assessment
