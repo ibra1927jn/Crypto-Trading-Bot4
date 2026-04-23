@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import logging
 import math
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -36,7 +39,7 @@ FEATURE_COLUMNS = (
 
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, max_len=5000):
+    def __init__(self, d_model: int, max_len: int = 5000) -> None:
         super().__init__()
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
@@ -53,7 +56,7 @@ class PositionalEncoding(nn.Module):
 
 
 class CryptoTransformer(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.embedding = nn.Linear(len(FEATURE_COLUMNS), D_MODEL)
         self.pos_encoder = PositionalEncoding(D_MODEL)
@@ -74,7 +77,7 @@ class CryptoTransformer(nn.Module):
 
 
 class AI_Predictor:
-    def __init__(self, config):
+    def __init__(self, config: dict[str, Any] | None) -> None:
         default_path = "models/trading_model.pth"
         self.model_path = (
             config.get("model_path", default_path)
