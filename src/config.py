@@ -51,17 +51,17 @@ class Config:
         "RSI": {
             "period": 14,
             "overbought": 70,
-            "oversold": 30
+            "oversold": 30,
         },
         "MACD": {
             "fast_period": 12,
             "slow_period": 26,
-            "signal_period": 9
+            "signal_period": 9,
         },
         "BOLLINGER": {
             "period": 20,
-            "std_dev": 2
-        }
+            "std_dev": 2,
+        },
     }
 
     # ===========================
@@ -81,7 +81,7 @@ class Config:
     SWING_CONFIG: ClassVar[dict[str, Any]] = {
         "check_interval": 60,  # segundos
         "use_ai_predictor": True,
-        "ai_confidence_threshold": 0.65  # Confianza mínima del modelo
+        "ai_confidence_threshold": 0.65,  # Confianza mínima del modelo
     }
 
     # ===========================
@@ -91,7 +91,7 @@ class Config:
         # pytorch o tensorflow
         "model_type": os.getenv("AI_MODEL_TYPE", "pytorch"),
         "model_path": os.getenv(
-            "AI_MODEL_PATH", "./models/trading_model.pth"
+            "AI_MODEL_PATH", "./models/trading_model.pth",
         ),
         "device": (
             "cuda"
@@ -100,7 +100,7 @@ class Config:
         ),
         "input_features": 50,  # Número de características de entrada
         "sequence_length": 60,  # Ventana de datos históricos
-        "batch_size": 32
+        "batch_size": 32,
     }
 
     # ===========================
@@ -109,7 +109,7 @@ class Config:
     DATA_CONFIG: ClassVar[dict[str, Any]] = {
         "historical_bars": 500,  # Cantidad de velas históricas a descargar
         "update_interval": 60,  # Actualizar datos cada 60 segundos
-        "cache_enabled": True
+        "cache_enabled": True,
     }
 
     # ===========================
@@ -127,7 +127,7 @@ class Config:
             'enableRateLimit': True,
             'options': {
                 'defaultType': 'future',  # spot, future, margin
-            }
+            },
         }
 
         # Testnet Binance: URLs específicas de futures
@@ -136,7 +136,7 @@ class Config:
                 'api': {
                     'public': 'https://testnet.binancefuture.com/fapi/v1',
                     'private': 'https://testnet.binancefuture.com/fapi/v1',
-                }
+                },
             }
 
         return config
@@ -147,7 +147,7 @@ class Config:
         if not cls.API_KEY or not cls.API_SECRET:
             logger.warning(
                 "API credentials not found! "
-                "Set BINANCE_API_KEY and BINANCE_API_SECRET in .env file"
+                "Set BINANCE_API_KEY and BINANCE_API_SECRET in .env file",
             )
             return False
 
