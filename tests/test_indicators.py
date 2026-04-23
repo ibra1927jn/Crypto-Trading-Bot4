@@ -77,8 +77,8 @@ class TestMACDSignal:
         """Simula cruce MACD alcista."""
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
-        macd_col = [c for c in df.columns if c.startswith('MACD_')][0]
-        signal_col = [c for c in df.columns if c.startswith('MACDs_')][0]
+        macd_col = next(c for c in df.columns if c.startswith('MACD_'))
+        signal_col = next(c for c in df.columns if c.startswith('MACDs_'))
         # Forzar cruce alcista
         df.iloc[-2, df.columns.get_loc(macd_col)] = -1.0
         df.iloc[-2, df.columns.get_loc(signal_col)] = 0.0
@@ -92,8 +92,8 @@ class TestMACDSignal:
         """Simula cruce MACD bajista."""
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
-        macd_col = [c for c in df.columns if c.startswith('MACD_')][0]
-        signal_col = [c for c in df.columns if c.startswith('MACDs_')][0]
+        macd_col = next(c for c in df.columns if c.startswith('MACD_'))
+        signal_col = next(c for c in df.columns if c.startswith('MACDs_'))
         df.iloc[-2, df.columns.get_loc(macd_col)] = 1.0
         df.iloc[-2, df.columns.get_loc(signal_col)] = 0.0
         df.iloc[-1, df.columns.get_loc(macd_col)] = -1.0
@@ -112,7 +112,7 @@ class TestBollingerSignal:
     def test_buy_below_lower_band(self, indicators):
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
-        bbl_col = [c for c in df.columns if c.startswith('BBL')][0]
+        bbl_col = next(c for c in df.columns if c.startswith('BBL'))
         df.iloc[-1, df.columns.get_loc('close')] = df[bbl_col].iloc[-1] - 5
         sig, conf = indicators.get_bollinger_signal(df)
         assert sig == 'BUY'
@@ -121,7 +121,7 @@ class TestBollingerSignal:
     def test_sell_above_upper_band(self, indicators):
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
-        bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
+        bbu_col = next(c for c in df.columns if c.startswith('BBU'))
         df.iloc[-1, df.columns.get_loc('close')] = df[bbu_col].iloc[-1] + 5
         sig, conf = indicators.get_bollinger_signal(df)
         assert sig == 'SELL'
@@ -139,8 +139,8 @@ class TestCombinedSignal:
         df = indicators.calculate_all(df)
         df.iloc[-1, df.columns.get_loc('rsi')] = 20.0
         # Ensure Bollinger is neutral
-        bbl_col = [c for c in df.columns if c.startswith('BBL')][0]
-        bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
+        bbl_col = next(c for c in df.columns if c.startswith('BBL'))
+        bbu_col = next(c for c in df.columns if c.startswith('BBU'))
         mid = (df[bbl_col].iloc[-1] + df[bbu_col].iloc[-1]) / 2
         df.iloc[-1, df.columns.get_loc('close')] = mid
         sig, _conf = indicators.get_combined_signal(df)
@@ -150,8 +150,8 @@ class TestCombinedSignal:
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
         df.iloc[-1, df.columns.get_loc('rsi')] = 80.0
-        bbl_col = [c for c in df.columns if c.startswith('BBL')][0]
-        bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
+        bbl_col = next(c for c in df.columns if c.startswith('BBL'))
+        bbu_col = next(c for c in df.columns if c.startswith('BBU'))
         mid = (df[bbl_col].iloc[-1] + df[bbu_col].iloc[-1]) / 2
         df.iloc[-1, df.columns.get_loc('close')] = mid
         sig, _conf = indicators.get_combined_signal(df)
@@ -244,8 +244,8 @@ class TestBollingerSignalNeutral:
     def test_neutral_when_between_bands(self, indicators):
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
-        bbl_col = [c for c in df.columns if c.startswith('BBL')][0]
-        bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
+        bbl_col = next(c for c in df.columns if c.startswith('BBL'))
+        bbu_col = next(c for c in df.columns if c.startswith('BBU'))
         mid = (df[bbl_col].iloc[-1] + df[bbu_col].iloc[-1]) / 2
         df.iloc[-1, df.columns.get_loc('close')] = mid
         sig, conf = indicators.get_bollinger_signal(df)
@@ -259,8 +259,8 @@ class TestCombinedSignalNeutral:
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
         df.iloc[-1, df.columns.get_loc('rsi')] = 50.0
-        bbl_col = [c for c in df.columns if c.startswith('BBL')][0]
-        bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
+        bbl_col = next(c for c in df.columns if c.startswith('BBL'))
+        bbu_col = next(c for c in df.columns if c.startswith('BBU'))
         mid = (df[bbl_col].iloc[-1] + df[bbu_col].iloc[-1]) / 2
         df.iloc[-1, df.columns.get_loc('close')] = mid
         sig, conf = indicators.get_combined_signal(df)
@@ -276,7 +276,7 @@ class TestCombinedSignalBollingerContribution:
         # RSI neutral (between 30-70)
         df.iloc[-1, df.columns.get_loc('rsi')] = 50.0
         # Push close below lower Bollinger band to trigger BUY
-        bbl_col = [c for c in df.columns if c.startswith('BBL')][0]
+        bbl_col = next(c for c in df.columns if c.startswith('BBL'))
         df.iloc[-1, df.columns.get_loc('close')] = df[bbl_col].iloc[-1] - 5
         sig, conf = indicators.get_combined_signal(df)
         assert sig == 'BUY'
@@ -289,7 +289,7 @@ class TestCombinedSignalBollingerContribution:
         # RSI neutral (between 30-70)
         df.iloc[-1, df.columns.get_loc('rsi')] = 50.0
         # Push close above upper Bollinger band to trigger SELL
-        bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
+        bbu_col = next(c for c in df.columns if c.startswith('BBU'))
         df.iloc[-1, df.columns.get_loc('close')] = df[bbu_col].iloc[-1] + 5
         sig, conf = indicators.get_combined_signal(df)
         assert sig == 'SELL'
@@ -302,7 +302,7 @@ class TestCombinedSignalBollingerContribution:
         # RSI oversold => BUY signal
         df.iloc[-1, df.columns.get_loc('rsi')] = 20.0
         # Close above upper band => SELL signal from Bollinger
-        bbu_col = [c for c in df.columns if c.startswith('BBU')][0]
+        bbu_col = next(c for c in df.columns if c.startswith('BBU'))
         df.iloc[-1, df.columns.get_loc('close')] = df[bbu_col].iloc[-1] + 5
         sig, conf = indicators.get_combined_signal(df)
         # 1 BUY (RSI) + 1 SELL (Bollinger) = tied = NEUTRAL
