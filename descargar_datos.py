@@ -91,8 +91,9 @@ for symbol in SYMBOLS:
             if len(funding) == 0:
                 break
 
-            for f in funding:
-                all_funding.append([f['timestamp'], f['fundingRate']])
+            all_funding.extend(
+                [f['timestamp'], f['fundingRate']] for f in funding
+            )
 
             temp_since = funding[-1]['timestamp'] + 1
             time.sleep(0.1)
