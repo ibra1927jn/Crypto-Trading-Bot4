@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 88)
+
+### Assessment
+- Entry state: 132/132 tests passing, 99% coverage, 0 lint errors on default profile
+- Ran ruff with `--select ALL`: `src/` is clean, but repo-root scripts (`main.py`, `descargar_datos.py`, `train_ai.py`, `test_ai.py`) still carry lint debt — TRY400, PD011, PLR0402, PLR1730
+
+### Changes
+- **refactor(main)**: Two `logger.error("...: %s", e)` inside `except Exception as e` → `logger.exception("...")` — traceback now attached in prod logs (de0e5cf)
+- **refactor(descargar_datos)**: Same TRY400 conversion in the OHLCV download retry loop (d4e40ef)
+- **refactor(ai)**: Replace deprecated pandas `.values` with `.to_numpy(dtype=...)` in `train_ai.py` (feature/target extraction) and `.to_numpy()` in `test_ai.py` (2 sites) (6701eaa)
+- **refactor(train_ai)**: Replace `if avg_val_loss < best_val_loss: best_val_loss = avg_val_loss` with `best_val_loss = min(...)` — PLR1730 (2f48092)
+- **refactor(ai)**: Drop `import torch.nn as nn` alias in both `test_ai.py` and `train_ai.py` in favour of `from torch import nn` — PLR0402 (54e6b33)
+
+### Results
+- **Tests**: 132/132 passing (unchanged)
+- **Coverage**: 99% (100% on src/ modules, unchanged)
+- **Build**: clean (0 lint errors; TRY400/PD011/PLR0402/PLR1730 now also clean at repo root)
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 87)
 
 ### Assessment
