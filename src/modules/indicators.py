@@ -92,7 +92,11 @@ class TechnicalIndicators:
             logger.error("❌ Error en Bollinger signal: %s", e)
             return "NEUTRAL", 0.0
 
-    def get_combined_signal(self, df: pd.DataFrame) -> tuple[str, float]:
+    def get_combined_signal(
+        self,
+        df: pd.DataFrame,
+        bollinger_signal: tuple[str, float] | None = None,
+    ) -> tuple[str, float]:
         if df is None or df.empty:
             return "NEUTRAL", 0.0
         try:
@@ -103,7 +107,9 @@ class TechnicalIndicators:
             elif rsi > RSI_OVERBOUGHT:
                 signals.append("SELL")
 
-            bol_sig, _ = self.get_bollinger_signal(df)
+            if bollinger_signal is None:
+                bollinger_signal = self.get_bollinger_signal(df)
+            bol_sig, _ = bollinger_signal
             if bol_sig != "NEUTRAL":
                 signals.append(bol_sig)
 

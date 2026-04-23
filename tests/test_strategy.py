@@ -19,7 +19,7 @@ class MockIndicators:
         self._signal = signal
         self._confidence = confidence
 
-    def get_combined_signal(self, df):
+    def get_combined_signal(self, df, bollinger_signal=None):
         return self._signal, self._confidence
 
     def get_macd_signal(self, df):

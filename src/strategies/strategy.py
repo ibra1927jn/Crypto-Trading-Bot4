@@ -190,9 +190,14 @@ class HybridStrategy:
         try:
             logger.debug("⚡ Using SCALPING strategy (High Volatility)")
 
+            # Compute Bollinger once; reuse for combined signal + details
+            bollinger_signal = self.indicators.get_bollinger_signal(df)
+
             # Obtener señales de indicadores
             combined_signal, confidence = (
-                self.indicators.get_combined_signal(df)
+                self.indicators.get_combined_signal(
+                    df, bollinger_signal=bollinger_signal,
+                )
             )
 
             # Convertir a enum Signal
@@ -212,9 +217,7 @@ class HybridStrategy:
                 "macd_signal": (
                     self.indicators.get_macd_signal(df)
                 ),
-                "bollinger_signal": (
-                    self.indicators.get_bollinger_signal(df)
-                ),
+                "bollinger_signal": bollinger_signal,
                 "price": (
                     df["close"].iloc[-1]
                     if "close" in df.columns else None
