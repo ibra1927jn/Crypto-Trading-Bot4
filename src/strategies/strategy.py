@@ -9,11 +9,18 @@ Implementa estrategias híbridas que se adaptan a las condiciones del mercado:
 Esta arquitectura modular permite añadir nuevas estrategias fácilmente.
 """
 
+from __future__ import annotations
+
 import logging
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
+
+if TYPE_CHECKING:
+    from modules.ai_predictor import AI_Predictor
+    from modules.data_manager import DataManager
+    from modules.indicators import TechnicalIndicators
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +66,12 @@ class HybridStrategy:
     """
 
     def __init__(
-        self, data_manager, indicators,
-        ai_predictor, config: dict[str, Any],
-    ):
+        self,
+        data_manager: DataManager,
+        indicators: TechnicalIndicators,
+        ai_predictor: AI_Predictor,
+        config: dict[str, Any],
+    ) -> None:
         """
         Inicializa la estrategia híbrida
 
