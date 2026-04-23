@@ -15,9 +15,9 @@ import logging
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
-import pandas as pd
-
 if TYPE_CHECKING:
+    import pandas as pd
+
     from modules.ai_predictor import AI_Predictor
     from modules.data_manager import DataManager
     from modules.indicators import TechnicalIndicators
