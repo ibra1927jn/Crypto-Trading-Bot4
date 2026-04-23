@@ -116,11 +116,11 @@ class HybridStrategy:
                     volatility,
                 )
 
-            return self.current_condition
-
         except Exception:
             logger.exception("❌ Error analyzing market condition")
             return MarketCondition.UNKNOWN
+
+        return self.current_condition
 
     def get_signal(
         self, df: pd.DataFrame,
