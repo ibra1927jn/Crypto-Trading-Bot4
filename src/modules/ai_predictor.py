@@ -55,7 +55,7 @@ class PositionalEncoding(nn.Module):
 class CryptoTransformer(nn.Module):
     def __init__(self):
         super().__init__()
-        self.embedding = nn.Linear(8, D_MODEL)
+        self.embedding = nn.Linear(len(FEATURE_COLUMNS), D_MODEL)
         self.pos_encoder = PositionalEncoding(D_MODEL)
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=D_MODEL, nhead=NHEAD, dropout=DROPOUT, batch_first=True
