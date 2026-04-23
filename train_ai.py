@@ -78,7 +78,7 @@ class PositionalEncoding(nn.Module):
         pe[:, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe.unsqueeze(0))
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x + self.pe[:, :x.size(1)]
 
 
@@ -110,7 +110,7 @@ class CryptoTransformer(nn.Module):
                 nn.init.ones_(module.weight)
                 nn.init.zeros_(module.bias)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.embedding(x)
         x = self.pos_encoder(x)
         x = self.transformer(x)
@@ -140,7 +140,9 @@ class EarlyStopping:
         return self.should_stop
 
 
-def load_and_prepare_data(data_folder, config):
+def load_and_prepare_data(
+    data_folder, config,
+) -> tuple[LazyCryptoDataset, LazyCryptoDataset, RobustScaler]:
     """Carga datos (versión silenciosa para sweeps)"""
     csv_files = [str(p) for p in Path(data_folder).glob("*_HD.csv")]
 
@@ -197,7 +199,7 @@ def load_and_prepare_data(data_folder, config):
 def train_epoch(
     model, train_loader, criterion, optimizer,
     scaler_amp, scheduler, device, config,
-):
+) -> float:
     """Entrena una época"""
     model.train()
     total_loss = 0
@@ -227,7 +229,9 @@ def train_epoch(
     return total_loss / len(train_loader)
 
 
-def validate(model, val_loader, criterion, device):
+def validate(
+    model, val_loader, criterion, device,
+) -> tuple[float, float, float]:
     """Validación"""
     model.eval()
     total_loss = 0
@@ -256,7 +260,7 @@ def validate(model, val_loader, criterion, device):
     return total_loss / len(val_loader), mae, correlation
 
 
-def train():
+def train() -> None:
     """Función principal de entrenamiento (compatible con sweeps)"""
 
     # Configuración hardware
