@@ -60,15 +60,15 @@ class TechnicalIndicators:
             curr_sig = df[signal_col].iloc[-1]
             prev_macd = df[macd_col].iloc[-2]
             prev_sig = df[signal_col].iloc[-2]
-
-            if prev_macd < prev_sig and curr_macd > curr_sig:
-                return "BUY", MACD_CROSSOVER_CONFIDENCE
-            if prev_macd > prev_sig and curr_macd < curr_sig:
-                return "SELL", MACD_CROSSOVER_CONFIDENCE
-            return "NEUTRAL", 0.0
         except Exception:
             logger.exception("❌ Error en MACD signal")
             return "NEUTRAL", 0.0
+
+        if prev_macd < prev_sig and curr_macd > curr_sig:
+            return "BUY", MACD_CROSSOVER_CONFIDENCE
+        if prev_macd > prev_sig and curr_macd < curr_sig:
+            return "SELL", MACD_CROSSOVER_CONFIDENCE
+        return "NEUTRAL", 0.0
 
     def get_bollinger_signal(self, df: pd.DataFrame) -> tuple[str, float]:
         if df is None or df.empty:
@@ -82,15 +82,15 @@ class TechnicalIndicators:
             bbu_col = next(
                 (c for c in df.columns if c.startswith("BBU")), None,
             )
-
-            if bbl_col is not None and close < latest[bbl_col]:
-                return "BUY", BOLLINGER_BREAK_CONFIDENCE
-            if bbu_col is not None and close > latest[bbu_col]:
-                return "SELL", BOLLINGER_BREAK_CONFIDENCE
-            return "NEUTRAL", 0.0
         except Exception:
             logger.exception("❌ Error en Bollinger signal")
             return "NEUTRAL", 0.0
+
+        if bbl_col is not None and close < latest[bbl_col]:
+            return "BUY", BOLLINGER_BREAK_CONFIDENCE
+        if bbu_col is not None and close > latest[bbu_col]:
+            return "SELL", BOLLINGER_BREAK_CONFIDENCE
+        return "NEUTRAL", 0.0
 
     def get_combined_signal(
         self,
