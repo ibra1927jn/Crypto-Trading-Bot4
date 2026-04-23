@@ -85,7 +85,7 @@ for symbol in SYMBOLS:
         try:
             # Binance suele dar 1000 registros de funding
             funding = exchange.fetch_funding_rate_history(
-                symbol, temp_since, limit=1000
+                symbol, temp_since, limit=1000,
             )
 
             if len(funding) == 0:
@@ -120,7 +120,7 @@ for symbol in SYMBOLS:
         # Crear DataFrame de Funding
         if len(all_funding) > 0:
             df_funding = pd.DataFrame(
-                all_funding, columns=["timestamp", "funding_rate"]
+                all_funding, columns=["timestamp", "funding_rate"],
             )
             df_funding["timestamp"] = pd.to_datetime(
                 df_funding["timestamp"], unit="ms",
