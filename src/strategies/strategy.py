@@ -283,25 +283,21 @@ class HybridStrategy:
 
             # Combinar ambas señales
             # La IA tiene mayor peso en condiciones de baja volatilidad
-            ai_weight = AI_WEIGHT
-            indicators_weight = INDICATORS_WEIGHT
-
-            # Convertir señales a valores numéricos
             indicators_value = SIGNAL_VALUES.get(indicators_signal, 0)
             ai_value = SIGNAL_VALUES.get(ai_signal, 0)
 
             # Calcular señal combinada
             combined_value = (
-                ai_value * ai_weight * ai_confidence +
+                ai_value * AI_WEIGHT * ai_confidence +
                 indicators_value *
-                indicators_weight *
+                INDICATORS_WEIGHT *
                 indicators_confidence
             )
 
             # Calcular confianza combinada
             combined_confidence = (
-                ai_confidence * ai_weight +
-                indicators_confidence * indicators_weight
+                ai_confidence * AI_WEIGHT +
+                indicators_confidence * INDICATORS_WEIGHT
             )
 
             # Determinar señal final
