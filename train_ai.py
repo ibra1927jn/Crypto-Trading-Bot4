@@ -276,7 +276,6 @@ def validate(
 
 def train() -> None:
     """Función principal de entrenamiento (compatible con sweeps)"""
-
     # Configuración hardware
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
