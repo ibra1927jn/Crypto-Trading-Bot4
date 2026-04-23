@@ -122,20 +122,20 @@ class Config:
     def get_exchange_config(cls) -> dict[str, Any]:
         """Retorna la configuración del exchange en formato dict"""
         config = {
-            'apiKey': cls.API_KEY,
-            'secret': cls.API_SECRET,
-            'enableRateLimit': True,
-            'options': {
-                'defaultType': 'future',  # spot, future, margin
+            "apiKey": cls.API_KEY,
+            "secret": cls.API_SECRET,
+            "enableRateLimit": True,
+            "options": {
+                "defaultType": "future",  # spot, future, margin
             },
         }
 
         # Testnet Binance: URLs específicas de futures
-        if cls.TESTNET and cls.EXCHANGE == 'binance':
-            config['urls'] = {
-                'api': {
-                    'public': 'https://testnet.binancefuture.com/fapi/v1',
-                    'private': 'https://testnet.binancefuture.com/fapi/v1',
+        if cls.TESTNET and cls.EXCHANGE == "binance":
+            config["urls"] = {
+                "api": {
+                    "public": "https://testnet.binancefuture.com/fapi/v1",
+                    "private": "https://testnet.binancefuture.com/fapi/v1",
                 },
             }
 
