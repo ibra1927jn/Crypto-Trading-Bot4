@@ -20,6 +20,6 @@ if api_key:
 else:
     print(
         "⚠️  El archivo existe, pero "
-        "'BINANCE_API_KEY' está vacía."
+        "'BINANCE_API_KEY' está vacía.",
     )
     print("👉 Abre el archivo .env y asegúrate de GUARDARLO (Ctrl + S)")
