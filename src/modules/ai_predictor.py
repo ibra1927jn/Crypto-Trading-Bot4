@@ -111,7 +111,7 @@ class AI_Predictor:
             logger.exception("❌ Error")
 
     def predict(self, df: pd.DataFrame) -> tuple[float, float]:
-        """Returns (pct_prediction, confidence) as floats."""
+        """Return (pct_prediction, confidence) as floats."""
         if self.model is None or len(df) < self.lookback + 20:
             return 0.0, 0.0
         try:
