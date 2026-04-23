@@ -91,7 +91,7 @@ class AI_Predictor:
     """Wrap the Transformer model and expose a ``predict`` interface for dataframes."""
 
     def __init__(self, config: dict[str, Any] | None) -> None:
-        """Load the model from ``config['model_path']`` (if present) onto CUDA or CPU."""
+        """Load the model from ``config['model_path']`` (if any) onto CUDA or CPU."""
         default_path = "models/trading_model.pth"
         self.model_path = (
             config.get("model_path", default_path)
