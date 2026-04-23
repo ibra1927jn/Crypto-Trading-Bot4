@@ -61,12 +61,16 @@ class TestCalculateAll:
 
 
 class TestMACDSignal:
-    def test_returns_tuple(self, indicators: TechnicalIndicators, df_with_indicators: pd.DataFrame) -> None:
+    def test_returns_tuple(
+        self, indicators: TechnicalIndicators, df_with_indicators: pd.DataFrame,
+    ) -> None:
         result = indicators.get_macd_signal(df_with_indicators)
         assert isinstance(result, tuple)
         assert len(result) == 2
 
-    def test_signal_values(self, indicators: TechnicalIndicators, df_with_indicators: pd.DataFrame) -> None:
+    def test_signal_values(
+        self, indicators: TechnicalIndicators, df_with_indicators: pd.DataFrame,
+    ) -> None:
         signal, conf = indicators.get_macd_signal(df_with_indicators)
         assert signal in ('BUY', 'SELL', 'NEUTRAL')
         assert 0.0 <= conf <= 1.0
@@ -106,7 +110,9 @@ class TestMACDSignal:
 
 
 class TestBollingerSignal:
-    def test_returns_tuple(self, indicators: TechnicalIndicators, df_with_indicators: pd.DataFrame) -> None:
+    def test_returns_tuple(
+        self, indicators: TechnicalIndicators, df_with_indicators: pd.DataFrame,
+    ) -> None:
         result = indicators.get_bollinger_signal(df_with_indicators)
         assert isinstance(result, tuple)
         assert len(result) == 2
@@ -131,7 +137,9 @@ class TestBollingerSignal:
 
 
 class TestCombinedSignal:
-    def test_returns_tuple(self, indicators: TechnicalIndicators, df_with_indicators: pd.DataFrame) -> None:
+    def test_returns_tuple(
+        self, indicators: TechnicalIndicators, df_with_indicators: pd.DataFrame,
+    ) -> None:
         result = indicators.get_combined_signal(df_with_indicators)
         assert isinstance(result, tuple)
         assert len(result) == 2
@@ -195,14 +203,18 @@ class TestMACDSignalError:
 
 
 class TestBollingerSignalError:
-    def test_bollinger_signal_no_bb_columns(self, indicators: TechnicalIndicators) -> None:
+    def test_bollinger_signal_no_bb_columns(
+        self, indicators: TechnicalIndicators,
+    ) -> None:
         """No BB columns returns NEUTRAL."""
         df = pd.DataFrame({'close': [100, 101, 102], 'rsi': [50, 55, 60]})
         signal, conf = indicators.get_bollinger_signal(df)
         assert signal == 'NEUTRAL'
         assert conf == 0.0
 
-    def test_bollinger_signal_no_close_column(self, indicators: TechnicalIndicators) -> None:
+    def test_bollinger_signal_no_close_column(
+        self, indicators: TechnicalIndicators,
+    ) -> None:
         """Exception handler: df without 'close' triggers except branch."""
         df = pd.DataFrame({'not_close': [100, 101, 102]})
         signal, conf = indicators.get_bollinger_signal(df)
@@ -211,7 +223,9 @@ class TestBollingerSignalError:
 
 
 class TestCombinedSignalError:
-    def test_combined_signal_no_rsi_column(self, indicators: TechnicalIndicators) -> None:
+    def test_combined_signal_no_rsi_column(
+        self, indicators: TechnicalIndicators,
+    ) -> None:
         """Error branch: df without 'rsi' column triggers exception handler."""
         df = pd.DataFrame({'close': [100, 101, 102]})
         signal, conf = indicators.get_combined_signal(df)
@@ -228,7 +242,9 @@ class TestIndicatorsSummaryError:
 
 
 class TestGetIndicatorsSummary:
-    def test_returns_dict_with_rsi(self, indicators: TechnicalIndicators, df_with_indicators: pd.DataFrame) -> None:
+    def test_returns_dict_with_rsi(
+        self, indicators: TechnicalIndicators, df_with_indicators: pd.DataFrame,
+    ) -> None:
         result = indicators.get_indicators_summary(df_with_indicators)
         assert isinstance(result, dict)
         assert 'rsi' in result
@@ -271,7 +287,9 @@ class TestCombinedSignalNeutral:
 
 
 class TestCombinedSignalBollingerContribution:
-    def test_bollinger_buy_adds_to_signals(self, indicators: TechnicalIndicators) -> None:
+    def test_bollinger_buy_adds_to_signals(
+        self, indicators: TechnicalIndicators,
+    ) -> None:
         """Bollinger BUY contributes to combined result."""
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
@@ -284,7 +302,9 @@ class TestCombinedSignalBollingerContribution:
         assert sig == 'BUY'
         assert conf == 0.7
 
-    def test_bollinger_sell_adds_to_signals(self, indicators: TechnicalIndicators) -> None:
+    def test_bollinger_sell_adds_to_signals(
+        self, indicators: TechnicalIndicators,
+    ) -> None:
         """Bollinger SELL contributes to combined result."""
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
@@ -311,7 +331,9 @@ class TestCombinedSignalBollingerContribution:
         assert sig == 'NEUTRAL'
         assert conf == 0.0
 
-    def test_precomputed_bollinger_is_reused(self, indicators: TechnicalIndicators, mocker: MockerFixture) -> None:
+    def test_precomputed_bollinger_is_reused(
+        self, indicators: TechnicalIndicators, mocker: MockerFixture,
+    ) -> None:
         """Passing bollinger_signal skips the internal get_bollinger_signal call."""
         df = make_ohlcv(200)
         df = indicators.calculate_all(df)
