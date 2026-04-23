@@ -20,6 +20,8 @@ D_MODEL = 128
 NHEAD = 4
 NUM_LAYERS = 4
 DROPOUT = 0.0
+# Umbral de predicción (± return) para abrir una posición simulada
+SIGNAL_THRESHOLD = 0.00005
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -120,12 +122,12 @@ if __name__ == "__main__":
         with torch.no_grad():
             pred = model(x).item()
         actual = real_ret[i]
-        if pred > 0.00005:  # Long
+        if pred > SIGNAL_THRESHOLD:  # Long
             total += 1
             if actual > 0:
                 hits += 1
             simulated.append(simulated[-1] * (1 + actual))
-        elif pred < -0.00005:  # Short
+        elif pred < -SIGNAL_THRESHOLD:  # Short
             total += 1
             if actual < 0:
                 hits += 1
