@@ -1,5 +1,22 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 84)
+
+### Assessment
+- Entry state: 131/131 tests passing, 99% coverage, pending uncommitted caching refactor in working tree from prior session
+- Found: same pattern as pass 83 but for Bollinger: `_scalping_strategy` called `get_bollinger_signal` indirectly via `get_combined_signal` and directly for the details dict — two full Bollinger computations per scalping tick
+- Found: 2 ruff RET504/RET505 lint hits in tests (not caught by pre-commit which only runs on src/)
+
+### Changes
+- **perf(strategy)**: Cache Bollinger signal in `_scalping_strategy`; `get_combined_signal` now accepts optional precomputed tuple (c215283)
+- **refactor(tests)**: Apply ruff RET504/RET505 idioms for flatter returns in tests (9161536)
+- **test(indicators)**: Regression test locking in precomputed `bollinger_signal` reuse (c792b9c)
+
+### Results
+- **Tests**: 132/132 passing (was 131/131)
+- **Coverage**: 99% (100% on src/ modules)
+- **Build**: clean (0 lint errors)
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 83)
 
 ### Assessment
