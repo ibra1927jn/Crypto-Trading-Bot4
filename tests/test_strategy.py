@@ -33,7 +33,12 @@ class MockIndicators:
 
 
 class MockAIPredictor:
-    def __init__(self, signal: str = 'NEUTRAL', confidence: float = 0.0, prediction: float = 0.0) -> None:
+    def __init__(
+        self,
+        signal: str = 'NEUTRAL',
+        confidence: float = 0.0,
+        prediction: float = 0.0,
+    ) -> None:
         self._signal = signal
         self._confidence = confidence
         self._prediction = prediction  # pct value (float)
@@ -46,7 +51,9 @@ class MockAIPredictor:
             self._prediction, self._confidence, threshold,
         )
 
-    def signal_from_prediction(self, pct: float, confidence: float, threshold: float = 0.65) -> str:
+    def signal_from_prediction(
+        self, pct: float, confidence: float, threshold: float = 0.65,
+    ) -> str:
         if pct > 0.02 and confidence >= threshold:
             return 'BUY'
         if pct < -0.02 and confidence >= threshold:
