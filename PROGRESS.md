@@ -1,5 +1,22 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 98)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage, 0 lint errors on default profile
+- Ruff `--select EM101` flagged 5 raw-string-in-exception hits, all in `tests/test_strategy.py` nested `_raise` helpers on the error-path tests (`test_analyze_market_condition_error`, `test_get_signal_outer_exception`, `test_get_signal_unknown_condition_no_error`, `test_scalping_strategy_error`, `test_swing_strategy_error`)
+
+### Changes
+- **refactor(test_strategy)**: EM101 — assign exception message to variable first across the 5 nested `_raise` helpers (45e26cb)
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged; test-refactor only)
+- **Build**: clean (0 lint errors on default profile; EM101 now fully clean across the entire repo)
+
+### Known Issues (unchanged from prior passes)
+- Pre-commit hook `API_KEY\s*=\s*\S+` pattern still matches test fixture assignments (`Config.API_KEY = "test_key"`) in `tests/test_config.py`, blocking the pending Q000 quote normalization and residual I001 unsorted-imports fix on that file. Hook needs a test-file or `= ""`/`= "test_*"` exclusion to unblock.
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 97)
 
 ### Assessment
