@@ -13,6 +13,8 @@ MIN_BARS_FOR_RETURNS = 2
 
 
 class DataManager:
+    """Fetch OHLCV data from an exchange and expose it as a pandas DataFrame."""
+
     def __init__(
         self,
         exchange: Any,
@@ -20,6 +22,7 @@ class DataManager:
         timeframe: str,
         historical_bars: int = 300,
     ) -> None:
+        """Store exchange/symbol/timeframe and the number of historical bars to fetch."""
         self.exchange = exchange
         self.symbol = symbol
         self.timeframe = timeframe

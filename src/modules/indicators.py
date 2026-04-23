@@ -17,7 +17,10 @@ RSI_OVERBOUGHT = 70
 
 
 class TechnicalIndicators:
+    """Compute RSI, MACD, Bollinger Bands, and ATR from an OHLCV DataFrame."""
+
     def __init__(self, config: dict[str, Any] | None) -> None:
+        """Read indicator periods/thresholds from ``config`` (or use defaults)."""
         self.config = config or {}
         self.rsi_period = self.config.get("RSI", {}).get("period", 14)
         self.macd_fast = self.config.get("MACD", {}).get("fast_period", 12)
