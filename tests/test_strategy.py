@@ -1,4 +1,6 @@
 """Tests para HybridStrategy"""
+import logging
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -133,7 +135,6 @@ class TestSwingStrategy:
 class TestSwingStrategyLogging:
     def test_swing_does_not_crash_on_log(self, dummy_df):
         """predict() returning string must not crash logger."""
-        import logging
         s = make_strategy(volatility=1.0, ind_signal='BUY', ind_conf=0.7,
                           ai_conf=0.9, ai_pred=0.5)
         logging.basicConfig(level=logging.DEBUG)
