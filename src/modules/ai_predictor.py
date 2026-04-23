@@ -145,10 +145,11 @@ class AI_Predictor:
             logger.info("🔮 IA: %s %.4f%%", icon, pct)
 
             confidence = min(abs(pct) / 1.0, MAX_CONFIDENCE)
-            return pct, confidence
         except Exception:
             logger.exception("❌ Error en predict")
             return 0.0, 0.0
+
+        return pct, confidence
 
     def signal_from_prediction(
         self,
