@@ -1,5 +1,4 @@
-"""
-Crypto Trading Bot con Machine Learning
+"""Crypto Trading Bot con Machine Learning
 ========================================
 Bot de trading de criptomonedas con arquitectura modular
 y soporte para modelos de ML locales.
