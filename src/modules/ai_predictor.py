@@ -56,6 +56,7 @@ class PositionalEncoding(nn.Module):
         self.register_buffer("pe", pe.unsqueeze(0))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Add positional encoding to ``x`` along the sequence dimension."""
         return x + self.pe[:, : x.size(1)]
 
 
@@ -76,6 +77,7 @@ class CryptoTransformer(nn.Module):
         self.decoder = nn.Linear(D_MODEL, 1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Return the scalar prediction for batched feature sequence ``x``."""
         x = self.embedding(x)
         x = self.pos_encoder(x)
         x = self.transformer(x)
@@ -181,5 +183,6 @@ class AI_Predictor:
         self, df: pd.DataFrame,
         threshold: float = DEFAULT_SIGNAL_THRESHOLD,
     ) -> str:
+        """Predict on ``df`` and return a BUY/SELL/NEUTRAL signal."""
         pct, confidence = self.predict(df)
         return self.signal_from_prediction(pct, confidence, threshold)
