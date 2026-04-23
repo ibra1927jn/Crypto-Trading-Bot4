@@ -4,14 +4,15 @@ import contextlib
 import logging
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
+from pathlib import Path
 
 import ccxt.async_support as ccxt
 import colorlog
 from dotenv import load_dotenv
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-load_dotenv(dotenv_path=os.path.join(BASE_DIR, '.env'), override=True)
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(dotenv_path=BASE_DIR / '.env', override=True)
 
 SYMBOLS = [
     s.strip()
@@ -20,7 +21,7 @@ SYMBOLS = [
 API_KEY = os.getenv('BINANCE_API_KEY')
 SECRET_KEY = os.getenv('BINANCE_API_SECRET')
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, str(BASE_DIR / 'src'))
 from modules.ai_predictor import AI_Predictor  # noqa: E402
 from modules.data_manager import DataManager  # noqa: E402
 from modules.indicators import TechnicalIndicators  # noqa: E402
@@ -99,7 +100,10 @@ class CryptoRadar:
                 await asyncio.sleep(5)
 
     async def _scan(self):
-        logger.info("\n📡 --- %s ---", datetime.now().strftime("%H:%M:%S"))
+        logger.info(
+            "\n📡 --- %s ---",
+            datetime.now(tz=timezone.utc).strftime("%H:%M:%S"),
+        )
         for symbol in SYMBOLS:
             try:
                 mgr = self.managers[symbol]
