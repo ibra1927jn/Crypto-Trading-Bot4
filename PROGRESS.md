@@ -1,5 +1,22 @@
 # Progress Log
 
+## 2026-04-23 — Heartbeat Maintenance Cycle (pass 91)
+
+### Assessment
+- Entry state: 132/132 tests passing, 99% coverage, 0 lint errors on default profile
+- Ran ruff with `--select ALL`: residual findings are either cosmetic (ANN/D/COM812/Q000), false positives (noqa E402 that IS required under defaults), or blocked by the pre-commit secret-scanner (tests/test_config.py credential-fixture lines)
+- Found real coupling risk in `src/modules/ai_predictor.py`: `nn.Linear(8, D_MODEL)` had a hardcoded input dim that must stay in sync with `FEATURE_COLUMNS` (8 entries)
+- Found `main.py` shebang without executable bit (EXE001)
+
+### Changes
+- **fix(main)**: `chmod +x main.py` so the `#!/usr/bin/env python3` shebang is honoured when invoked directly — EXE001 (aa2b613)
+- **refactor(ai_predictor)**: Replace `nn.Linear(8, D_MODEL)` literal with `nn.Linear(len(FEATURE_COLUMNS), D_MODEL)` so the transformer embedding dimension tracks the feature-list constant (c9eab91)
+
+### Results
+- **Tests**: 132/132 passing (unchanged)
+- **Coverage**: 99% (100% on src/ modules, unchanged)
+- **Build**: clean (0 lint errors on default profile)
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 90)
 
 ### Assessment
