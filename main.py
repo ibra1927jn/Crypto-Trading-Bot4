@@ -94,8 +94,8 @@ class CryptoRadar:
                 await self._scan()
                 logger.info("⏳ Esperando 60s...")
                 await asyncio.sleep(60)
-            except Exception as e:
-                logger.error("Error: %s", e)
+            except Exception:
+                logger.exception("Error")
                 await asyncio.sleep(5)
 
     async def _scan(self):
@@ -123,8 +123,8 @@ class CryptoRadar:
                     "%s %-10s $%-10.2f | Señal: %s",
                     icon, symbol, price, signal.value,
                 )
-            except Exception as e:
-                logger.error("Error %s: %s", symbol, e)
+            except Exception:
+                logger.exception("Error %s", symbol)
 
 
 async def _main():
