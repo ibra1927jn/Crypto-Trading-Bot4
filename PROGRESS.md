@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 151)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage on `src/` (same 5 intentional uncovered lines: `src/__init__.py:8-9` module constants, `src/utils/__init__.py:3` empty `__all__`, `src/config.py:180-181` `if __name__ == "__main__"` guard), 0 lint errors on default ruff profile, `pyflakes` clean across all 8 Python entry points (`src/`, `tests/`, `main.py`, `train_ai.py`, `test_ai.py`, `descargar_datos.py`, `debug_env.py`, `verificar.py`), working tree clean, branch in sync with origin.
+- No TODO/FIXME/HACK in source (only Spanish "TODO LISTO" idiom in `debug_env.py:20`).
+- No hardcoded credentials: `Config.API_KEY` / `Config.API_SECRET` resolve from `os.getenv(...)`. `.gitignore` covers `.env`, `*.key`, `*.pem`, `*_secret*`, `*_credentials*`, `api_keys.txt`, models, logs, caches.
+- Ruff `--select ALL` total held at 268 — composition unchanged from pass 109 steady-state (test asserts, magic numbers in fixtures, CLI `print`, mock method args, ccxt/wandb `Any`; D-rule pair-conflicts mutually exclusive by design).
+- Longest functions: `train_ai.py::train` and `src/strategies/strategy.py::_swing_strategy` — both under the 100-line threshold.
+- README:29 cosmetic `AI_Predictor` → `AIPredictor` sync remains correctly deferred (pre-commit hook blocks any README edit via Pattern 3 matching unchanged docs example at README:137 — empirically verified pass 149).
+
+### Changes
+- None — code/test/lint state at steady-state. Documenting the assessment only.
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% on `src/` (unchanged)
+- **Build**: clean (0 lint errors on default profile)
+
 ## 2026-04-24 — Heartbeat Maintenance Cycle (pass 150)
 
 ### Assessment
