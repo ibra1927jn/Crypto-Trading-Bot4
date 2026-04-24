@@ -198,8 +198,9 @@ def load_and_prepare_data(
             all_features.append(feats)
             all_targets.append(targs)
         # per-file training data may fail for many reasons
-        # (missing columns, parse errors, empty frames); skip and continue
-        except Exception as e:  # noqa: BLE001
+        # (missing columns, parse errors, empty frames); skip and continue.
+        # PERF203 overhead is negligible vs disk I/O in the loop body.
+        except Exception as e:  # noqa: BLE001, PERF203
             logger.warning("Skipping %s: %s", file, e)
 
     X_raw = np.concatenate(all_features)  # noqa: N806 — sklearn X convention
