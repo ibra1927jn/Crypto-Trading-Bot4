@@ -111,17 +111,22 @@ class AIPredictor:
             logger.warning("Modelo no encontrado en %s", self.model_path)
             return
         try:
-            self.model = CryptoTransformer().to(self.device)
+            model = CryptoTransformer().to(self.device)
             state = torch.load(
                 self.model_path,
                 map_location=self.device,
                 weights_only=True,
             )
-            self.model.load_state_dict(state)
-            self.model.eval()
-            logger.info("✅ CEREBRO TRANSFORMER CONECTADO")
+            model.load_state_dict(state)
+            model.eval()
         except Exception:
-            logger.exception("❌ Error")
+            # Leave self.model as None so predict() short-circuits instead of
+            # running inference on random weights.
+            self.model = None
+            logger.exception("❌ Error cargando modelo desde %s", self.model_path)
+            return
+        self.model = model
+        logger.info("✅ CEREBRO TRANSFORMER CONECTADO")
 
     def predict(self, df: pd.DataFrame) -> tuple[float, float]:
         """Return (pct_prediction, confidence) as floats."""

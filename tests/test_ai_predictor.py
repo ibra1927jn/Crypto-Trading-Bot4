@@ -207,14 +207,13 @@ class TestAIPredictorLoadModel:
         assert predictor.model is None
 
     def test_load_model_bad_file(self, tmp_path: Path) -> None:
-        """Model is instantiated even if state_dict load fails (logs error)."""
+        """Model is reset to None on load failure so predict() short-circuits."""
         bad_model = tmp_path / "bad_model.pth"
         bad_model.write_text("not a model")
         predictor = AIPredictor({})
         predictor.model_path = str(bad_model)
         predictor._load_model()
-        # Model object is created before load_state_dict, so it persists
-        assert predictor.model is not None
+        assert predictor.model is None
 
     def test_load_model_success(self, tmp_path: Path) -> None:
         """Successful load sets model to eval mode."""
