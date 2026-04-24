@@ -1,5 +1,27 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 105)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage, 0 lint errors on default profile, working tree clean
+- Ruff `--select ALL` total stable at 269 — composition unchanged from pass 104 (200 S101 / 29 PLR2004 / 23 T201 / 6 ARG002 / 3 ANN401 / 3 ARG001 / 3 SLF001 / 2 PLR0913), all documented intentional
+- Targeted scans: no TODO/FIXME/HACK (only "TODO LISTO" Spanish idiom in `debug_env.py:20`), no F401/F811/F841 unused imports/vars, no PLR0912/0915/0911/C901 complexity hits, no SIM/PERF/B/RET/UP/TRY/LOG/G; flake8 clean at line-length 120
+- Verified the README:29 cosmetic block is real: staged the `AI_Predictor` → `AIPredictor` edit and ran the local hook; output `BLOCKED: Secret pattern detected in README.md ... Pattern: BINANCE_API_KEY\s*=\s*\S+ Match: 137:BINANCE_API_KEY=tu_api_key_aqui`. Confirms prior-pass diagnosis and that the filter exempts only `os.getenv|os.environ|config.get|config.__getitem__` lines, not docs placeholders. Reverted the staged change — kept session policy intact (no `--no-verify` without explicit user authorization)
+- Verified `tests/test_config.py` is NOT actually hook-blocked despite earlier-session belief: regex `API_KEY\s*=\s*\S+` does not match `monkeypatch.setattr(Config, "API_KEY", ...)` syntax; ran `git show :tests/test_config.py | grep -EnR 'API_KEY\s*=\s*\S+'` → zero matches. Q000 in that file is also already clean (pass-100-era stash@{0} `inherited Q000 test_config.py - blocked by secret hook` is now obsolete; not dropped — preserving without explicit user authorization)
+- Coverage gaps unchanged: `src/__init__.py:8-9` (constants — only reachable via `import src` which tests don't do, since `pythonpath = ["src"]` makes them import siblings instead), `src/utils/__init__.py:3` (empty `__all__`), `src/config.py:180-181` (`if __name__ == "__main__"` guard)
+
+### Changes
+- None — staged the README:29 fix to verify the hook's behavior, then reverted on confirmed block. All other surfaced patterns intentional.
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 lint errors on default profile, 0 flake8 errors at line-length 120)
+
+### Known Issues (unchanged from prior passes)
+- Pre-commit secret-scan hook blocks any commit touching `README.md` due to the documentation placeholder on line 137 (`BINANCE_API_KEY=tu_api_key_aqui`). Hook is local-only (`.git/hooks/pre-commit`, untracked) so cannot be repaired in-tree. The cosmetic `AI_Predictor` → `AIPredictor` sync on README:29 remains the only stale reference outside historical PROGRESS entries.
+- `stash@{0}` (`inherited Q000 test_config.py - blocked by secret hook`) is obsolete — Q000 is now clean in that file via another path. Not dropped without explicit authorization.
+
 ## 2026-04-24 — Heartbeat Maintenance Cycle (pass 104)
 
 ### Assessment
