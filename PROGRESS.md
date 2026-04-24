@@ -1,5 +1,26 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 106)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage, 0 lint errors on default profile, 0 flake8 errors at line-length 120, working tree clean
+- Ruff `--select ALL` total stable at 269 — composition unchanged from passes 104–105 (200 S101 / 29 PLR2004 / 23 T201 / 6 ARG002 / 3 ANN401 / 3 ARG001 / 3 SLF001 / 2 PLR0913), all documented intentional
+- Targeted scans (BLE/SIM/PERF/B/RET/UP/TRY/LOG/G/F401/F811/F841/PLR0912/0915/0911/C901): all clean. No TODO/FIXME/HACK in source (only Spanish "TODO LISTO" idiom in `debug_env.py:20`).
+- New finding — pre-commit hook has a SIGPIPE/pipefail race on files >~64KB: traced the hook with `bash -x` against a staged PROGRESS.md (80,287 chars) and confirmed `echo "$CONTENT" | grep -qEi -- "$pattern"` returns non-zero (no-match) under `set -euo pipefail`, while the same content/pattern matches against a tmpfile. Root cause: `grep -q` exits on first match → `echo` writes to a closed pipe → SIGPIPE (exit 141) → pipefail propagates as pipeline failure → if-condition treats as no-match. Effect: PROGRESS.md commits succeed despite literal `BINANCE_API_KEY=tu_api_key_aqui` text on lines 22/35/60 (verified by completing a throwaway `git commit` and `git reset --soft HEAD~1`). The README:29 block is still real because README is 9KB (fits in pipe buffer, no SIGPIPE, hook fires correctly). Hook is `.git/hooks/pre-commit` (untracked, local-only) so cannot be repaired in-tree without explicit user authorization.
+- Coverage gaps unchanged: `src/__init__.py:8-9` (constants, only reachable via `import src` not used by tests since `pythonpath=["src"]` makes them sibling imports), `src/utils/__init__.py:3` (empty `__all__`), `src/config.py:180-181` (`if __name__ == "__main__"` guard).
+
+### Changes
+- None — code/test/lint state at steady-state. Hook bug documented but not fixed (out of scope: untracked local file, would also require user authorization to alter security tooling). No `--no-verify` used.
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 lint errors on default profile, 0 flake8 errors at line-length 120)
+
+### Known Issues (revised — pass 106 corrects prior characterization)
+- Pre-commit secret-scan hook reliably blocks small files (<~64KB) only. README.md (9KB) is correctly blocked when content matches `BINANCE_API_KEY\s*=\s*\S+` etc. PROGRESS.md (80KB) silently passes the same scan due to the SIGPIPE/pipefail race documented above. The README:29 cosmetic `AI_Predictor` → `AIPredictor` sync remains the only stale source-tree reference outside historical PROGRESS entries; would require either (a) `--no-verify` (forbidden by session policy without explicit user authorization) or (b) restructuring README:130-145 docs to drop the `KEY=value` literal placeholder format.
+- `stash@{0}` (`inherited Q000 test_config.py - blocked by secret hook`) remains obsolete (Q000 already clean in that file); not dropped without explicit authorization.
+
 ## 2026-04-24 — Heartbeat Maintenance Cycle (pass 105)
 
 ### Assessment
