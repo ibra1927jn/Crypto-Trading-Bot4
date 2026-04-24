@@ -1,5 +1,24 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 101)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage, 0 lint errors on default profile, working tree clean
+- Ruff `--select ALL` surfaces only intentional patterns already documented in prior passes: S101 asserts in tests (200), PLR2004 magic numbers in tests (29), T201 prints in CLI scripts (23), ANN401 `Any` on the ccxt exchange type (3), SLF001 private-member access in tests (3), ARG001/002 unused args on mock signatures that mirror real-API shapes (9), PLR0913 wide-signature constructors (2), N801 `AI_Predictor` name (1 — cross-module rename, not atomic)
+- Targeted scans: no TODO/FIXME/HACK in source, no unused imports/vars (F401/F811/F841), no complexity violations (PLR0912/0915/0911/C901), no SIM/PERF/B/RET/UP/TRY/LOG/G hits. Default ruff profile fully green.
+
+### Changes
+- None — all surfaced patterns are intentional or would require cross-cutting changes outside heartbeat scope (e.g., renaming `AI_Predictor` touches 6+ files across `src/`, `tests/`, `main.py`; not atomic)
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged; uncovered lines remain `__version__`/`__author__` constants, `if __name__` guard in config.py, empty `__all__` in utils)
+- **Build**: clean (0 lint errors on default profile)
+
+### Known Issues (unchanged from prior passes)
+- Pre-commit secret-scan regex still matches `Config.API_KEY` test fixtures in `tests/test_config.py`. Does not currently block any pending fixes (Q000/I001 on that file are clean).
+- `AI_Predictor` class name (N801) is a cross-module public-API rename; deferred for a dedicated refactor pass with test-update scope.
+
 ## 2026-04-24 — Heartbeat Maintenance Cycle (pass 100)
 
 ### Assessment
