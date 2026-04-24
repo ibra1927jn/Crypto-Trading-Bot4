@@ -1,5 +1,22 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 103)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage, 0 lint errors on default profile, working tree clean
+- The long-deferred N801 `AI_Predictor` → `AIPredictor` rename was the only actionable item remaining under `--select ALL` that wasn't an intentional test-only pattern. Scoped the change: 7 files touched (1 class def, 1 re-export + `__all__`, 1 type annotation + docstrings in strategy.py, 2 main.py sites, 2 test files with imports/docstrings/instantiations). All internal references — no external package consumers — so atomic rename is safe.
+
+### Changes
+- **refactor(ai_predictor)**: N801 — rename `AI_Predictor` class to `AIPredictor` atomically across `src/modules/ai_predictor.py`, `src/modules/__init__.py` (import + `__all__`), `src/strategies/strategy.py` (TYPE_CHECKING import, annotation, docstrings), `main.py` (import + instantiation), `tests/test_ai_predictor.py` (import + 22 instantiations + docstrings), `tests/test_strategy.py` (docstring mentions only) (bdb9a2c)
+
+### Results
+- **Tests**: 133/133 passing (unchanged — pure rename, no behavior change)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 lint errors on default profile; N801 eliminated from `--select ALL` — 270 → 269 total, all remaining are intentional test-only patterns: S101 asserts, PLR2004 magic numbers, T201 CLI prints, ANN401 ccxt Any, SLF001 test private access, ARG001/002 mock signatures, PLR0913 wide constructors)
+
+### Known Issues (unchanged from prior passes)
+- Pre-commit secret-scan regex matches the unrelated `BINANCE_API_KEY=tu_api_key_aqui` placeholder on `README.md:137` (docs) and `Config.API_KEY` test fixtures in `tests/test_config.py`. This blocked a trivial cosmetic sync of `AI_Predictor` → `AIPredictor` in README.md:29 (docs description); left as the only remaining stale reference outside of historical PROGRESS.md entries. Hook needs a docs-file/test-file exclusion to unblock.
+
 ## 2026-04-24 — Heartbeat Maintenance Cycle (pass 102)
 
 ### Assessment
