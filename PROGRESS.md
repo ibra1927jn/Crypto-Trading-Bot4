@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 104)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage, 0 lint errors on default profile, working tree clean
+- Ruff `--select ALL` total stable at 269: S101 asserts in tests (200), PLR2004 magic numbers in tests (29), T201 prints in CLI/diagnostic scripts (23), ARG002 unused method args on mock signatures (6), ANN401 `Any` on ccxt exchange + wandb config (3), ARG001 unused function args on mocks (3), SLF001 private-member access in tests (3), PLR0913 wide constructors on test fixture/train_epoch (2). All previously documented as intentional.
+- Targeted scans: no TODO/FIXME/HACK in source (only Spanish "TODO LISTO" idiom in `debug_env.py:20`, false positive), no unused imports/vars (F401/F811/F841), no complexity violations (PLR0912/0915/0911/C901), no SIM/PERF/B/RET/UP/TRY/LOG/G hits. flake8 with project's `max-line-length=120` also clean. No `print()` in `src/`. All `noqa` markers paired with explanatory comments per established pattern.
+- Coverage gap audit: only uncovered lines are `__version__`/`__author__` constants (`src/__init__.py`), empty `__all__` (`src/utils/__init__.py`), and the `if __name__ == "__main__"` script-entry guard in `src/config.py:178-181`. None testable without invoking the script as `__main__`.
+- `.gitignore` correctly excludes `coverage.json`, `.coverage`, all `__pycache__`, `.ruff_cache`, `.pytest_cache`. No tracked junk.
+
+### Changes
+- None — all surfaced patterns are intentional. Cosmetic README:29 `AI_Predictor` → `AIPredictor` doc-string sync remains blocked by the in-repo pre-commit secret-scan hook (matches the placeholder `BINANCE_API_KEY=tu_api_key_aqui` on README:137); per session policy, `--no-verify` is not used without explicit user authorization. Hook lives in `.git/hooks/pre-commit` (untracked) so it can't be repaired as part of a commit.
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 lint errors on default profile, 0 flake8 errors at line-length 120)
+
+### Known Issues (unchanged from prior passes)
+- Pre-commit secret-scan regex still matches the documentation placeholder on README.md:137 and `Config.API_KEY` test fixtures in `tests/test_config.py`. Continues to block the cosmetic `AI_Predictor` → `AIPredictor` text update in README.md:29 (only remaining stale reference outside historical PROGRESS.md entries). Hook needs a docs/test-file exclusion or a `<placeholder>`-aware filter to unblock.
+
 ## 2026-04-24 — Heartbeat Maintenance Cycle (pass 103)
 
 ### Assessment
