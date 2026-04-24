@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 153)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage on `src/` (same 5 intentional uncovered lines: `src/__init__.py:8-9` module constants, `src/utils/__init__.py:3` empty `__all__`, `src/config.py:180-181` `if __name__ == "__main__"` guard), 0 lint errors on default ruff profile, `pyflakes` clean across all 8 Python entry points, working tree clean, branch in sync with origin.
+- No TODO/FIXME/HACK in source (only Spanish "TODO LISTO" idiom in `debug_env.py:20`).
+- No hardcoded credentials: `Config.API_KEY` / `Config.API_SECRET` resolve from `os.getenv(...)`. `.gitignore` covers `.env`, `*.key`, `*.pem`, `*_secret*`, `*_credentials*`, `api_keys.txt`, models, logs, caches.
+- Ruff `--select ALL` total held at 268 — composition unchanged from pass 109 steady-state (200 S101 / 29 PLR2004 / 23 T201 / 6 ARG002 / 3 ANN401 / 3 ARG001 / 3 SLF001 / 1 PLR0913 — all documented intentional). D211/D213 pair-conflict warnings remain mutually-exclusive-by-design.
+- Longest functions: `train_ai.py::train` (94 lines) and `src/strategies/strategy.py::_swing_strategy` (96 lines) — both under the 100-line threshold, no split warranted.
+- README:29 cosmetic `AI_Predictor` → `AIPredictor` sync remains correctly deferred (pre-commit hook Pattern 3 `BINANCE_API_KEY\s*=\s*\S+` blocks any README edit via content scan against unchanged docs example at README:137 — empirically verified pass 149; allowlist at hook:90 only excludes `os.getenv|os.environ|config.get|config.__getitem__`, which docs examples cannot naturally include).
+
+### Changes
+- None — code/test/lint state at steady-state. Documenting the assessment only.
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% on `src/` (unchanged)
+- **Build**: clean (0 lint errors on default profile)
+
 ## 2026-04-24 — Heartbeat Maintenance Cycle (pass 152)
 
 ### Assessment
