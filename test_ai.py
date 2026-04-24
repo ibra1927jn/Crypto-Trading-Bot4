@@ -117,8 +117,8 @@ if __name__ == "__main__":
     except Exception as e:  # noqa: BLE001
         sys.exit(f"❌ Error: Modelo no compatible: {e}")
 
-    # Test
-    start_idx = random.randint(0, len(scaled) - TEST_BARS - LOOKBACK)
+    # Test — random is fine here, this is a backtest sampler, not crypto
+    start_idx = random.randint(0, len(scaled) - TEST_BARS - LOOKBACK)  # noqa: S311
     test_data = scaled[start_idx:start_idx + TEST_BARS + LOOKBACK]
     end_idx = start_idx + TEST_BARS + LOOKBACK
     real_ret = df["return"].to_numpy()[start_idx + LOOKBACK:end_idx]
