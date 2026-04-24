@@ -1,5 +1,21 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 118)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage on `src/` (same 5 intentional uncovered lines), 0 lint errors on default ruff profile, branch in sync with origin.
+- Working tree on entry was **not** clean: `tests/test_strategy.py` carried an uncommitted dead-parameter removal (the `signal` arg on `MockAIPredictor.__init__` and the matching `ai_signal` arg on `make_strategy()`). Per the heartbeat rule against reverting inherited work, kept and committed it.
+- Verified safety before committing: grep confirms nothing in `src/` reads `ai._signal`, and no test caller passed `ai_signal=` to `make_strategy()`. The `MockAIPredictor.get_signal()` method derives its output from `_prediction`/`_confidence` via `signal_from_prediction`, so the stored `_signal` field was truly dead.
+
+### Changes
+- `dd83c9c` `refactor(tests): drop unused signal/ai_signal params from strategy mocks` — committed the inherited dead-param removal.
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% on `src/` (unchanged)
+- **Build**: clean (0 lint errors on default profile)
+- **Ruff `--select ALL`**: 268 (was 269) — one PLR0913 eliminated by the param removal on `make_strategy()`. Composition: 200 S101 / 29 PLR2004 / 23 T201 / 6 ARG002 / 3 ANN401 / 3 ARG001 / 3 SLF001 / 1 PLR0913, all documented intentional.
+
 ## 2026-04-24 — Heartbeat Maintenance Cycle (pass 117)
 
 ### Assessment
