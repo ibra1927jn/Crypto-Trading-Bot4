@@ -1,5 +1,26 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 100)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage, 0 lint errors on default profile
+- Ruff `--select ALL` surfaced residual fixes: 3 E501 long-comment lines left over from pass 99 wrap (descargar_datos.py:102, test_ai.py:115, train_ai.py:200), 1 S311 pseudo-random call in the test-script backtest sampler, 2 PERF203 try/except-in-loop hits (main.py scan loop, train_ai.py per-file loader), and 1 RUF100 unused-noqa (BLE001 on an `except` whose body uses `logger.exception`, which already satisfies BLE001)
+- All flagged handlers were intentional (resilience patterns around third-party I/O / async scan); no real bugs
+
+### Changes
+- **fix(lint)**: E501 — wrap the 3 long BLE001 explanation comments across two lines each in descargar_datos.py, test_ai.py, train_ai.py (c3bb3e8)
+- **refactor(test_ai)**: S311 — noqa pseudo-random `start_idx` in backtest sampler (not crypto) (4ad6706)
+- **refactor(lint)**: PERF203 — noqa intentional try/except inside main.py radar scan loop and train_ai.py per-file loader (36dbd1d)
+- **fix(lint)**: RUF100 — drop unused BLE001 noqa from main.py scan loop (logger.exception already satisfies BLE001) (69cacf9)
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged; noqa-comment / wrap-only refactors)
+- **Build**: clean (0 lint errors on default profile; E501/S311/PERF203/RUF100 all fully clean under `--select ALL`)
+
+### Known Issues (unchanged from prior passes)
+- Pre-commit secret-scan regex still matches test fixture assignments to `Config.API_KEY` in `tests/test_config.py`, blocking the pending Q000 quote normalization and residual I001 unsorted-imports fix on that file. Hook needs a test-file or `"test_*"`-value exclusion to unblock.
+
 ## 2026-04-23 — Heartbeat Maintenance Cycle (pass 99)
 
 ### Assessment
