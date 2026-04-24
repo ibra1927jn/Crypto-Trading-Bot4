@@ -51,12 +51,10 @@ class MockAIPredictor:
 
     def __init__(
         self,
-        signal: str = "NEUTRAL",
         confidence: float = 0.0,
         prediction: float = 0.0,
     ) -> None:
-        """Store the fixed signal/confidence/prediction values used by the stubs."""
-        self._signal = signal
+        """Store the fixed confidence/prediction values used by the stubs."""
         self._confidence = confidence
         self._prediction = prediction  # pct value (float)
 
@@ -87,14 +85,13 @@ def make_strategy(
     volatility: float = 1.0,
     ind_signal: str = "NEUTRAL",
     ind_conf: float = 0.0,
-    ai_signal: str = "NEUTRAL",
     ai_conf: float = 0.0,
     ai_pred: float = 0.0,
 ) -> HybridStrategy:
     """Build a HybridStrategy wired with the three mock dependencies."""
     dm = MockDataManager(volatility)
     ind = MockIndicators(ind_signal, ind_conf)
-    ai = MockAIPredictor(ai_signal, ai_conf, ai_pred)
+    ai = MockAIPredictor(ai_conf, ai_pred)
     config = {
         "VOLATILITY_THRESHOLD": 2.0,
         "SCALPING_CONFIG": {"check_interval": 5},
