@@ -112,7 +112,9 @@ if __name__ == "__main__":
             MODEL_PATH, map_location=device, weights_only=True,
         ))
         model.eval()
-    except Exception as e:  # noqa: BLE001 — torch.load/load_state_dict raises varied errors (RuntimeError, KeyError, UnpicklingError); surface any as a fatal CLI exit
+    # torch.load/load_state_dict raises varied errors (RuntimeError, KeyError, UnpicklingError);
+    # surface any as a fatal CLI exit
+    except Exception as e:  # noqa: BLE001
         sys.exit(f"❌ Error: Modelo no compatible: {e}")
 
     # Test
