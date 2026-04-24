@@ -142,7 +142,7 @@ class TechnicalIndicators:
             return "SELL", COMBINED_SIGNAL_CONFIDENCE
         return "NEUTRAL", 0.0
 
-    def get_indicators_summary(self, df: pd.DataFrame) -> dict:
+    def get_indicators_summary(self, df: pd.DataFrame) -> dict[str, Any]:
         """Return a small dict of the latest indicator values (currently RSI)."""
         if df is None or df.empty:
             return {}
