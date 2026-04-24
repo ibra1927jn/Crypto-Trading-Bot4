@@ -197,8 +197,8 @@ def load_and_prepare_data(
             targs = df["return"].to_numpy(dtype=np.float32)
             all_features.append(feats)
             all_targets.append(targs)
-        # per-file training data may fail for many reasons (missing columns, parse errors,
-        # empty frames); skip and continue
+        # per-file training data may fail for many reasons
+        # (missing columns, parse errors, empty frames); skip and continue
         except Exception as e:  # noqa: BLE001
             logger.warning("Skipping %s: %s", file, e)
 

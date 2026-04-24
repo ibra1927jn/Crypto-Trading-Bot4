@@ -99,7 +99,8 @@ for symbol in SYMBOLS:
             temp_since = funding[-1]["timestamp"] + 1
             time.sleep(0.1)
 
-        # ccxt raises varied errors for coins without funding history; log and stop paging
+        # ccxt raises varied errors for coins without funding history;
+        # log and stop paging
         except Exception as e:  # noqa: BLE001
             logger.warning(
                 "Error obteniendo funding rate: %s", e,
