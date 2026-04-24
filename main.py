@@ -25,7 +25,7 @@ API_KEY = os.getenv("BINANCE_API_KEY")
 SECRET_KEY = os.getenv("BINANCE_API_SECRET")
 
 sys.path.insert(0, str(BASE_DIR / "src"))
-from modules.ai_predictor import AI_Predictor  # noqa: E402
+from modules.ai_predictor import AIPredictor  # noqa: E402
 from modules.data_manager import DataManager  # noqa: E402
 from modules.indicators import TechnicalIndicators  # noqa: E402
 from strategies.strategy import HybridStrategy  # noqa: E402
@@ -82,7 +82,7 @@ class CryptoRadar:
         logger.info("✅ CONEXIÓN EXITOSA")
 
         self.indicators = TechnicalIndicators({})
-        self.ai_predictor = AI_Predictor({})
+        self.ai_predictor = AIPredictor({})
 
         self.strategies = {}
         for sym in SYMBOLS:

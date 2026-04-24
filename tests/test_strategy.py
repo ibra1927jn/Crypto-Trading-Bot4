@@ -47,7 +47,7 @@ class MockIndicators:
 
 
 class MockAIPredictor:
-    """Stand-in AI_Predictor with fixed prediction and confidence outputs."""
+    """Stand-in AIPredictor with fixed prediction and confidence outputs."""
 
     def __init__(
         self,
@@ -75,7 +75,7 @@ class MockAIPredictor:
     def signal_from_prediction(
         self, pct: float, confidence: float, threshold: float = 0.65,
     ) -> str:
-        """Replicate AI_Predictor.signal_from_prediction()'s BUY/SELL/NEUTRAL map."""
+        """Replicate AIPredictor.signal_from_prediction()'s BUY/SELL/NEUTRAL map."""
         if pct > 0.02 and confidence >= threshold:
             return "BUY"
         if pct < -0.02 and confidence >= threshold:

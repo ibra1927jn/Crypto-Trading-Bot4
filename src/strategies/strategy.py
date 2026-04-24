@@ -4,7 +4,7 @@
 Implementa estrategias híbridas que se adaptan a las condiciones del mercado:
 
 - ALTA VOLATILIDAD (Scalping): Usa indicadores técnicos para velocidad
-- BAJA VOLATILIDAD (Swing): Consulta AI_Predictor antes de operar
+- BAJA VOLATILIDAD (Swing): Consulta AIPredictor antes de operar
 
 Esta arquitectura modular permite añadir nuevas estrategias fácilmente.
 """
@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     import pandas as pd
 
-    from modules.ai_predictor import AI_Predictor
+    from modules.ai_predictor import AIPredictor
     from modules.data_manager import DataManager
     from modules.indicators import TechnicalIndicators
 
@@ -69,7 +69,7 @@ class HybridStrategy:
         self,
         data_manager: DataManager,
         indicators: TechnicalIndicators,
-        ai_predictor: AI_Predictor,
+        ai_predictor: AIPredictor,
         config: dict[str, Any],
     ) -> None:
         """Inicializa la estrategia híbrida.
@@ -77,7 +77,7 @@ class HybridStrategy:
         Args:
             data_manager: Instancia de DataManager
             indicators: Instancia de TechnicalIndicators
-            ai_predictor: Instancia de AI_Predictor
+            ai_predictor: Instancia de AIPredictor
             config: Configuración general
 
         """
@@ -254,7 +254,7 @@ class HybridStrategy:
         """Estrategia de SWING para baja volatilidad.
 
         Combina indicadores técnicos con predicciones de IA.
-        Consulta al AI_Predictor antes de tomar decisiones.
+        Consulta al AIPredictor antes de tomar decisiones.
 
         Args:
             df: DataFrame con datos e indicadores

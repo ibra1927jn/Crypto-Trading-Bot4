@@ -87,7 +87,7 @@ class CryptoTransformer(nn.Module):
         return self.decoder(x)
 
 
-class AI_Predictor:
+class AIPredictor:
     """Wrap the Transformer model and expose a ``predict`` interface for dataframes."""
 
     def __init__(self, config: dict[str, Any] | None) -> None:

@@ -1,4 +1,4 @@
-"""Tests para AI_Predictor - tensor shapes y lógica de predicción."""
+"""Tests para AIPredictor - tensor shapes y lógica de predicción."""
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -7,7 +7,7 @@ import pandas as pd
 import torch
 
 from modules.ai_predictor import (
-    AI_Predictor,
+    AIPredictor,
     CryptoTransformer,
     PositionalEncoding,
 )
@@ -58,7 +58,7 @@ class TestPositionalEncoding:
 
 
 class TestAIPredictorPredict:
-    """Tests covering AI_Predictor.predict() over full and degenerate inputs."""
+    """Tests covering AIPredictor.predict() over full and degenerate inputs."""
 
     def _make_df(self, n: int = 300) -> pd.DataFrame:
         """Build a synthetic OHLCV+funding DataFrame with ``n`` rows."""
@@ -76,7 +76,7 @@ class TestAIPredictorPredict:
 
     def test_predict_returns_tuple(self) -> None:
         """predict() returns a (pct, confidence) tuple."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         df = self._make_df(300)
         result = predictor.predict(df)
         assert isinstance(result, tuple)
@@ -84,7 +84,7 @@ class TestAIPredictorPredict:
 
     def test_predict_insufficient_data(self) -> None:
         """Returns (0.0, 0.0) when the DataFrame is shorter than lookback."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         df = self._make_df(50)
         pct, conf = predictor.predict(df)
         assert pct == 0.0
@@ -92,7 +92,7 @@ class TestAIPredictorPredict:
 
     def test_predict_with_model_loaded(self) -> None:
         """Test predict path when model is available."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         predictor.model = CryptoTransformer().to(predictor.device)
         predictor.model.eval()
         df = self._make_df(300)
@@ -103,7 +103,7 @@ class TestAIPredictorPredict:
 
     def test_predict_error_returns_zero(self) -> None:
         """Test that predict returns (0.0, 0.0) on internal error."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         predictor.model = MagicMock()
         predictor.model.side_effect = RuntimeError("test error")
         df = self._make_df(300)
@@ -117,34 +117,34 @@ class TestAIPredictorSignalFromPrediction:
 
     def test_buy_above_threshold(self) -> None:
         """Positive pct with high confidence → BUY."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         assert predictor.signal_from_prediction(0.05, 0.8) == "BUY"
 
     def test_sell_below_threshold(self) -> None:
         """Negative pct with high confidence → SELL."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         assert predictor.signal_from_prediction(-0.05, 0.8) == "SELL"
 
     def test_neutral_low_confidence(self) -> None:
         """Confidence below threshold → NEUTRAL regardless of pct."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         assert predictor.signal_from_prediction(0.05, 0.3) == "NEUTRAL"
 
     def test_neutral_small_pct(self) -> None:
         """Near-zero pct → NEUTRAL even with high confidence."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         assert predictor.signal_from_prediction(0.01, 0.9) == "NEUTRAL"
 
     def test_custom_threshold(self) -> None:
         """Caller-supplied ``threshold`` overrides the default."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         assert predictor.signal_from_prediction(
             0.05, 0.5, threshold=0.4,
         ) == "BUY"
 
     def test_get_signal_calls_predict_only_once(self) -> None:
         """Regression: get_signal must not invoke predict() twice."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         with patch.object(
             predictor, "predict", return_value=(0.05, 0.8),
         ) as mock_predict:
@@ -157,60 +157,60 @@ class TestAIPredictorGetSignal:
 
     def test_get_signal_neutral_no_model(self) -> None:
         """With no model loaded, get_signal() returns NEUTRAL."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         df = pd.DataFrame({"close": [100.0] * 300})
         signal = predictor.get_signal(df)
         assert signal == "NEUTRAL"
 
     def test_get_signal_buy(self) -> None:
         """Mocked positive prediction with high confidence → BUY."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         with patch.object(predictor, "predict", return_value=(0.05, 0.8)):
             signal = predictor.get_signal(pd.DataFrame())
             assert signal == "BUY"
 
     def test_get_signal_sell(self) -> None:
         """Mocked negative prediction with high confidence → SELL."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         with patch.object(predictor, "predict", return_value=(-0.05, 0.8)):
             signal = predictor.get_signal(pd.DataFrame())
             assert signal == "SELL"
 
     def test_get_signal_neutral_low_confidence(self) -> None:
         """Low-confidence prediction → NEUTRAL."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         with patch.object(predictor, "predict", return_value=(0.05, 0.3)):
             signal = predictor.get_signal(pd.DataFrame())
             assert signal == "NEUTRAL"
 
     def test_get_signal_neutral_small_pct(self) -> None:
         """Near-zero pct with any confidence → NEUTRAL."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         with patch.object(predictor, "predict", return_value=(0.01, 0.9)):
             signal = predictor.get_signal(pd.DataFrame())
             assert signal == "NEUTRAL"
 
     def test_get_signal_custom_threshold(self) -> None:
         """Caller-supplied threshold is honored by get_signal()."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         with patch.object(predictor, "predict", return_value=(0.05, 0.5)):
             signal = predictor.get_signal(pd.DataFrame(), threshold=0.4)
             assert signal == "BUY"
 
 
 class TestAIPredictorLoadModel:
-    """Tests for AI_Predictor._load_model() under missing/bad/valid weight files."""
+    """Tests for AIPredictor._load_model() under missing/bad/valid weight files."""
 
     def test_load_model_no_file(self) -> None:
         """Model stays None when file doesn't exist."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         assert predictor.model is None
 
     def test_load_model_bad_file(self, tmp_path: Path) -> None:
         """Model is instantiated even if state_dict load fails (logs error)."""
         bad_model = tmp_path / "bad_model.pth"
         bad_model.write_text("not a model")
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         predictor.model_path = str(bad_model)
         predictor._load_model()
         # Model object is created before load_state_dict, so it persists
@@ -221,7 +221,7 @@ class TestAIPredictorLoadModel:
         model = CryptoTransformer()
         model_path = tmp_path / "good_model.pth"
         torch.save(model.state_dict(), str(model_path))
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         predictor.model_path = str(model_path)
         predictor._load_model()
         assert predictor.model is not None
@@ -247,7 +247,7 @@ class TestAIPredictorPostDropna:
 
     def test_insufficient_data_after_dropna(self) -> None:
         """Data passes initial check but is too short after dropna."""
-        predictor = AI_Predictor({})
+        predictor = AIPredictor({})
         predictor.model = CryptoTransformer().to(predictor.device)
         predictor.model.eval()
         # 210 rows pass the initial check (>= lookback+20=200) but inject NaNs
