@@ -106,7 +106,7 @@ class CryptoRadar:
                 await asyncio.sleep(60)
             # PERF203 overhead is negligible vs the 60s sleep body;
             # broad catch keeps the radar alive across transient errors.
-            except Exception:  # noqa: BLE001, PERF203
+            except Exception:  # noqa: PERF203
                 logger.exception("Error")
                 await asyncio.sleep(5)
 
