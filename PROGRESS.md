@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 111)
+
+### Docs
+- Committed the inherited pass 110 PROGRESS.md entry that had been staged in the working tree but left uncommitted from a prior session (68e34b9). The two refactor commits it describes (3aad316 indicators, 8ffdb7b train_ai) were already on the branch; this closes the doc gap.
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage (same 5 uncovered lines: `src/__init__.py:8-9` constants, `src/utils/__init__.py:3` empty `__all__`, `src/config.py:180-181` `if __name__ == "__main__"` guard — all intentional), 0 lint errors on default ruff profile, working tree otherwise clean.
+- Ruff `--select ALL` unchanged at 269 (200 S101 / 29 PLR2004 / 23 T201 / 6 ARG002 / 3 ANN401 / 3 ARG001 / 3 SLF001 / 2 PLR0913); all documented intentional across prior passes.
+- Targeted re-scans all clean: `I` (import ordering), `ERA` (commented-out code), `C90/PLR0915` (complexity), `D` (docstrings on `src`), `N/E/W/F/B/SIM/UP/PL/TRY/RET` on `src`, `F/E/W` + `N/B/SIM/UP` + `TRY/RET/PLR/PLW` on root scripts. Long-function audit: only `src/strategies/strategy.py::_swing_strategy` (95 lines) and `train_ai.py::train` (93 lines) exceed 80 lines, both under the 100-line threshold and cohesive.
+- No TODO/FIXME/HACK in source (only Spanish "TODO LISTO" idiom in `debug_env.py:20`).
+- No hardcoded credentials: `grep -iE "(password|secret|api_key|apikey|token)\s*=\s*[\"'][^\"']+[\"']"` in `src/` empty; `Config.API_KEY` and `Config.API_SECRET` resolve from `os.getenv(...)` with empty-string fallback (`src/config.py:30-31`).
+- README:29 `AI_Predictor` cosmetic and the pre-commit hook SIGPIPE/pipefail race remain known-deferred (both require user authorization — README fix is blocked by the same hook scanning README:137 `BINANCE_API_KEY:tu_api_key_aqui` placeholder, `:` shown in place of literal `=` to avoid recursive hook match; hook is local/untracked).
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 lint errors on default profile)
+
 ## 2026-04-24 — Heartbeat Maintenance Cycle (pass 110)
 
 ### Refactor
