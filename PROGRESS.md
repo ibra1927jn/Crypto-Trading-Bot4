@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 112)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage (same 5 uncovered intentional lines: `src/__init__.py:8-9`, `src/utils/__init__.py:3`, `src/config.py:180-181`), 0 lint errors on default ruff profile, working tree clean.
+- Ruff `--select ALL` total stable at 269 (200 S101 / 29 PLR2004 / 23 T201 / 6 ARG002 / 3 ANN401 / 3 ARG001 / 3 SLF001 / 2 PLR0913) — composition unchanged since pass 104, all documented intentional.
+- Targeted re-scans clean: `PTH/SIM/UP` (modernization), `B/A/Q/COM/T20` (style/quality minus T201 prints), `C901/PLR0915/PLR0912` (complexity), `BLE/SIM/PERF/RET/UP/TRY/LOG/G/DTZ/EM` (custom). `flake8 --max-line-length 120` clean.
+- No TODO/FIXME/HACK in source (only Spanish "TODO LISTO" idiom in `debug_env.py:20`).
+- No hardcoded credentials in `src/`. `.gitignore` covers `.env`, `*.key`, `*.pem`, `*_secret*`, `*_credentials*`, `api_keys.txt`, models, logs, caches.
+- Long-function audit (>50 lines): `train_ai.py::train` (94), `_swing_strategy` (96), `_scalping_strategy` (62), `should_open_position` (57), `calculate_stop_loss_take_profit` (55), `get_signal` (52), `train_ai.py::load_and_prepare_data` (57). All cohesive and under the 100-line threshold.
+- Noted RUF100-style "unused noqa" warnings appear only when ruff is run with `--select RUF` but without the rules the noqas reference (e.g., `# noqa: BLE001, PERF203` at `train_ai.py:203`); these are forward-compatible documentation and clean under the project's default ruff profile.
+- README:29 cosmetic `AI_Predictor` and pre-commit hook SIGPIPE/pipefail race remain known-deferred (require user authorization; documented passes 105, 106, 109).
+
+### Changes
+- None — code/test/lint state at steady-state. Documenting the assessment only.
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean (0 lint errors on default profile)
+
 ## 2026-04-24 — Heartbeat Maintenance Cycle (pass 111)
 
 ### Docs
