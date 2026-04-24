@@ -1,5 +1,22 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 149)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage on `src/` (same 5 intentional uncovered lines: `src/__init__.py:8-9` module constants, `src/utils/__init__.py:3` empty `__all__`, `src/config.py:180-181` `if __name__ == "__main__"` guard), 0 lint errors on default ruff profile, `pyflakes` clean across all 8 Python entry points, working tree clean, branch in sync with origin.
+- No TODO/FIXME/HACK in source (only Spanish "TODO LISTO" idiom in `debug_env.py:20`).
+- No hardcoded credentials: `Config.API_KEY` / `Config.API_SECRET` resolve from `os.getenv(...)`. `.gitignore` covers `.env`, `*.key`, `*.pem`, `*_secret*`, `*_credentials*`, `api_keys.txt`, models, logs, caches.
+- Longest functions: `train_ai.py::train` and `src/strategies/strategy.py::_swing_strategy` — both under the 100-line threshold, no split warranted.
+
+### Changes
+- Attempted the long-deferred README:29 cosmetic fix (`AI_Predictor` → `AIPredictor`). Edit applied locally, tests re-ran green (133/133), then commit was rejected by `.git/hooks/pre-commit` Pattern 3 (content-regex `BINANCE_API_KEY\s*=\s*\S+`) matching the unchanged `.env` documentation example at README:137 (`BINANCE_API_KEY=tu_api_key_aqui`). Working tree restored via `git restore README.md` — no commit created.
+- Empirical verification of the deferral rationale: the hook scans the full staged blob via `git show ":$file"` (line 82), not the diff, so *any* edit to README.md trips the same false positive regardless of where the change is. The allowlist at line 90 only excludes `os.getenv|os.environ|config.get|config.__getitem__` — a plain docs `.env` example cannot be allowlisted without restructuring the markdown block. Fix remains correctly deferred: it would require either modifying the hook (out-of-scope infra) or rewording the `.env` documentation (disproportionate to a 1-character cosmetic).
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% on `src/` (unchanged)
+- **Build**: clean (0 lint errors on default profile)
+
 ## 2026-04-24 — Heartbeat Maintenance Cycle (pass 148)
 
 ### Assessment
