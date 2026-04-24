@@ -100,7 +100,7 @@ class PositionalEncoding(nn.Module):
 class CryptoTransformer(nn.Module):
     """Transformer encoder that maps ``(batch, seq, 8)`` features to a scalar return."""
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         """Build the network from a hyperparameter dict (d_model/nhead/layers/etc)."""
         super().__init__()
         self.embedding = nn.Linear(8, config["d_model"])
