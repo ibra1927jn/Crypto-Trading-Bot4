@@ -55,7 +55,8 @@ class DataManager:
                         self.symbol,
                     )
                     df["funding_rate"] = funding["fundingRate"]
-                except Exception as e:  # noqa: BLE001 — ccxt raises varied exceptions; log and fall back to 0.0
+                # ccxt raises varied exceptions; log and fall back to 0.0
+                except Exception as e:  # noqa: BLE001
                     logger.warning("⚠️ Funding rate no disponible: %s", e)
                     df["funding_rate"] = 0.0
 
