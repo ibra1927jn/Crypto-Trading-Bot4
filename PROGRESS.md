@@ -1,5 +1,21 @@
 # Progress Log
 
+## 2026-04-24 — Heartbeat Maintenance Cycle (pass 110)
+
+### Refactor
+- **refactor(indicators)**: `get_indicators_summary` return annotation was bare `dict`; parameterized to `dict[str, Any]` to match siblings `get_exchange_config` (config.py:122) and `get_strategy_summary` (strategy.py:515). `Any` already imported in indicators.py, so no import change needed. Pure annotation, no behavior change (3aad316).
+- **refactor(train_ai)**: `CryptoTransformer.__init__(config: dict)` was the only remaining bare `dict` annotation in the repo (audit swept `src/`, `tests/`, and all root scripts). Parameterized to `dict[str, Any]` matching the rest of the codebase. `Any` already imported in train_ai.py (8ffdb7b).
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage, 0 lint errors on default profile, working tree clean (matches pass 109 steady-state).
+- Ruff `--select ALL` held at 269 errors post-fix (the two bare-dict annotations were not individually flagged by any ruff rule — they're a consistency audit catch, not a lint catch): 200 S101 / 29 PLR2004 / 23 T201 / 6 ARG002 / 3 SLF001 / 3 ARG001 / 3 ANN401 / 2 PLR0913, all documented intentional across prior passes.
+- Verified post-commit no new bare generic-type annotations remain (`grep -nE ":\s*(dict|list|tuple|set)\s*[,=)]"` and `grep -nE "-> (dict|list|tuple|set)\b(?!\[)"` across the entire repo both empty).
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged — annotation-only refactors)
+- **Build**: clean (0 lint errors on default profile)
+
 ## 2026-04-24 — Heartbeat Maintenance Cycle (pass 109)
 
 ### Assessment
