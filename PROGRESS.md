@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-04-25 — Heartbeat Maintenance Cycle (pass 223)
+
+### Refactor
+- `src/strategies/strategy.py`: inlined four redundantly-wrapped ternaries in the SCALPING and SWING `details` dicts. Each `(df["col"].iloc[-1] if "col" in df.columns else None)` was spread across four lines despite collapsing easily under the 120-char flake8 limit. Same trajectory as passes 221–222 — collapsing simple wraps that don't aid readability. Multi-line parens that wrap meaningful arithmetic (`combined_value`, `combined_confidence`) remain intact.
+
+### Results
+- **Tests**: 133/133 passing
+- **Coverage**: 99% on `src/` (unchanged)
+- **Build**: clean (ruff default profile, flake8 max-line-length=120)
+
 ## 2026-04-25 — Heartbeat Maintenance Cycle (pass 222)
 
 ### Refactor
