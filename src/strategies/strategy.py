@@ -227,9 +227,7 @@ class HybridStrategy:
                     df["rsi"].iloc[-1]
                     if "rsi" in df.columns else None
                 ),
-                "macd_signal": (
-                    self.indicators.get_macd_signal(df)
-                ),
+                "macd_signal": self.indicators.get_macd_signal(df),
                 "bollinger_signal": bollinger_signal,
                 "price": (
                     df["close"].iloc[-1]

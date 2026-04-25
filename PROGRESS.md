@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-04-25 — Heartbeat Maintenance Cycle (pass 221)
+
+### Refactor
+- `src/strategies/strategy.py`: collapsed three-line wrapping around `self.indicators.get_macd_signal(df)` in the SCALPING `details` dict to a single line. The other multi-line parens in the same dict wrap conditional expressions (`x if cond else None`) where the wrap is meaningful; this one wrapped a bare function call and was stylistically inconsistent.
+
+### Results
+- **Tests**: 133/133 passing
+- **Coverage**: 99% on `src/` (unchanged)
+- **Build**: clean (ruff default profile)
+
 ## 2026-04-25 — Heartbeat Maintenance Cycle (pass 220)
 
 ### Assessment
