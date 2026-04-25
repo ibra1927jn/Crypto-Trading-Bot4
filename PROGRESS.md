@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-04-25 — Heartbeat Maintenance Cycle (pass 214)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage on `src/` (uncovered: `src/__init__.py` lines 8-9 and `src/utils/__init__.py` line 3 — these `__init__` modules aren't imported because tests use `pythonpath=["src"]`; `src/config.py:180-181` is the `if __name__ == "__main__"` block).
+- Ruff and pyflakes both clean across `src/`, `tests/`, and root scripts (`main.py`, `train_ai.py`, `test_ai.py`, `descargar_datos.py`, `verificar.py`, `debug_env.py`).
+- No TODO/FIXME/HACK/XXX markers in `src/`, `tests/`, or root scripts (the only "TODO" string is `"¡TODO LISTO!"` Spanish UX text in `debug_env.py`).
+- Every `except Exception:` handler in `src/` and root scripts captures details via `logger.exception` or rebinds the exception variable.
+- All credentials (`BINANCE_API_KEY`, `BINANCE_API_SECRET`) loaded from environment; `.env`, keys, coverage artifacts all covered by `.gitignore`.
+- Pre-commit hook already filters `os.getenv|os.environ|config.get` from the `API_KEY` content pattern, so the historical false positive on `src/config.py` is resolved.
+
+### Changes
+- None — steady-state. Documenting the assessment only.
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% (unchanged)
+- **Build**: clean
+
 ## 2026-04-25 — Heartbeat Maintenance Cycle (pass 213)
 
 ### Assessment
