@@ -217,16 +217,10 @@ class HybridStrategy:
 
             # Detalles de la señal
             details = {
-                "rsi": (
-                    df["rsi"].iloc[-1]
-                    if "rsi" in df.columns else None
-                ),
+                "rsi": df["rsi"].iloc[-1] if "rsi" in df.columns else None,
                 "macd_signal": self.indicators.get_macd_signal(df),
                 "bollinger_signal": bollinger_signal,
-                "price": (
-                    df["close"].iloc[-1]
-                    if "close" in df.columns else None
-                ),
+                "price": df["close"].iloc[-1] if "close" in df.columns else None,
             }
 
             logger.info(
@@ -306,14 +300,8 @@ class HybridStrategy:
                 "ai_prediction": ai_prediction,
                 "ai_confidence": ai_confidence,
                 "combined_value": combined_value,
-                "price": (
-                    df["close"].iloc[-1]
-                    if "close" in df.columns else None
-                ),
-                "rsi": (
-                    df["rsi"].iloc[-1]
-                    if "rsi" in df.columns else None
-                ),
+                "price": df["close"].iloc[-1] if "close" in df.columns else None,
+                "rsi": df["rsi"].iloc[-1] if "rsi" in df.columns else None,
             }
 
             logger.info(
