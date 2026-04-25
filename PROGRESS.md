@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-04-25 — Heartbeat Maintenance Cycle (pass 215)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage on `src/` (5 intentional uncovered lines unchanged: `src/__init__.py:8-9`, `src/utils/__init__.py:3`, `src/config.py:180-181`).
+- Default ruff profile clean across `src/` and `tests/`; pyflakes and flake8 (`--max-line-length=120`) also clean.
+- Strict ruff (`--select ALL`) on `src/`+`tests/` totals 242 (200 S101 / 29 PLR2004 / 6 ARG002 / 3 ARG001 / 3 SLF001 / 1 ANN401 — all in `tests/` except the single `ANN401` on `DataManager.exchange: Any`, which is intentional for the polymorphic ccxt client). Root scripts add 26 more strict findings (23 T201 print statements, 2 ANN401, 1 PLR0913) — all intentional CLI/training-script characteristics.
+- No TODO/FIXME/HACK/XXX markers in `src/`, `tests/`, or root scripts (the only "TODO" string is the Spanish UX message `"¡TODO LISTO!"` in `debug_env.py`).
+- Working tree clean; branch in sync with origin (`04f0449`).
+- Longest function: `src/strategies/strategy.py::_swing_strategy` (95 lines) — under the 100-line threshold.
+
+### Changes
+- None — steady-state. Documenting the assessment only.
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% on `src/` (unchanged)
+- **Build**: clean (0 lint errors on default profile)
+
 ## 2026-04-25 — Heartbeat Maintenance Cycle (pass 214)
 
 ### Assessment
