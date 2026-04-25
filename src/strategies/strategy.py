@@ -159,16 +159,12 @@ class HybridStrategy:
 
             # Elegir estrategia según volatilidad
             if condition == MarketCondition.HIGH_VOLATILITY:
-                signal, confidence, strategy_details = (
-                    self._scalping_strategy(df)
-                )
+                signal, confidence, strategy_details = self._scalping_strategy(df)
                 details["strategy_used"] = "SCALPING"
                 details.update(strategy_details)
 
             elif condition == MarketCondition.LOW_VOLATILITY:
-                signal, confidence, strategy_details = (
-                    self._swing_strategy(df)
-                )
+                signal, confidence, strategy_details = self._swing_strategy(df)
                 details["strategy_used"] = "SWING"
                 details.update(strategy_details)
 
@@ -207,10 +203,8 @@ class HybridStrategy:
             bollinger_signal = self.indicators.get_bollinger_signal(df)
 
             # Obtener señales de indicadores
-            combined_signal, confidence = (
-                self.indicators.get_combined_signal(
-                    df, bollinger_signal=bollinger_signal,
-                )
+            combined_signal, confidence = self.indicators.get_combined_signal(
+                df, bollinger_signal=bollinger_signal,
             )
 
             # Convertir a enum Signal
@@ -265,9 +259,7 @@ class HybridStrategy:
             logger.debug("🎯 Using SWING strategy (Low Volatility)")
 
             # Obtener señal de indicadores técnicos
-            indicators_signal, indicators_confidence = (
-                self.indicators.get_combined_signal(df)
-            )
+            indicators_signal, indicators_confidence = self.indicators.get_combined_signal(df)
 
             # Obtener predicción de IA (single inference; reuse for signal)
             ai_prediction, ai_confidence = self.ai_predictor.predict(df)
