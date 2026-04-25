@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-04-25 — Heartbeat Maintenance Cycle (pass 222)
+
+### Refactor
+- `src/strategies/strategy.py`: dropped outer line-continuation parens that wrapped single function calls in four `tuple = func(...)` assignments inside `get_signal`, `_scalping_strategy`, and `_swing_strategy`. All resulting lines fit within the 120-char flake8 limit. Same stylistic cleanup as pass 221, applied to the remaining instances in the file. Multi-line parens that wrap meaningful arithmetic (`combined_value`, `combined_confidence`) or conditional expressions are left intact.
+
+### Results
+- **Tests**: 133/133 passing
+- **Coverage**: 99% on `src/` (unchanged)
+- **Build**: clean (ruff default profile, flake8 max-line-length=120)
+
 ## 2026-04-25 — Heartbeat Maintenance Cycle (pass 221)
 
 ### Refactor
