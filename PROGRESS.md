@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-04-25 — Heartbeat Maintenance Cycle (pass 216)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage on `src/` (5 intentional uncovered lines unchanged: `src/__init__.py:8-9`, `src/utils/__init__.py:3`, `src/config.py:180-181`).
+- Default ruff profile clean across `src/`, `tests/`, and root scripts (`main.py`, `train_ai.py`, `test_ai.py`, `descargar_datos.py`, `verificar.py`, `debug_env.py`); pyflakes also clean.
+- No TODO/FIXME/HACK/XXX markers in `src/`, `tests/`, or root scripts (the only "TODO" string is the Spanish UX message `"¡TODO LISTO!"` in `debug_env.py`).
+- Working tree clean; branch in sync with origin (`145c818`).
+- Longest function: `src/strategies/strategy.py::_swing_strategy` (95 lines, body 266-346) — under the 100-line threshold.
+- `.env` is in `.gitignore`; credentials sourced from environment via `os.getenv` in `src/config.py`.
+
+### Changes
+- None — steady-state. Documenting the assessment only.
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% on `src/` (unchanged)
+- **Build**: clean (0 lint errors on default profile)
+
 ## 2026-04-25 — Heartbeat Maintenance Cycle (pass 215)
 
 ### Assessment
