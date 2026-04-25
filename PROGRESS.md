@@ -1,5 +1,21 @@
 # Progress Log
 
+## 2026-04-25 — Heartbeat Maintenance Cycle (pass 212)
+
+### Assessment
+- Entry state: 133/133 tests passing, 99% coverage on `src/` (5 intentional uncovered lines unchanged), 0 lint errors on default ruff profile across `src/` and `tests/`, working tree clean, branch in sync with origin (`463e1ef`).
+- No TODO/FIXME/HACK in `src/`; no debug `print(` calls in `src/` (only in CLI utility scripts `debug_env.py`, `verificar.py`, `test_ai.py` which are intentional user output).
+- Credentials sourced via `os.getenv` with empty-string defaults; `.gitignore` covers secrets.
+- Longest function holds under the 100-line threshold (`src/strategies/strategy.py::_swing_strategy` at 95 lines).
+
+### Changes
+- None — steady-state. Documenting the assessment only.
+
+### Results
+- **Tests**: 133/133 passing (unchanged)
+- **Coverage**: 99% on `src/` (unchanged)
+- **Build**: clean (0 lint errors on default profile)
+
 ## 2026-04-25 — Heartbeat Maintenance Cycle (pass 211)
 
 ### Assessment
